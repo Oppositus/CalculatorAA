@@ -221,6 +221,13 @@ public class MainWindow {
                 mainTable.setModel(newModel);
             }
         });
+        buttonInstruments.addActionListener(actionEvent -> {
+            String[] old = ((AATableModel)mainTable.getModel()).instruments;
+            String[] instruments = InstrumentsEditor.showDialog(old);
+            if (!Arrays.equals(instruments, old)) {
+                ;
+            }
+        });
     }
 
     private void createUIComponents() {
