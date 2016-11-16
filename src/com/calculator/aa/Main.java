@@ -4,10 +4,10 @@ import com.calculator.aa.ui.MainWindow;
 
 import javax.swing.*;
 
-public class Main {
+class Main {
     private static Main program;
-    private JFrame mainFrame;
-    private MainWindow mainWindow;
+    private final JFrame mainFrame;
+    private final MainWindow mainWindow;
 
     private Main() {
         mainFrame = new JFrame("todo: name");

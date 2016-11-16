@@ -2,9 +2,6 @@ package com.calculator.aa.ui;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Arrays;
 
 public class MainWindow {
@@ -19,11 +16,11 @@ public class MainWindow {
 
         private final int width;
         private final int height;
-        private double[][]data;
-        private String[] instruments;
-        private String[] periods;
-        private double[] averages;
-        private double[] deviations;
+        private final double[][]data;
+        private final String[] instruments;
+        private final String[] periods;
+        private final double[] averages;
+        private final double[] deviations;
 
         // Default constructor
         private AATableModel() {
@@ -52,7 +49,7 @@ public class MainWindow {
                     if (wh < width - 1) {
                         data[ht][wh] = 0.0f;
                     }
-                    periods[ht] = String.format("%s %d", "Период", ht);;
+                    periods[ht] = String.format("%s %d", "Период", ht);
                 }
             }
         }
@@ -225,7 +222,7 @@ public class MainWindow {
             String[] old = ((AATableModel)mainTable.getModel()).instruments;
             String[] instruments = InstrumentsEditor.showDialog(old);
             if (!Arrays.equals(instruments, old)) {
-                ;
+
             }
         });
     }
