@@ -6,12 +6,16 @@ import com.calculator.aa.calc.Calc;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.font.TextAttribute;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 public class MainWindow {
@@ -24,6 +28,31 @@ public class MainWindow {
     private JButton buttonCorrelations;
     private JButton buttonCovariances;
     private JButton buttonPortfolio;
+
+    private class AATableCellRenderer extends DefaultTableCellRenderer {
+        private final Color back = new Color(212, 212, 212);
+        private int rows;
+
+        AATableCellRenderer(int r) {
+            rows = r;
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+            Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+            Font font = cell.getFont();
+
+            if (row >= rows - 2) {
+                font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD));
+                cell.setBackground(back);
+            } else {
+                cell.setBackground(Color.WHITE);
+                font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_REGULAR));
+            }
+            cell.setFont(font);
+            return cell;
+        }
+    }
 
     private class AATableModel extends AbstractTableModel {
 
@@ -147,7 +176,7 @@ public class MainWindow {
         @Override
         public Object getValueAt(int row, int col) {
             if (row == height - 2) {
-                return col == 0 ? "Доходность" : (height < 4 ? "" : Calc.formatPercent(averages[col - 1] - 1));
+                return col == 0 ? "Доходность" : (height < 4 ? "" : Calc.formatPercent(averages[col - 1]));
             } else if (row == height - 1) {
                 return col == 0 ? "Риск" : (height < 5 ? "" : Calc.formatPercent(deviations[col - 1]));
             } else {
@@ -209,6 +238,10 @@ public class MainWindow {
             AATableModel oldModel = (AATableModel)mainTable.getModel();
             AATableModel newModel = new AATableModel(oldModel.width - 1, oldModel.height - 1, oldModel, -1);
             mainTable.setModel(newModel);
+
+            for (int i = 0; i < newModel.width; i++) {
+                mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.height));
+            }
         });
         buttonDeleteRow.addActionListener(actionEvent -> {
             AATableModel oldModel = (AATableModel)mainTable.getModel();
@@ -218,6 +251,10 @@ public class MainWindow {
                         oldModel,
                         mainTable.getSelectedRow());
                 mainTable.setModel(newModel);
+
+                for (int i = 0; i < newModel.width; i++) {
+                    mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.height));
+                }
             }
         });
         buttonOpen.addActionListener(actionEvent -> {
@@ -265,7 +302,10 @@ public class MainWindow {
 
             ShowTable.show("Таблица ковариаций", covTable, cols, cols);
         });
-        buttonPortfolio.addActionListener(actionEvent -> PortfolioChart.showChart());
+        buttonPortfolio.addActionListener(actionEvent -> {
+            AATableModel model = (AATableModel)mainTable.getModel();
+            PortfolioChart.showChart(model.instruments, model.data);
+        });
     }
 
     private void parseCSVAndLoadData(File f) {
@@ -300,6 +340,10 @@ public class MainWindow {
 
             AATableModel newModel = new AATableModel(whLength, htLength, rawData, columns.toArray(new String[0]));
             mainTable.setModel(newModel);
+
+            for (int i = 0; i < newModel.width; i++) {
+                mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.height));
+            }
 
         } catch (IOException e) {
             JOptionPane.showMessageDialog(Main.getFrame(), e, "Ошибка", JOptionPane.ERROR_MESSAGE);

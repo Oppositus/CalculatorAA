@@ -19,6 +19,14 @@ public class DoublePoint {
         this(other.x, other.y);
     }
 
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
     public int mapX(int max) {
         return (int)(x / max);
     }
@@ -29,5 +37,9 @@ public class DoublePoint {
 
     public Point map(int maxX, int maxY) {
         return new Point(mapX(maxX), mapY(maxY));
+    }
+
+    public DoublePoint multiply(double m) {
+        return new DoublePoint(x * m, y * m);
     }
 }
