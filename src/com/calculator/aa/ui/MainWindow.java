@@ -1,16 +1,29 @@
 package com.calculator.aa.ui;
 
+import com.calculator.aa.Main;
+import com.calculator.aa.calc.Calc;
+
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.AbstractTableModel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class MainWindow {
     private JTable mainTable;
-    private JButton buttonInstruments;
+    private JButton buttonOpen;
     private JPanel mainPanel;
     private JScrollPane scrollPane;
     private JButton buttonAddRow;
     private JButton buttonDeleteRow;
+    private JButton buttonCorrelations;
+    private JButton buttonCovariances;
+    private JButton buttonPortfolio;
 
     private class AATableModel extends AbstractTableModel {
 
@@ -96,7 +109,32 @@ public class MainWindow {
             }
         }
 
-        @Override
+        // Create new table w*h and copy data from data
+        private AATableModel(int w, int h, double[][] d, String[] i) {
+            this(w, h);
+
+            instruments[0] = "";
+            for (int wh = 0; wh < width; wh++) {
+                if (wh > 0) {
+                    instruments[wh] = i[wh - 1];
+                } else {
+                    instruments[wh] = "";
+                }
+
+                for (int ht = 0; ht < height - 2; ht++) {
+                    if (wh < width - 1) {
+                        data[ht][wh] = d[ht][wh];
+                    }
+                    if (wh > 0) {
+                        updateAverage(wh - 1);
+                        updateStDev(wh - 1);
+                    }
+                    periods[ht] = String.format("%s %d", "Период", ht);
+                }
+            }
+        }
+
+            @Override
         public int getRowCount() {
             return height;
         }
@@ -109,9 +147,9 @@ public class MainWindow {
         @Override
         public Object getValueAt(int row, int col) {
             if (row == height - 2) {
-                return col == 0 ? "Доходность" : (height < 4 ? "" : formatPercent(averages[col - 1] - 1));
+                return col == 0 ? "Доходность" : (height < 4 ? "" : Calc.formatPercent(averages[col - 1] - 1));
             } else if (row == height - 1) {
-                return col == 0 ? "Риск" : (height < 5 ? "" : formatPercent(deviations[col - 1]));
+                return col == 0 ? "Риск" : (height < 5 ? "" : Calc.formatPercent(deviations[col - 1]));
             } else {
                 return col == 0 ? periods[row] : data[row][col - 1];
             }
@@ -143,40 +181,17 @@ public class MainWindow {
             fireTableCellUpdated(row, col);
         }
 
-        private double[] Yields(int col) {
-            double[] yields = new double[height - 3];
-
-            for (int ht = 1; ht < height - 2; ht++) {
-                double prev = data[ht - 1][col];
-                double curr = data[ht][col];
-
-                if (prev <= 0.0f || curr <= 0.0f) {
-                    return yields;
-                }
-
-                double divided = curr / prev;
-                if (divided == Double.POSITIVE_INFINITY) {
-                    return yields;
-                }
-
-                yields[ht - 1] = divided;
+        private double[] getCol(int col) {
+            int length = height - 2;
+            double[] values = new double[length];
+            for (int i = 0; i < length; i++) {
+                values[i] = data[i][col];
             }
-
-            return yields;
+            return values;
         }
 
         private void updateAverage(int col) {
-            if (height < 4) {
-                return;
-            }
-
-            double[] yields = Yields(col);
-
-            double sum = 0.0;
-            for (int ht = 0; ht < height - 3; ht++) {
-                sum += yields[ht];
-            }
-            averages[col] = sum / (height - 3);
+            averages[col] = Calc.averageYields(getCol(col));
         }
 
         private void updateStDev(int col) {
@@ -185,20 +200,7 @@ public class MainWindow {
                 return;
             }
 
-            double[] yields = Yields(col);
-
-            double sum2 = 0.0;
-
-            for (int ht = 0; ht < height - 3; ht++) {
-                double difference = (yields[ht] - averages[col]);
-                sum2 += difference * difference;
-            }
-
-            deviations[col] = Math.sqrt(1.0 / (height - 4) * sum2);
-        }
-
-        private String formatPercent(double f) {
-            return String.format("%.2f%%", f * 100);
+            deviations[col] = Calc.stdevYields(getCol(col));
         }
     }
 
@@ -218,13 +220,90 @@ public class MainWindow {
                 mainTable.setModel(newModel);
             }
         });
-        buttonInstruments.addActionListener(actionEvent -> {
-            String[] old = ((AATableModel)mainTable.getModel()).instruments;
-            String[] instruments = InstrumentsEditor.showDialog(old);
-            if (!Arrays.equals(instruments, old)) {
+        buttonOpen.addActionListener(actionEvent -> {
+            JFileChooser fc = new JFileChooser(".");
+            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fc.setMultiSelectionEnabled(false);
+            fc.setFileFilter(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    String extension = "";
+                    String fileName = file.getName().toLowerCase();
+                    int i = fileName.lastIndexOf('.');
+                    if (i >= 0) {
+                        extension = fileName.substring(i + 1);
+                    }
+                    return extension.equals("csv");
+                }
 
+                @Override
+                public String getDescription() {
+                    return "CSV data files (.*csv)";
+                }
+            });
+
+            int result = fc.showOpenDialog(Main.getFrame());
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File f = fc.getSelectedFile();
+                if (f.exists()) {
+                    parseCSVAndLoadData(f);
+                }
             }
         });
+        buttonCorrelations.addActionListener(actionEvent -> {
+
+            AATableModel model = (AATableModel)mainTable.getModel();
+            double[][] corrTable = Calc.correlationTable(model.data);
+            String[] cols = Arrays.copyOfRange(model.instruments, 1, model.instruments.length);
+
+            ShowTable.show("Таблица корреляций", corrTable, cols, cols);
+        });
+        buttonCovariances.addActionListener(actionEvent -> {
+            AATableModel model = (AATableModel)mainTable.getModel();
+            double[][] covTable = Calc.covarianceTable(model.data);
+            String[] cols = Arrays.copyOfRange(model.instruments, 1, model.instruments.length);
+
+            ShowTable.show("Таблица ковариаций", covTable, cols, cols);
+        });
+        buttonPortfolio.addActionListener(actionEvent -> PortfolioChart.showChart());
+    }
+
+    private void parseCSVAndLoadData(File f) {
+        try {
+            ArrayList<String> columns = new ArrayList<>();
+            ArrayList<ArrayList<Double>> data = new ArrayList<>();
+
+            BufferedReader is = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
+
+            is.lines().forEach(line -> {
+                if (columns.isEmpty()) {
+                    columns.addAll(Arrays.asList(line.split(",")));
+                } else {
+                    if (!line.isEmpty()) {
+                        data.add(
+                                new ArrayList<>(
+                                        Arrays.stream(line.split(",")).map(Double::valueOf).collect(Collectors.toList()))
+                        );
+                    }
+                }
+            });
+
+            double[][] rawData = new double[data.size()][columns.size()];
+            int htLength = data.size();
+            int whLength = columns.size();
+
+            for (int ht = 0; ht < htLength; ht++) {
+                for (int wh = 0; wh < whLength; wh++) {
+                    rawData[ht][wh] = data.get(ht).get(wh);
+                }
+            }
+
+            AATableModel newModel = new AATableModel(whLength, htLength, rawData, columns.toArray(new String[0]));
+            mainTable.setModel(newModel);
+
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(Main.getFrame(), e, "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void createUIComponents() {
