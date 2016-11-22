@@ -1,10 +1,8 @@
 package com.calculator.aa.calc;
 
-import java.awt.*;
-import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
+import java.text.NumberFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Calc {
 
@@ -71,20 +69,8 @@ public class Calc {
         return sum / length;
     }
 
-    private static double[] multSquareMatrixAndVector(double[][] matrix, double[] vector) {
-        int length = vector.length;
-        double[] result = new double[length];
+    private static double sumProduct(double[] v1, double[] v2) {
 
-        for (int i = 0; i < length; i++) {
-            for (int j = 0; j < length; j++) {
-                result[i] += matrix[i][j] * vector[j];
-            }
-        }
-
-        return result;
-    }
-
-    private static double multVectors(double[] v1, double[] v2) {
         double sum = 0.0;
         int length = v1.length;
         for (int i = 0; i < length; i++) {
@@ -165,25 +151,59 @@ public class Calc {
     }
 
     private static double portfolioYield(double[] averageYields, double[] weights) {
-        return multVectors(averageYields, weights);
+        return sumProduct(averageYields, weights);
     }
 
-    private static double portfolioRisk(double[][] covariations, double[] averageYields, double[] weights) {
-        return Math.sqrt(multVectors(multSquareMatrixAndVector(covariations, averageYields), weights));
+    private static double portfolioRisk(double[][] correlations, double[] stdevYields, double[] weights) {
+
+        int length = weights.length;
+        double sum = 0;
+
+        for (int i = 0; i < length; i++) {
+            for (int j = 0; j < length; j++) {
+                sum += weights[i] * weights[j] * stdevYields[i] * stdevYields[j] * correlations[i][j];
+            }
+        }
+
+        return Math.sqrt(sum);
     }
 
-    private static Portfolio portfolio(double[][] covariations, double[] averageYields, double[] weights) {
+    public static Portfolio portfolio(double[][] correlations, double[] averageYields, double[] stdevYields, double[] weights) {
         return new Portfolio(
                 new DoublePoint(
-                        portfolioRisk(covariations, averageYields, weights),
+                        portfolioRisk(correlations, stdevYields, weights),
                         portfolioYield(averageYields, weights)),
                 weights);
     }
 
-    public static ArrayList<Portfolio> iteratePortfolios(double[][] covariations, double[] averageYields,
-                                                         int[] minimals, int[] maximals, int divStep) {
-        ArrayList<Portfolio> result = new ArrayList<>();
+    private static double[] createWeights(double[] stdevYields, boolean minimal) {
+        int length = stdevYields.length;
+        int minIndex = 0;
+        int maxIndex = 0;
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
 
+        for (int i = 0; i < length; i++) {
+            if (stdevYields[i] < min) {
+                min = stdevYields[i];
+                minIndex = i;
+            }
+            if (stdevYields[i] > max) {
+                max = stdevYields[i];
+                maxIndex = i;
+            }
+        }
+
+        double[] result = new double[length];
+        result[minimal ? minIndex : maxIndex] = 1;
+
+        return result;
+    }
+
+    public static ArrayList<Portfolio> iteratePortfolios(double[][] correlations, double[] averageYields,
+                                                         double[] stdevYields, int[] minimals, int[] maximals,
+                                                         int divStep, boolean effectiveOnly) {
+        ArrayList<Portfolio> result = new ArrayList<>();
         int length = averageYields.length;
 
         for (int i = 0; i < length; i++) {
@@ -198,7 +218,32 @@ public class Calc {
         int[] weights = new int[length];
         System.arraycopy(minimals, 0, weights, 0, length);
 
-        iteratePortfolioHelper(covariations, averageYields, minimals, maximals, 100 / divStep, weights, 0, result);
+        iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, 100 / divStep, weights, 0, result);
+
+        result.sort(Portfolio::compareTo);
+
+        if (effectiveOnly) {
+
+            int effectiveCount = 1000;
+
+            double[] border = new double[effectiveCount + 1];
+            Portfolio[] effecive = new Portfolio[effectiveCount + 1];
+            double minRisk = result.get(0).risk();
+            double maxRisk = result.get(result.size() - 1).risk();
+
+            for (Portfolio pf : result) {
+                double diff = maxRisk - minRisk;
+                double pos = pf.risk() - minRisk;
+                int percent = (int)(pos / diff * effectiveCount);
+                if (pf.yield() > border[percent]) {
+                    border[percent] = pf.yield();
+                    effecive[percent] = pf;
+                }
+            }
+
+            List<Portfolio> effeciveResult = Arrays.stream(effecive).filter(p -> p != null).collect(Collectors.toList());
+            result = new ArrayList<Portfolio>(effeciveResult);
+        }
 
         return result;
     }
@@ -211,30 +256,34 @@ public class Calc {
         return sum;
     }
 
-    private static void iteratePortfolioHelper(double[][] covariations, double[] averageYields,
-                                                    int[] minimals, int[] maximals, int step,
-                                                    int[] weights, int index, ArrayList<Portfolio> acc) {
-        if (sumIntArray(weights) > maximals[index] + step) {
+    private static void iteratePortfolioHelper(double[][] correlations, double[] averageYields, double[] stdevYields,
+                                               int[] minimals, int[] maximals, int step,
+                                               int[] weights, int index, ArrayList<Portfolio> acc) {
+
+        if (sumIntArray(weights) > 100) {
             return;
         }
 
-        for (int w = weights[index]; w < maximals[index] + step; w += step) {
-            weights[index] = w;
+        while (weights[index] <= maximals[index]) {
 
             // clear tail
             System.arraycopy(minimals, index + 1, weights, index + 1, weights.length - (index + 1));
 
             int sum = sumIntArray(weights);
+
             // todo: check intervals!
             if (sum == 100) {
                 acc.add(
-                        portfolio(covariations, averageYields, Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray())
+                        portfolio(correlations, averageYields, stdevYields,
+                                Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray())
                 );
             }
 
-            if (index < weights.length - 1) {
-                iteratePortfolioHelper(covariations, averageYields, minimals, maximals, step, weights, index + 1, acc);
+            if (index < weights.length - 1 && sum < 100) {
+                iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, step, weights, index + 1, acc);
             }
+
+            weights[index] += step;
         }
     }
 

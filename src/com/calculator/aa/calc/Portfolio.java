@@ -23,6 +23,14 @@ public class Portfolio implements Comparable<Portfolio> {
         }
     }
 
+    public double yield() {
+        return parameters.getY();
+    }
+
+    public double risk() {
+        return parameters.getX();
+    }
+
     public void print() {
         for (double weight : weights) {
             System.out.print(Calc.formatPercent(weight));

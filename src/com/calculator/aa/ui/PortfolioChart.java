@@ -5,6 +5,7 @@ import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.DoublePoint;
 import com.calculator.aa.calc.Portfolio;
 
+import javax.sound.sampled.Port;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -43,6 +44,7 @@ public class PortfolioChart extends JDialog {
         // call onCancel() on ESCAPE
         contentPane.registerKeyboardAction(e -> onOK(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
         buttonCompute.addActionListener(e -> {
             int length = instruments.length - 1;
 
@@ -51,18 +53,21 @@ public class PortfolioChart extends JDialog {
 
             DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
 
-            double[][] covTable = Calc.covarianceTable(data);
+            double[][] corrTable = Calc.correlationTable(data);
             double[] avYields = new double[length];
+            double[] sdYields = new double[length];
 
             for (int col = 0; col < length; col++) {
                 minimals[col] = Integer.valueOf((String) model.getValueAt(0, col + 1));
                 maximals[col] = Integer.valueOf((String) model.getValueAt(1, col + 1));
                 avYields[col] = Calc.averageYields(Calc.column(data, col));
+                sdYields[col] = Calc.stdevYields(Calc.column(data, col));
             }
 
-            ArrayList<Portfolio> portfolios = Calc.iteratePortfolios(covTable, avYields, minimals, maximals, 10);
+            ArrayList<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, 10, false);
 
-            portfolios.forEach(Portfolio::print);
+            //portfolios.forEach(Portfolio::print);
+            ((CanvasPanel)chartPanel).setPortfolios(portfolios);
         });
     }
 

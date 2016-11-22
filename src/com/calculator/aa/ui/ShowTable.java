@@ -57,9 +57,9 @@ public class ShowTable extends JDialog {
                     if (row == 0 && col == 0) {
                         sb.append(srcName);
                     } else if (col == 0) {
-                        sb.append(srcColLabels[col]);
+                        sb.append(srcColLabels[row - 1]);
                     } else if (row == 0) {
-                        sb.append(srcRowLabels[row]);
+                        sb.append(srcRowLabels[col - 1]);
                     } else {
                         sb.append(String.valueOf(srcTable[row - 1][col - 1]));
                     }
