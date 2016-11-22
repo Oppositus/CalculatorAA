@@ -1,7 +1,9 @@
 package com.calculator.aa.calc;
 
-import java.text.NumberFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Calc {
@@ -168,42 +170,19 @@ public class Calc {
         return Math.sqrt(sum);
     }
 
-    public static Portfolio portfolio(double[][] correlations, double[] averageYields, double[] stdevYields, double[] weights) {
+    private static Portfolio portfolio(double[][] correlations, double[] averageYields, double[] stdevYields, double[] weights, String[] instruments) {
         return new Portfolio(
                 new DoublePoint(
                         portfolioRisk(correlations, stdevYields, weights),
                         portfolioYield(averageYields, weights)),
-                weights);
+                weights,
+                instruments);
     }
 
-    private static double[] createWeights(double[] stdevYields, boolean minimal) {
-        int length = stdevYields.length;
-        int minIndex = 0;
-        int maxIndex = 0;
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
-
-        for (int i = 0; i < length; i++) {
-            if (stdevYields[i] < min) {
-                min = stdevYields[i];
-                minIndex = i;
-            }
-            if (stdevYields[i] > max) {
-                max = stdevYields[i];
-                maxIndex = i;
-            }
-        }
-
-        double[] result = new double[length];
-        result[minimal ? minIndex : maxIndex] = 1;
-
-        return result;
-    }
-
-    public static ArrayList<Portfolio> iteratePortfolios(double[][] correlations, double[] averageYields,
+    public static List<Portfolio> iteratePortfolios(double[][] correlations, double[] averageYields,
                                                          double[] stdevYields, int[] minimals, int[] maximals,
-                                                         int divStep, boolean effectiveOnly) {
-        ArrayList<Portfolio> result = new ArrayList<>();
+                                                         String[] instruments, int divStep) {
+        List<Portfolio> result = new LinkedList<>();
         int length = averageYields.length;
 
         for (int i = 0; i < length; i++) {
@@ -218,34 +197,61 @@ public class Calc {
         int[] weights = new int[length];
         System.arraycopy(minimals, 0, weights, 0, length);
 
-        iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, 100 / divStep, weights, 0, result);
+        iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, 100 / divStep, weights, instruments, 0, result);
 
         result.sort(Portfolio::compareTo);
 
-        if (effectiveOnly) {
+        return result;
+    }
 
-            int effectiveCount = 1000;
+    public static List<Portfolio> getOptimalBorder(List<Portfolio> sourceSorted) {
+        List<Portfolio> result = new LinkedList<>();
+        List<Portfolio> rest = new ArrayList<>(sourceSorted);
 
-            double[] border = new double[effectiveCount + 1];
-            Portfolio[] effecive = new Portfolio[effectiveCount + 1];
-            double minRisk = result.get(0).risk();
-            double maxRisk = result.get(result.size() - 1).risk();
+        Portfolio current = sourceSorted.get(0);
+        result.add(current);
 
-            for (Portfolio pf : result) {
-                double diff = maxRisk - minRisk;
-                double pos = pf.risk() - minRisk;
-                int percent = (int)(pos / diff * effectiveCount);
-                if (pf.yield() > border[percent]) {
-                    border[percent] = pf.yield();
-                    effecive[percent] = pf;
-                }
+        Portfolio maxYield = sourceSorted.stream().max(Portfolio::compareToYield).orElse(current);
+
+        while (!rest.isEmpty()) {
+            rest.remove(current);
+            double yield = current.yield();
+            rest = rest.stream().filter(pf -> pf.yield() >= yield).collect(Collectors.toList());
+            current = findMaxSine(current, rest);
+            result.add(current);
+            if (current == maxYield) {
+                break;
             }
-
-            List<Portfolio> effeciveResult = Arrays.stream(effecive).filter(p -> p != null).collect(Collectors.toList());
-            result = new ArrayList<Portfolio>(effeciveResult);
         }
 
         return result;
+    }
+
+    private static Portfolio findMaxSine(Portfolio origin, List<Portfolio> portfolios) {
+        double max = Double.MIN_VALUE;
+        Portfolio maxPf = portfolios.get(0);
+
+        for (Portfolio p : portfolios) {
+            if (p.risk() < origin.risk() || p.yield() < origin.yield()) {
+                continue;
+            }
+
+            double c = sine(origin.performance(), p.performance());
+            if (c > max) {
+                max = c;
+                maxPf = p;
+            }
+        }
+
+        return maxPf;
+    }
+
+    private static double sine(DoublePoint from, DoublePoint to) {
+        double x = to.getX() - from.getX();
+        double y = to.getY() - from.getY();
+        double r = Math.sqrt(x * x + y * y);
+
+        return y / r;
     }
 
     private static int sumIntArray(int[] array) {
@@ -258,7 +264,7 @@ public class Calc {
 
     private static void iteratePortfolioHelper(double[][] correlations, double[] averageYields, double[] stdevYields,
                                                int[] minimals, int[] maximals, int step,
-                                               int[] weights, int index, ArrayList<Portfolio> acc) {
+                                               int[] weights, String[] instruments, int index, List<Portfolio> acc) {
 
         if (sumIntArray(weights) > 100) {
             return;
@@ -275,16 +281,22 @@ public class Calc {
             if (sum == 100) {
                 acc.add(
                         portfolio(correlations, averageYields, stdevYields,
-                                Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray())
+                                Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray(), instruments)
                 );
             }
 
             if (index < weights.length - 1 && sum < 100) {
-                iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, step, weights, index + 1, acc);
+                iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, step, weights, instruments, index + 1, acc);
             }
 
             weights[index] += step;
         }
+    }
+
+    public static double distance(DoublePoint p1, DoublePoint p2) {
+        double dx = p2.getX() - p1.getX();
+        double dy = p2.getY() - p1.getY();
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     public static String formatPercent(double f) {

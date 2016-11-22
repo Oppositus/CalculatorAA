@@ -10,7 +10,7 @@ public class Main {
     private final MainWindow mainWindow;
 
     private Main() {
-        mainFrame = new JFrame("todo: name");
+        mainFrame = new JFrame("СПТ: калькулятор");
         mainWindow = new MainWindow();
         mainFrame.setContentPane(mainWindow.GetMainPanel());
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

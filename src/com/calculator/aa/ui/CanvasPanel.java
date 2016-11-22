@@ -1,5 +1,7 @@
 package com.calculator.aa.ui;
 
+import com.calculator.aa.calc.Calc;
+import com.calculator.aa.calc.DoublePoint;
 import com.calculator.aa.calc.Portfolio;
 
 import javax.swing.*;
@@ -8,26 +10,27 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.List;
 
 class CanvasPanel extends JPanel {
 
     private static final Color axisColor = Color.BLACK;
     private static final Color portfolioColor = Color.BLUE;
+    private static final Color backColor = Color.WHITE;
+    private static final Color selectedColor = Color.RED;
     private static final int safeZone = 10;
 
-    private ArrayList<Portfolio> portfolios = new ArrayList<>();
-    private double minRisk;
-    private double maxRisk;
-    private double minYield;
-    private double maxYield;
+    private List<Portfolio> portfolios = new ArrayList<>();
+    private List<Portfolio> optimalPortfolios = new ArrayList<>();
 
     private double minX;
     private double maxX;
     private double minY;
     private double maxY;
-    private double dx;
-    private double dy;
+    private double dRisk;
+    private double dYield;
 
     private Rectangle drawingArea;
 
@@ -43,10 +46,23 @@ class CanvasPanel extends JPanel {
     private int mouseX = 0;
     private int mouseY = 0;
 
+    private boolean borderOnlyMode = false;
+
+    private Portfolio nearest = null;
+
     private class mouseEnterExitListener implements MouseListener {
 
         @Override
-        public void mouseClicked(MouseEvent mouseEvent) {}
+        public void mouseClicked(MouseEvent mouseEvent) {
+            if (nearest != null) {
+
+                String[] cols = { "Значение" };
+                String[] labels = nearest.labels();
+                double[][] table = nearest.values();
+
+                ShowTable.show("Портфель", table, labels, cols);
+            }
+        }
 
         @Override
         public void mousePressed(MouseEvent mouseEvent) {}
@@ -83,37 +99,49 @@ class CanvasPanel extends JPanel {
 
         addMouseListener(new mouseEnterExitListener());
         addMouseMotionListener(new mouseMoveListener());
+
+        setCursor(
+                getToolkit().createCustomCursor(
+                        new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
+                        new Point(0, 0),
+                        "null")
+        );
     }
 
-    public void setPortfolios(ArrayList<Portfolio> pfs) {
+    void setPortfolios(List<Portfolio> pfs) {
         portfolios = pfs;
+        optimalPortfolios = Calc.getOptimalBorder(portfolios);
 
-        minRisk = portfolios.get(0).risk();
-        minX = minRisk * 0.9;
-        maxRisk = portfolios.get(portfolios.size() - 1).risk();
-        maxX = maxRisk * 1.1;
+        double minRisk = portfolios.get(0).risk();
+        double maxRisk = portfolios.get(portfolios.size() - 1).risk();
 
-        minYield = Double.MAX_VALUE;
-        maxYield = Double.MIN_VALUE;
+        double dr = (maxRisk - minRisk) * 0.05;
+        minX = minRisk - dr;
+        maxX = maxRisk + dr;
+
+        double minYield = Double.MAX_VALUE;
+        double maxYield = Double.MIN_VALUE;
 
         for (Portfolio p : portfolios) {
             if (p.yield() < minYield) {
                 minYield = p.yield();
-                minY = minYield * 0.95;
             }
             if (p.yield() > maxYield) {
                 maxYield = p.yield();
-                maxY = maxYield * 1.1;
             }
+
+            double dy = (maxYield - minYield) * 0.05;
+            minY = minYield - dy;
+            maxY = maxYield + dy;
         }
 
-        dx = maxX - minX;
-        dy = maxY - minY;
+        dRisk = maxX - minX;
+        dYield = maxY - minY;
 
-        minRiskStr = String.format("%.1f%%", minRisk * 100);
-        maxRiskStr = String.format("%.1f%%", maxRisk * 100);
-        minYieldStr = String.format("%.1f%%", minYield * 100);
-        maxYieldStr = String.format("%.1f%%", maxYield * 100);
+        minRiskStr = String.format("%.1f%%", minX * 100);
+        maxRiskStr = String.format("%.1f%%", maxX * 100);
+        minYieldStr = String.format("%.1f%%", minY * 100);
+        maxYieldStr = String.format("%.1f%%", maxY * 100);
 
         stringHeight = -1;
         stringWidth = -1;
@@ -121,16 +149,27 @@ class CanvasPanel extends JPanel {
         repaint();
     }
 
+    void setBorderOnlyMode(boolean mode) {
+        if (borderOnlyMode != mode) {
+            borderOnlyMode = mode;
+            repaint();
+        }
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (portfolios.isEmpty()) {
-            return;
-        }
-
         int w = getWidth();
         int h = getHeight();
+
+        if (portfolios.isEmpty()) {
+            if (mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) {
+                g.setColor(axisColor);
+                drawEmptyCross(g, w, h);
+            }
+            return;
+        }
 
         if (stringHeight < 0 || stringWidth < 0) {
             calculateStringMetrics(g);
@@ -142,11 +181,21 @@ class CanvasPanel extends JPanel {
         drawAxis(g);
 
         g.setColor(portfolioColor);
-        portfolios.forEach(pf -> drawPortfolio(g, pf, w, h));
+
+        if (borderOnlyMode) {
+            optimalPortfolios.forEach(pf -> drawPortfolio(g, pf));
+        } else {
+            portfolios.forEach(pf -> drawPortfolio(g, pf));
+        }
+
+        if (!optimalPortfolios.isEmpty()) {
+            drawOptimalBorder(g);
+        }
 
         if (mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) {
+            drawNearest(g);
             g.setColor(axisColor);
-            drawCross(g);
+            drawCross(g, w, h);
         }
     }
 
@@ -165,13 +214,109 @@ class CanvasPanel extends JPanel {
         g.drawString(maxYieldStr, drawingArea.x - stringWidth, drawingArea.y + stringHeight);
     }
 
-    private void drawPortfolio(Graphics g, Portfolio pf, int width, int height) {
+    private void drawPortfolio(Graphics g, Portfolio pf) {
         g.drawRect(mapX(pf.risk()) - 1, mapY(pf.yield()) - 1, 2, 2);
     }
 
-    private void drawCross(Graphics g) {
+    private void drawNearest(Graphics g) {
+        DoublePoint p = new DoublePoint(reMapX(mouseX), reMapY(mouseY));
+
+        if (p.getX() < 0 || p.getY() < 0) {
+            nearest = null;
+            return;
+        }
+
+        double distance = Double.MAX_VALUE;
+        Portfolio nearestPortfolio = null;
+
+        List<Portfolio> pfs = borderOnlyMode ? optimalPortfolios : portfolios;
+
+        for (Portfolio pf : pfs) {
+            double dst = Calc.distance(p, pf.performance());
+            if (dst < distance) {
+                distance = dst;
+                nearestPortfolio = pf;
+            }
+        }
+
+        nearest = nearestPortfolio;
+        if (nearest != null) {
+            g.setColor(selectedColor);
+            g.fillRect(mapX(nearest.risk()) - 4, mapY(nearest.yield()) - 4, 7, 7);
+        }
+    }
+
+    private void drawOptimalBorder(Graphics g) {
+
+        int length = optimalPortfolios.size();
+        int[] xxs = new int[length];
+        int[] yys = new int[length];
+        int i = 0;
+
+        for (Portfolio p : optimalPortfolios) {
+            xxs[i] = mapX(p.risk());
+            yys[i] = mapY(p.yield());
+            i += 1;
+        }
+
+        g.drawPolyline(xxs, yys, length);
+    }
+
+    private void drawCross(Graphics g, int w, int h) {
+        double xPos = reMapX(mouseX);
+        double yPos = reMapY(mouseY);
+
+        if (xPos < 0 || yPos < 0) {
+            drawEmptyCross(g, w, h);
+            return;
+        }
+
         g.drawLine(drawingArea.x - safeZone / 2, mouseY, drawingArea.x + drawingArea.width + safeZone / 2, mouseY);
         g.drawLine(mouseX, drawingArea.y - safeZone / 2, mouseX, drawingArea.y + drawingArea.height + safeZone / 2);
+
+        if (nearest == null) {
+            return;
+        }
+
+        String rString = "Риск: " + Calc.formatPercent(nearest.risk());
+        String yString = "Дох.: " + Calc.formatPercent(nearest.yield());
+
+        FontMetrics fm = g.getFontMetrics();
+        Rectangle2D boundsR = fm.getStringBounds(rString, g);
+        Rectangle2D boundsY = fm.getStringBounds(yString, g);
+        int max = (int)Math.ceil(Math.max(boundsR.getWidth(), boundsY.getWidth()));
+
+        int plus = 10;
+        int plus2 = 5;
+
+        int rectX = mouseX + safeZone / 2 + plus2;
+        int rectY = mouseY + plus;
+        int textX = mouseX + safeZone + plus2;
+        int textY = mouseY + stringHeight + plus;
+
+        if (textX + max > drawingArea.x + drawingArea.width - safeZone) {
+            rectX -= max + safeZone * 2 + plus;
+            textX -= max + safeZone * 2 + plus;
+        }
+
+        if (textY + stringHeight * 2 > drawingArea.y + drawingArea.height) {
+            rectY -= stringHeight * 4 - plus;
+            textY -= stringHeight * 4 - plus;
+        }
+
+        g.drawRect(rectX, rectY, max + safeZone, stringHeight * 2 + safeZone / 2);
+
+        g.setColor(backColor);
+        g.fillRect(rectX + 1, rectY + 1, max + safeZone - 1, stringHeight * 2 + safeZone / 2 - 1);
+
+        g.setColor(axisColor);
+        g.drawString(rString, textX, textY);
+        g.drawString(yString, textX, textY + stringHeight);
+    }
+
+    private void drawEmptyCross(Graphics g, int w, int h) {
+        g.drawLine(0, mouseY, w, mouseY);
+        g.drawLine(mouseX, 0, mouseX, h);
     }
 
     private void calculateStringMetrics(Graphics g) {
@@ -184,9 +329,7 @@ class CanvasPanel extends JPanel {
     }
 
     private void calculateStringMetricsHelper(Graphics g, FontMetrics fm, String test) {
-        Rectangle2D bounds;
-
-        bounds = fm.getStringBounds(test, g);
+        Rectangle2D bounds = fm.getStringBounds(test, g);
         if (stringHeight < bounds.getHeight()) {
             stringHeight = (int)Math.ceil(bounds.getHeight());
         }
@@ -205,42 +348,41 @@ class CanvasPanel extends JPanel {
     }
 
     private int mapX(double x) {
-        double posX = (x - minX) / dx;
-        return (int)(posX * drawingArea.width + drawingArea.x);
+        double posX = (x - minX) / dRisk;
+        return drawingArea.x + (int)(posX * drawingArea.width);
     }
 
     private int mapY(double y) {
-        double posY = (y - minY) / dy;
-        return drawingArea.height + drawingArea.y - (int)(posY * drawingArea.height + drawingArea.y);
+        double posY = (y - minY) / dYield;
+        return drawingArea.height + drawingArea.y - (int)(posY * drawingArea.height);
+    }
+
+    private double reMapX(int x) {
+        int xx = x - drawingArea.x;
+        if (xx >= 0 && xx <= drawingArea.width) {
+            double pos = (double)xx / drawingArea.width;
+            return dRisk * pos + minX;
+        }
+        return -1;
+    }
+
+    private double reMapY(int y) {
+        int yy = y - drawingArea.y;
+        if (yy >= 0 && yy <= drawingArea.height) {
+            double pos = 1 - (double)yy / drawingArea.height;
+            return dYield * pos + minY;
+        }
+        return -1;
     }
 
     private void startMouseCross(int x, int y) {
         mouseCrossEnabled = true;
-
-        if (portfolios.isEmpty()) {
-            return;
-        }
-
         moveMouseCross(x, y);
     }
 
     private void moveMouseCross(int x, int y) {
-        if (portfolios.isEmpty()) {
-            return;
-        }
-
-        if (x >= drawingArea.x && x <= drawingArea.width + drawingArea.x) {
-            mouseX = x;
-        } else {
-            mouseX = -1;
-        }
-
-        if (y >= drawingArea.y && y <= drawingArea.height + drawingArea.y) {
-            mouseY = y;
-        } else {
-            mouseY = -1;
-        }
-
+        mouseX = x;
+        mouseY = y;
         repaint();
     }
 

@@ -7,9 +7,11 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
-public class ShowTable extends JDialog {
+class ShowTable extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
     private JTable tableData;

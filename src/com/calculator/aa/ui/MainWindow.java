@@ -8,14 +8,13 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.font.TextAttribute;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class MainWindow {
@@ -31,7 +30,7 @@ public class MainWindow {
 
     private class AATableCellRenderer extends DefaultTableCellRenderer {
         private final Color back = new Color(212, 212, 212);
-        private int rows;
+        private final int rows;
 
         AATableCellRenderer(int r) {
             rows = r;
@@ -310,8 +309,8 @@ public class MainWindow {
 
     private void parseCSVAndLoadData(File f) {
         try {
-            ArrayList<String> columns = new ArrayList<>();
-            ArrayList<ArrayList<Double>> data = new ArrayList<>();
+            List<String> columns = new ArrayList<>();
+            List<List<Double>> data = new ArrayList<>();
 
             BufferedReader is = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
 
@@ -320,10 +319,7 @@ public class MainWindow {
                     columns.addAll(Arrays.asList(line.split(",")));
                 } else {
                     if (!line.isEmpty()) {
-                        data.add(
-                                new ArrayList<>(
-                                        Arrays.stream(line.split(",")).map(Double::valueOf).collect(Collectors.toList()))
-                        );
+                        data.add(Arrays.stream(line.split(",")).map(Double::valueOf).collect(Collectors.toList()));
                     }
                 }
             });

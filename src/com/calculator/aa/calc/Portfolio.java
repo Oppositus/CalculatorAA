@@ -3,10 +3,12 @@ package com.calculator.aa.calc;
 public class Portfolio implements Comparable<Portfolio> {
     private final DoublePoint parameters;
     private final double[] weights;
+    private final String[] instruments;
 
-    Portfolio(DoublePoint p, double[] w) {
+    Portfolio(DoublePoint p, double[] w, String[] i) {
         parameters = p;
         weights = w;
+        instruments = i;
     }
 
     @Override
@@ -23,6 +25,45 @@ public class Portfolio implements Comparable<Portfolio> {
         }
     }
 
+    public int compareToYield(Portfolio o) {
+        double myYield = parameters.getY();
+        double otherYield = o.parameters.getY();
+
+        if (myYield < otherYield) {
+            return -1;
+        } else if (myYield > otherYield) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    public String[] labels() {
+        int length = weights.length;
+        String[] result = new String[length + 2];
+
+        System.arraycopy(instruments, 0, result, 0, length);
+
+        result[length] = "Риск";
+        result[length + 1] = "Доходность";
+
+        return result;
+    }
+
+    public double[][] values() {
+        int length = weights.length;
+        double[][] result = new double[length + 2][1];
+
+        for (int i = 0; i < length; i++) {
+            result[i][0] = weights[i];
+        }
+
+        result[length][0] = risk();
+        result[length + 1][0] = yield();
+
+        return result;
+    }
+
     public double yield() {
         return parameters.getY();
     }
@@ -31,13 +72,7 @@ public class Portfolio implements Comparable<Portfolio> {
         return parameters.getX();
     }
 
-    public void print() {
-        for (double weight : weights) {
-            System.out.print(Calc.formatPercent(weight));
-            System.out.print("\t");
-        }
-        System.out.print(Calc.formatPercent(parameters.getX()));
-        System.out.print("\t");
-        System.out.println(Calc.formatPercent(parameters.getY()));
+    public DoublePoint performance() {
+        return parameters;
     }
 }

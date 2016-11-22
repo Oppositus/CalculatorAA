@@ -2,22 +2,23 @@ package com.calculator.aa.ui;
 
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
-import com.calculator.aa.calc.DoublePoint;
 import com.calculator.aa.calc.Portfolio;
 
-import javax.sound.sampled.Port;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.Arrays;
+import java.util.List;
 
-public class PortfolioChart extends JDialog {
+class PortfolioChart extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
     private JPanel chartPanel;
     private JTable tableLimitations;
     private JButton buttonCompute;
+    private JToggleButton buttonBorderOnly;
 
     private final String[] instruments;
     private final double[][] data;
@@ -64,11 +65,14 @@ public class PortfolioChart extends JDialog {
                 sdYields[col] = Calc.stdevYields(Calc.column(data, col));
             }
 
-            ArrayList<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, 10, false);
+            String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
+            List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, 20);
 
             //portfolios.forEach(Portfolio::print);
             ((CanvasPanel)chartPanel).setPortfolios(portfolios);
         });
+
+        buttonBorderOnly.addChangeListener(e -> ((CanvasPanel)chartPanel).setBorderOnlyMode(buttonBorderOnly.isSelected()));
     }
 
     private void onOK() {

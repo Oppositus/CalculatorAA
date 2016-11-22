@@ -81,7 +81,7 @@
           <component id="69a1f" class="javax.swing.JButton" binding="buttonPortfolio">
             <constraints/>
             <properties>
-              <text value="Портфели"/>
+              <text value="График"/>
             </properties>
           </component>
         </children>
