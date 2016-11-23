@@ -307,6 +307,27 @@ public class MainWindow {
     }
 
     private void askImportOptions(File f) {
+
+        if (savedOptions == null) {
+            savedOptions = new String[] {";", "\"", "."};
+
+            Properties prop = Main.getProperties();
+            String s = prop.getProperty("import.delimeter");
+            if (s != null) {
+                savedOptions[0] = s;
+            }
+
+            s = prop.getProperty("import.mark");
+            if (s != null) {
+                savedOptions[1] = s;
+            }
+
+            s = prop.getProperty("import.decimal");
+            if (s != null) {
+                savedOptions[2] = s;
+            }
+        }
+
         String[] options = ImportOptions.showOptions(savedOptions);
         if (options != null) {
             savedOptions = options;
@@ -323,6 +344,11 @@ public class MainWindow {
             String delim = options[0];
             String mark = options[1];
             String decimal = options[2];
+
+            Properties prop = Main.getProperties();
+            prop.setProperty("import.delimeter", delim);
+            prop.setProperty("import.mark", mark);
+            prop.setProperty("import.decimal", decimal);
 
             BufferedReader is = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
 

@@ -10,6 +10,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Properties;
 
 class ShowTable extends JDialog {
     private JPanel contentPane;
@@ -51,23 +52,34 @@ class ShowTable extends JDialog {
             int rowsLength = srcRowLabels.length + 1;
             int colsLength = srcColLabels.length + 1;
 
+            Properties prop = Main.getProperties();
+            String delim = prop.getProperty("import.delimeter", ";");
+            String mark = prop.getProperty("import.mark", "\"");
+            String decimal = prop.getProperty("import.decimal", ".");
+
             StringBuilder sb = new StringBuilder();
 
             for (int row = 0; row < rowsLength; row++) {
                 for (int col = 0; col < colsLength; col++) {
 
                     if (row == 0 && col == 0) {
+                        sb.append(mark);
                         sb.append(srcName);
+                        sb.append(mark);
                     } else if (col == 0) {
+                        sb.append(mark);
                         sb.append(srcColLabels[row - 1]);
+                        sb.append(mark);
                     } else if (row == 0) {
+                        sb.append(mark);
                         sb.append(srcRowLabels[col - 1]);
+                        sb.append(mark);
                     } else {
-                        sb.append(String.valueOf(srcTable[row - 1][col - 1]));
+                        sb.append(String.valueOf(srcTable[row - 1][col - 1]).replace(".", decimal));
                     }
 
                     if (col != colsLength - 1) {
-                        sb.append(",");
+                        sb.append(delim);
                     }
                 }
                 if (row != rowsLength - 1) {

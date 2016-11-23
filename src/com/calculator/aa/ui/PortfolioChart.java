@@ -6,11 +6,13 @@ import com.calculator.aa.calc.Portfolio;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 class PortfolioChart extends JDialog {
     private JPanel contentPane;
@@ -66,7 +68,8 @@ class PortfolioChart extends JDialog {
             }
 
             String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
-            List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, 20);
+            int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length));
+            List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers);
 
             //portfolios.forEach(Portfolio::print);
             ((CanvasPanel)chartPanel).setPortfolios(portfolios);
@@ -75,7 +78,65 @@ class PortfolioChart extends JDialog {
         buttonBorderOnly.addChangeListener(e -> ((CanvasPanel)chartPanel).setBorderOnlyMode(buttonBorderOnly.isSelected()));
     }
 
+    private int calculateDivision(int[] minimals, int[] maximals) {
+
+        int[] variants = new int[] {100, 50, 25, 20, 10, 5, 4, 2, 1};
+        int length = variants.length;
+        int limit = 50000;
+        int[] sum = new int[1];
+
+        for (int i = 0; i < length; i++) {
+            sum[0] = 0;
+
+            calculateDivisionHelper(
+                    Arrays.copyOf(minimals, minimals.length),
+                    Arrays.copyOf(maximals, maximals.length),
+                    Arrays.copyOf(minimals, minimals.length),
+                    0, variants[i], sum
+            );
+
+            if (sum[0] > limit) {
+                return 100 / variants[i - 1];
+            }
+        }
+
+        return 100;
+    }
+
+    // todo: optimize this shit!
+    private void calculateDivisionHelper(int[] minimals, int[] maximals, int[] weights, int index, int step, int[] sum) {
+        if (Calc.sumIntArray(weights) > 100) {
+            return;
+        }
+
+        while (weights[index] <= maximals[index]) {
+
+            // clear tail
+            System.arraycopy(minimals, index + 1, weights, index + 1, weights.length - (index + 1));
+
+            int testSum = Calc.sumIntArray(weights);
+
+            // todo: check intervals!
+            if (testSum == 100) {
+                sum[0] += 1;
+            }
+
+            if (index < weights.length - 1 && testSum < 100) {
+                calculateDivisionHelper(minimals, maximals, weights, index + 1, step, sum);
+            }
+
+            weights[index] += step;
+        }
+    }
+
     private void onOK() {
+        Properties properties = Main.getProperties();
+        Rectangle bounds = getBounds();
+        properties.setProperty("portfolio.x", String.valueOf((int)bounds.getX()));
+        properties.setProperty("portfolio.y", String.valueOf((int)bounds.getY()));
+        properties.setProperty("portfolio.w", String.valueOf((int)bounds.getWidth()));
+        properties.setProperty("portfolio.h", String.valueOf((int)bounds.getHeight()));
+
         dispose();
     }
 
@@ -95,9 +156,21 @@ class PortfolioChart extends JDialog {
         dialog.setTitle("Портфели");
         dialog.setLocationRelativeTo(Main.getFrame());
 
+        dialog.pack();
+
+        Properties properties = Main.getProperties();
+        int x = Integer.parseInt(properties.getProperty("portfolio.x", "-1"));
+        int y = Integer.parseInt(properties.getProperty("portfolio.y", "-1"));
+        int w = Integer.parseInt(properties.getProperty("portfolio.w", "-1"));
+        int h = Integer.parseInt(properties.getProperty("portfolio.h", "-1"));
+
+        if (x >= 0 && y >= 0 && w >= 0 && h >= 0) {
+            Rectangle rec = new Rectangle(x, y, w, h);
+            dialog.setBounds(rec);
+        }
+
         dialog.updateLimitations();
 
-        dialog.pack();
         dialog.setVisible(true);
     }
 

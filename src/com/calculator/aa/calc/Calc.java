@@ -208,6 +208,10 @@ public class Calc {
         List<Portfolio> result = new LinkedList<>();
         List<Portfolio> rest = new ArrayList<>(sourceSorted);
 
+        if (sourceSorted.isEmpty()) {
+            return result;
+        }
+
         Portfolio current = sourceSorted.get(0);
         result.add(current);
 
@@ -217,6 +221,12 @@ public class Calc {
             rest.remove(current);
             double yield = current.yield();
             rest = rest.stream().filter(pf -> pf.yield() >= yield).collect(Collectors.toList());
+
+            // Специальный случай, когда на границе 1 портфель
+            if (rest.isEmpty()) {
+                return result;
+            }
+
             current = findMaxSine(current, rest);
             result.add(current);
             if (current == maxYield) {
@@ -254,7 +264,7 @@ public class Calc {
         return y / r;
     }
 
-    private static int sumIntArray(int[] array) {
+    public static int sumIntArray(int[] array) {
         int sum = 0;
         for (int i : array) {
             sum += i;

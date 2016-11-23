@@ -124,6 +124,11 @@ class CanvasPanel extends JPanel {
     }
 
     void setPortfolios(List<Portfolio> pfs) {
+
+        if (pfs.isEmpty()) {
+            return;
+        }
+
         portfolios = pfs;
         optimalPortfolios = Calc.getOptimalBorder(portfolios);
 
@@ -203,7 +208,7 @@ class CanvasPanel extends JPanel {
             portfolios.forEach(pf -> drawPortfolio(g, pf));
         }
 
-        if (!optimalPortfolios.isEmpty()) {
+        if (!optimalPortfolios.isEmpty() && optimalPortfolios.size() > 1) {
             drawOptimalBorder(g);
         }
 
