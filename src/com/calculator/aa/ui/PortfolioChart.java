@@ -68,25 +68,39 @@ class PortfolioChart extends JDialog {
             }
 
             String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
-            int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length));
+            int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length), false);
             List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers);
 
-            //portfolios.forEach(Portfolio::print);
             ((CanvasPanel)chartPanel).setPortfolios(portfolios);
         });
 
         buttonBorderOnly.addChangeListener(e -> ((CanvasPanel)chartPanel).setBorderOnlyMode(buttonBorderOnly.isSelected()));
     }
 
-    private int calculateDivision(int[] minimals, int[] maximals) {
+    private int calculateDivision(int[] minimals, int[] maximals, boolean accuracy) {
 
         int[] variants = new int[] {100, 50, 25, 20, 10, 5, 4, 2, 1};
         int length = variants.length;
         int limit = 50000;
         int[] sum = new int[1];
+        int nonEmpty = 0;
+
+        for (int i = 0; i < length; i++) {
+            if (maximals[i] - minimals[i] > 0) {
+                nonEmpty += 1;
+            }
+        }
 
         for (int i = 0; i < length; i++) {
             sum[0] = 0;
+
+            if (i == length - 2 && nonEmpty > 10) {
+                return 100 / variants[length - 3];
+            }
+
+            if (i == length - 1 && nonEmpty > 5) {
+                return 100 / variants[length - 2];
+            }
 
             calculateDivisionHelper(
                     Arrays.copyOf(minimals, minimals.length),
@@ -96,7 +110,7 @@ class PortfolioChart extends JDialog {
             );
 
             if (sum[0] > limit) {
-                return 100 / variants[i - 1];
+                return 100 / variants[accuracy ? i : i - 1];
             }
         }
 
@@ -105,10 +119,6 @@ class PortfolioChart extends JDialog {
 
     // todo: optimize this shit!
     private void calculateDivisionHelper(int[] minimals, int[] maximals, int[] weights, int index, int step, int[] sum) {
-        if (Calc.sumIntArray(weights) > 100) {
-            return;
-        }
-
         while (weights[index] <= maximals[index]) {
 
             // clear tail
@@ -116,7 +126,6 @@ class PortfolioChart extends JDialog {
 
             int testSum = Calc.sumIntArray(weights);
 
-            // todo: check intervals!
             if (testSum == 100) {
                 sum[0] += 1;
             }

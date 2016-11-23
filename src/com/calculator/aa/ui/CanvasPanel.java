@@ -239,12 +239,13 @@ class CanvasPanel extends JPanel {
     }
 
     private void drawNearest(Graphics g) {
-        DoublePoint p = new DoublePoint(reMapX(mouseX), reMapY(mouseY));
 
-        if (p.getX() < 0 || p.getY() < 0) {
+        if (!drawingArea.contains(mouseX, mouseY)) {
             nearest = null;
             return;
         }
+
+        DoublePoint p = new DoublePoint(reMapX(mouseX), reMapY(mouseY));
 
         double distance = Double.MAX_VALUE;
         Portfolio nearestPortfolio = null;
@@ -283,13 +284,13 @@ class CanvasPanel extends JPanel {
     }
 
     private void drawCross(Graphics g, int w, int h) {
-        double xPos = reMapX(mouseX);
-        double yPos = reMapY(mouseY);
-
-        if (xPos < 0 || yPos < 0) {
+        if (!drawingArea.contains(mouseX, mouseY)) {
             drawEmptyCross(g, w, h);
             return;
         }
+
+        double xPos = reMapX(mouseX);
+        double yPos = reMapY(mouseY);
 
         g.drawLine(drawingArea.x - safeZone / 2, mouseY, drawingArea.x + drawingArea.width + safeZone / 2, mouseY);
         g.drawLine(mouseX, drawingArea.y - safeZone / 2, mouseX, drawingArea.y + drawingArea.height + safeZone / 2);

@@ -3,7 +3,9 @@ package com.calculator.aa.ui;
 import com.calculator.aa.Main;
 
 import javax.swing.*;
-import java.awt.event.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class ImportOptions extends JDialog {
     private JPanel contentPane;
@@ -15,7 +17,7 @@ public class ImportOptions extends JDialog {
 
     private String[] result;
 
-    public ImportOptions(String[] options) {
+    private ImportOptions(String[] options) {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
@@ -71,7 +73,7 @@ public class ImportOptions extends JDialog {
         dispose();
     }
 
-    public static String[] showOptions(String[] options) {
+    static String[] showOptions(String[] options) {
         ImportOptions dialog = new ImportOptions(options);
         dialog.setTitle("Импорт данных");
         dialog.setLocationRelativeTo(Main.getFrame());

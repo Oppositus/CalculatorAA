@@ -9,7 +9,10 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.font.TextAttribute;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
@@ -30,6 +33,7 @@ public class MainWindow {
 
     private class AATableCellRenderer extends DefaultTableCellRenderer {
         private final Color back = new Color(212, 212, 212);
+        private final Color badBack = new Color(255, 224, 224);
         private final int rows;
 
         AATableCellRenderer(int r) {
@@ -45,7 +49,12 @@ public class MainWindow {
                 font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD));
                 cell.setBackground(back);
             } else {
-                cell.setBackground(Color.WHITE);
+                if (col > 0) {
+                    double data = ((AATableModel)table.getModel()).data[row][col - 1];
+                    cell.setBackground(data >= 0 ? Color.WHITE : badBack);
+                } else {
+                    cell.setBackground(Color.WHITE);
+                }
                 font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_REGULAR));
             }
             cell.setFont(font);
@@ -57,8 +66,8 @@ public class MainWindow {
 
         private final int width;
         private final int height;
-        private final double[][]data;
-        private final String[] instruments;
+        private double[][]data;
+        private String[] instruments;
         private final String[] periods;
         private final double[] averages;
         private final double[] deviations;
@@ -152,11 +161,12 @@ public class MainWindow {
                     if (wh < width - 1) {
                         data[ht][wh] = d[ht][wh];
                     }
-                    if (wh > 0) {
-                        updateAverage(wh - 1);
-                        updateStDev(wh - 1);
-                    }
                     periods[ht] = l[ht];
+                }
+
+                if (wh > 0) {
+                    updateAverage(wh - 1);
+                    updateStDev(wh - 1);
                 }
             }
         }
@@ -178,7 +188,12 @@ public class MainWindow {
             } else if (row == height - 1) {
                 return col == 0 ? "Риск" : (height < 5 ? "" : Calc.formatPercent2(deviations[col - 1]));
             } else {
-                return col == 0 ? periods[row] : data[row][col - 1];
+                if (col == 0) {
+                    return periods[row];
+                }
+
+                double v = data[row][col - 1];
+                return v >= 0 ? v : "";
             }
         }
 
@@ -217,6 +232,13 @@ public class MainWindow {
             return values;
         }
 
+        private void setCol(int sourceCol, int destCol, double[][] dest) {
+            int length = height - 2;
+            for (int i = 0; i < length; i++) {
+                dest[i][destCol] = data[i][sourceCol];
+            }
+        }
+
         private void updateAverage(int col) {
             averages[col] = Calc.averageYields(getCol(col));
         }
@@ -227,7 +249,7 @@ public class MainWindow {
                 return;
             }
 
-            deviations[col] = Calc.stdevYields(getCol(col));
+            deviations[col] = Calc.stdevYields(getCol(col), averages[col]);
         }
     }
 
@@ -360,7 +382,8 @@ public class MainWindow {
                     if (!line.isEmpty()) {
                         labels.add(splitted[0]);
                         String[] numbers = Arrays.copyOfRange(splitted, 1, splitted.length);
-                        data.add(Arrays.stream(numbers).map(s -> s.replace(decimal, ".")).map(Double::valueOf).collect(Collectors.toList()));
+                        data.add(Arrays.stream(numbers).map(s -> s.replace(decimal, "."))
+                                .map(s -> s.isEmpty() ? -1.0 : Double.valueOf(s)).collect(Collectors.toList()));
                     }
                 }
             });

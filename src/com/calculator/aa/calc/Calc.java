@@ -33,6 +33,22 @@ public class Calc {
         return yields;
     }
 
+    private static int getMinimalValidIndex(double[] arr1, double[] arr2) {
+        int length = arr1.length;
+
+        if (length != arr2.length) {
+            return -1;
+        }
+
+        for (int i = 0; i < length; i++) {
+            if (arr1[i] >= 0.0 && arr2[i] >= 0.0) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     private static double correlation(double[] y1, double[] y2) {
         double avy1 = Arrays.stream(y1).average().orElse(0.0);
         double avy2 = Arrays.stream(y2).average().orElse(0.0);
@@ -92,22 +108,19 @@ public class Calc {
     }
 
     public static double averageYields(double[] values) {
-        return Arrays.stream(yields(values)).average().orElse(0.0);
+        double[] filtered = Arrays.stream(values).filter(d -> d >= 0).toArray();
+        return Arrays.stream(yields(filtered)).average().orElse(0.0);
     }
 
     public static double stdevYields(double[] values) {
+        return stdevYields(values, averageYields(values));
+    }
 
-        double sum2 = 0.0;
-        double[] yields = yields(values);
-        double average = averageYields(values);
-        int length = yields.length;
-
-        for (double yield : yields) {
-            double difference = (yield - average);
-            sum2 += difference * difference;
-        }
-
-        return Math.sqrt(1.0 / (length - 1) * sum2);
+    public static double stdevYields(double[] values, double average) {
+        double[] filtered = Arrays.stream(values).filter(d -> d >= 0).toArray();
+        double[] yields = yields(filtered);
+        double sum = Arrays.stream(yields).map(d -> d - average).map(d -> d * d).sum();
+        return Math.sqrt(1.0 / (yields.length - 1) * sum);
     }
 
     public static double[][] correlationTable(double[][] values) {
@@ -120,8 +133,12 @@ public class Calc {
                 double[] valuesC1 = column(values, col1);
                 double[] valuesC2 = column(values, col2);
 
-                double[] y1 = yields(valuesC1);
-                double[] y2 = yields(valuesC2);
+                int index = getMinimalValidIndex(valuesC1, valuesC2);
+                double[] valuesC1Ready = Arrays.copyOfRange(valuesC1, index, valuesC1.length);
+                double[] valuesC2Ready = Arrays.copyOfRange(valuesC2, index, valuesC2.length);
+
+                double[] y1 = yields(valuesC1Ready);
+                double[] y2 = yields(valuesC2Ready);
 
                 corrTable[col1][col2] = correlation(y1, y2);
                 corrTable[col2][col1] = corrTable[col1][col2];
@@ -141,8 +158,12 @@ public class Calc {
                 double[] valuesC1 = column(values, col1);
                 double[] valuesC2 = column(values, col2);
 
-                double[] y1 = yields(valuesC1);
-                double[] y2 = yields(valuesC2);
+                int index = getMinimalValidIndex(valuesC1, valuesC2);
+                double[] valuesC1Ready = Arrays.copyOfRange(valuesC1, index, valuesC1.length);
+                double[] valuesC2Ready = Arrays.copyOfRange(valuesC2, index, valuesC2.length);
+
+                double[] y1 = yields(valuesC1Ready);
+                double[] y2 = yields(valuesC2Ready);
 
                 covTable[col1][col2] = covariance(y1, y2);
                 covTable[col2][col1] = covTable[col1][col2];
@@ -275,11 +296,6 @@ public class Calc {
     private static void iteratePortfolioHelper(double[][] correlations, double[] averageYields, double[] stdevYields,
                                                int[] minimals, int[] maximals, int step,
                                                int[] weights, String[] instruments, int index, List<Portfolio> acc) {
-
-        if (sumIntArray(weights) > 100) {
-            return;
-        }
-
         while (weights[index] <= maximals[index]) {
 
             // clear tail
@@ -287,7 +303,6 @@ public class Calc {
 
             int sum = sumIntArray(weights);
 
-            // todo: check intervals!
             if (sum == 100) {
                 acc.add(
                         portfolio(correlations, averageYields, stdevYields,

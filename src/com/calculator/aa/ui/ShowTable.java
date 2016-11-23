@@ -68,11 +68,11 @@ class ShowTable extends JDialog {
                         sb.append(mark);
                     } else if (col == 0) {
                         sb.append(mark);
-                        sb.append(srcColLabels[row - 1]);
+                        sb.append(srcRowLabels[row - 1]);
                         sb.append(mark);
                     } else if (row == 0) {
                         sb.append(mark);
-                        sb.append(srcRowLabels[col - 1]);
+                        sb.append(srcColLabels[col - 1]);
                         sb.append(mark);
                     } else {
                         sb.append(String.valueOf(srcTable[row - 1][col - 1]).replace(".", decimal));
