@@ -11,9 +11,7 @@ import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +25,8 @@ public class MainWindow {
     private JButton buttonCorrelations;
     private JButton buttonCovariances;
     private JButton buttonPortfolio;
+
+    private String[] savedOptions;
 
     private class AATableCellRenderer extends DefaultTableCellRenderer {
         private final Color back = new Color(212, 212, 212);
@@ -138,10 +138,9 @@ public class MainWindow {
         }
 
         // Create new table w*h and copy data from data
-        private AATableModel(int w, int h, double[][] d, String[] i) {
+        private AATableModel(int w, int h, double[][] d, String[] l, String[] i) {
             this(w, h);
 
-            instruments[0] = "";
             for (int wh = 0; wh < width; wh++) {
                 if (wh > 0) {
                     instruments[wh] = i[wh - 1];
@@ -157,7 +156,7 @@ public class MainWindow {
                         updateAverage(wh - 1);
                         updateStDev(wh - 1);
                     }
-                    periods[ht] = String.format("%s %d", "Период", ht);
+                    periods[ht] = l[ht];
                 }
             }
         }
@@ -175,9 +174,9 @@ public class MainWindow {
         @Override
         public Object getValueAt(int row, int col) {
             if (row == height - 2) {
-                return col == 0 ? "Доходность" : (height < 4 ? "" : Calc.formatPercent(averages[col - 1]));
+                return col == 0 ? "Доходность" : (height < 4 ? "" : Calc.formatPercent2(averages[col - 1]));
             } else if (row == height - 1) {
-                return col == 0 ? "Риск" : (height < 5 ? "" : Calc.formatPercent(deviations[col - 1]));
+                return col == 0 ? "Риск" : (height < 5 ? "" : Calc.formatPercent2(deviations[col - 1]));
             } else {
                 return col == 0 ? periods[row] : data[row][col - 1];
             }
@@ -282,7 +281,7 @@ public class MainWindow {
             if (result == JFileChooser.APPROVE_OPTION) {
                 File f = fc.getSelectedFile();
                 if (f.exists()) {
-                    parseCSVAndLoadData(f);
+                    askImportOptions(f);
                 }
             }
         });
@@ -307,19 +306,35 @@ public class MainWindow {
         });
     }
 
-    private void parseCSVAndLoadData(File f) {
+    private void askImportOptions(File f) {
+        String[] options = ImportOptions.showOptions(savedOptions);
+        if (options != null) {
+            savedOptions = options;
+            parseCSVAndLoadData(f, options);
+        }
+    }
+
+    private void parseCSVAndLoadData(File f, String[] options) {
         try {
             List<String> columns = new ArrayList<>();
+            List<String> labels = new ArrayList<>();
             List<List<Double>> data = new ArrayList<>();
+
+            String delim = options[0];
+            String mark = options[1];
+            String decimal = options[2];
 
             BufferedReader is = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
 
             is.lines().forEach(line -> {
+                String[] splitted = processText(line, delim, mark);
                 if (columns.isEmpty()) {
-                    columns.addAll(Arrays.asList(line.split(",")));
+                    columns.addAll(Arrays.asList(Arrays.copyOfRange(splitted, 1, splitted.length)));
                 } else {
                     if (!line.isEmpty()) {
-                        data.add(Arrays.stream(line.split(",")).map(Double::valueOf).collect(Collectors.toList()));
+                        labels.add(splitted[0]);
+                        String[] numbers = Arrays.copyOfRange(splitted, 1, splitted.length);
+                        data.add(Arrays.stream(numbers).map(s -> s.replace(decimal, ".")).map(Double::valueOf).collect(Collectors.toList()));
                     }
                 }
             });
@@ -334,16 +349,58 @@ public class MainWindow {
                 }
             }
 
-            AATableModel newModel = new AATableModel(whLength, htLength, rawData, columns.toArray(new String[0]));
+            AATableModel newModel = new AATableModel(whLength, htLength, rawData, labels.toArray(new String[0]), columns.toArray(new String[0]));
             mainTable.setModel(newModel);
 
             for (int i = 0; i < newModel.width; i++) {
                 mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.height));
             }
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(Main.getFrame(), e, "Ошибка", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private String[] processText(String text, String delim, String mark) {
+        List<String> result = new LinkedList<>();
+        boolean inText = false;
+        int length = text.length();
+        String mark2 = mark + mark;
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        while (i < length) {
+            String current = text.substring(i, i + 1);
+
+            if (current.equals(mark)) {
+                if (i < length - 1 && text.substring(i, i + 2).equals(mark2)) {
+                    sb.append(mark);
+                    i += 2;
+                } else {
+                    inText = !inText;
+                    i += 1;
+                }
+                continue;
+            }
+
+            if (current.equals(delim)) {
+                if (!inText) {
+                    result.add(sb.toString());
+                    sb.setLength(0);
+                } else {
+                    sb.append(current);
+                }
+            } else {
+                sb.append(current);
+            }
+
+            i += 1;
+        }
+
+        if (sb.length() > 0) {
+            result.add(sb.toString());
+        }
+
+        return result.toArray(new String[0]);
     }
 
     private void createUIComponents() {

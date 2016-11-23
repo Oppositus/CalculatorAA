@@ -299,8 +299,11 @@ public class Calc {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    public static String formatPercent(double f) {
+    public static String formatPercent2(double f) {
         return String.format("%.2f%%", f * 100);
     }
 
+    public static String formatPercent1(double f) {
+        return String.format("%.1f%%", f * 100);
+    }
 }

@@ -21,6 +21,7 @@ class CanvasPanel extends JPanel {
     private static final Color backColor = Color.WHITE;
     private static final Color selectedColor = Color.RED;
     private static final int safeZone = 10;
+    private static final int safeTop = 5;
 
     private List<Portfolio> portfolios = new ArrayList<>();
     private List<Portfolio> optimalPortfolios = new ArrayList<>();
@@ -46,6 +47,12 @@ class CanvasPanel extends JPanel {
     private int mouseX = 0;
     private int mouseY = 0;
 
+    private boolean dragMode = false;
+    private int dragStartX = 0;
+    private int dragStartY = 0;
+    private int dragEndX = 0;
+    private int dragEndY = 0;
+
     private boolean borderOnlyMode = false;
 
     private Portfolio nearest = null;
@@ -65,10 +72,18 @@ class CanvasPanel extends JPanel {
         }
 
         @Override
-        public void mousePressed(MouseEvent mouseEvent) {}
+        public void mousePressed(MouseEvent mouseEvent) {
+            dragMode = true;
+            dragStartX = mouseEvent.getX();
+            dragStartY = mouseEvent.getY();
+        }
 
         @Override
-        public void mouseReleased(MouseEvent mouseEvent) {}
+        public void mouseReleased(MouseEvent mouseEvent) {
+            dragMode = false;
+            dragEndX = mouseEvent.getX();
+            dragEndY = mouseEvent.getY();
+        }
 
         @Override
         public void mouseEntered(MouseEvent mouseEvent) {
@@ -138,10 +153,10 @@ class CanvasPanel extends JPanel {
         dRisk = maxX - minX;
         dYield = maxY - minY;
 
-        minRiskStr = String.format("%.1f%%", minX * 100);
-        maxRiskStr = String.format("%.1f%%", maxX * 100);
-        minYieldStr = String.format("%.1f%%", minY * 100);
-        maxYieldStr = String.format("%.1f%%", maxY * 100);
+        minRiskStr = Calc.formatPercent1(minX);
+        maxRiskStr = Calc.formatPercent1(maxX);
+        minYieldStr = Calc.formatPercent1(minY);
+        maxYieldStr = Calc.formatPercent1(maxY);
 
         stringHeight = -1;
         stringWidth = -1;
@@ -208,8 +223,8 @@ class CanvasPanel extends JPanel {
         g.drawLine(drawingArea.x, drawingArea.y + drawingArea.height, drawingArea.x, drawingArea.y + drawingArea.height + safeZone / 2);
         g.drawLine(drawingArea.x + drawingArea.width, drawingArea.y + drawingArea.height, drawingArea.x + drawingArea.width, drawingArea.y + drawingArea.height + safeZone / 2);
 
-        g.drawString(minRiskStr, drawingArea.x, drawingArea.y + drawingArea.height + stringHeight);
-        g.drawString(maxRiskStr, drawingArea.x + drawingArea.width - stringWidth, drawingArea.y + drawingArea.height + stringHeight);
+        g.drawString(minRiskStr, drawingArea.x, drawingArea.y + drawingArea.height + stringHeight + safeTop);
+        g.drawString(maxRiskStr, drawingArea.x + drawingArea.width - stringWidth, drawingArea.y + drawingArea.height + stringHeight + safeTop);
         g.drawString(minYieldStr, drawingArea.x - stringWidth, drawingArea.y + drawingArea.height);
         g.drawString(maxYieldStr, drawingArea.x - stringWidth, drawingArea.y + stringHeight);
     }
@@ -278,8 +293,8 @@ class CanvasPanel extends JPanel {
             return;
         }
 
-        String rString = "Риск: " + Calc.formatPercent(nearest.risk());
-        String yString = "Дох.: " + Calc.formatPercent(nearest.yield());
+        String rString = "Риск: " + Calc.formatPercent2(nearest.risk());
+        String yString = "Дох.: " + Calc.formatPercent2(nearest.yield());
 
         FontMetrics fm = g.getFontMetrics();
         Rectangle2D boundsR = fm.getStringBounds(rString, g);
@@ -312,6 +327,40 @@ class CanvasPanel extends JPanel {
         g.setColor(axisColor);
         g.drawString(rString, textX, textY);
         g.drawString(yString, textX, textY + stringHeight);
+
+        String rCrossString = Calc.formatPercent1(xPos);
+        String yCrossString = Calc.formatPercent1(yPos);
+        boundsR = fm.getStringBounds(rCrossString, g);
+        int rWidth = (int)boundsR.getWidth();
+        int rHeight = (int)boundsR.getHeight();
+        boundsY = fm.getStringBounds(yCrossString, g);
+        int yWidth = (int)boundsY.getWidth();
+        int yHeight = (int)boundsY.getHeight();
+
+        rectX = mouseX - 1 - safeZone;
+        rectY = drawingArea.y + drawingArea.height + stringHeight - safeTop;
+        textX = mouseX - 1;
+        textY = drawingArea.y + drawingArea.height + stringHeight + safeTop;
+
+        if (textX + rWidth + 1 > w - safeZone) {
+            textX = w - safeZone - rWidth + 1;
+            rectX = w - safeZone - rWidth + 1;
+        }
+
+        g.setColor(backColor);
+        g.fillRect(rectX, rectY, rWidth + safeZone + 1, rHeight + 1);
+        g.setColor(axisColor);
+        g.drawString(rCrossString, textX, textY);
+
+        rectX = drawingArea.x - yWidth - safeZone - safeTop;
+        rectY = mouseY - 1 - safeZone;
+        textX = drawingArea.x - yWidth - safeZone;
+        textY = mouseY - 1 + safeTop;
+
+        g.setColor(backColor);
+        g.fillRect(rectX, rectY, yWidth + safeZone, yHeight + safeTop + 1);
+        g.setColor(axisColor);
+        g.drawString(yCrossString, textX, textY);
     }
 
     private void drawEmptyCross(Graphics g, int w, int h) {

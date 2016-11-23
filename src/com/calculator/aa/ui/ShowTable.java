@@ -97,7 +97,7 @@ class ShowTable extends JDialog {
             for (int col = 0; col < colsLengthP1; col++) {
                 preparedRows[row][col] = col == 0 ?
                         rowLabels[row] :
-                        Calc.formatPercent(table[row][col - 1]);
+                        Calc.formatPercent2(table[row][col - 1]);
                 if (row == 0) {
                     preparedCols[col] = col == 0 ? "" : colLabels[col - 1];
                 }
