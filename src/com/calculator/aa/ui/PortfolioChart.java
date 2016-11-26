@@ -51,30 +51,43 @@ class PortfolioChart extends JDialog {
         buttonCompute.addActionListener(e -> {
             int length = instruments.length - 1;
 
+            DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
+
             int[] minimals = new int[length];
             int[] maximals = new int[length];
 
-            DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
+            for (int col = 0; col < length; col++) {
+                int minValue = Integer.valueOf((String) model.getValueAt(0, col + 1));
+                int maxValue = Integer.valueOf((String) model.getValueAt(1, col + 1));
 
-            double[][] corrTable = Calc.correlationTable(data);
+                if (minValue < 0 || maxValue > 100 || minValue > maxValue) {
+                    return;
+                }
+
+                minimals[col] = minValue;
+                maximals[col] = maxValue;
+            }
+
+            double[][] dataFiltered = Calc.filterValidData(data, maximals);
+
+            double[][] corrTable = Calc.correlationTable(dataFiltered);
             double[] avYields = new double[length];
             double[] sdYields = new double[length];
 
             for (int col = 0; col < length; col++) {
-                minimals[col] = Integer.valueOf((String) model.getValueAt(0, col + 1));
-                maximals[col] = Integer.valueOf((String) model.getValueAt(1, col + 1));
-                avYields[col] = Calc.averageYields(Calc.column(data, col));
-                sdYields[col] = Calc.stdevYields(Calc.column(data, col));
+                double[] column = Calc.column(dataFiltered, col);
+                avYields[col] = Calc.averageYields(column);
+                sdYields[col] = Calc.stdevYields(column);
             }
 
             String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
             int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length), false);
             List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers);
 
-            ((CanvasPanel)chartPanel).setPortfolios(portfolios);
+            ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, dataFiltered, Main.getPeriods(dataFiltered.length));
         });
 
-        buttonBorderOnly.addChangeListener(e -> ((CanvasPanel)chartPanel).setBorderOnlyMode(buttonBorderOnly.isSelected()));
+        buttonBorderOnly.addChangeListener(e -> ((PortfolioChartPanel)chartPanel).setBorderOnlyMode(buttonBorderOnly.isSelected()));
     }
 
     private int calculateDivision(int[] minimals, int[] maximals, boolean accuracy) {
@@ -184,6 +197,6 @@ class PortfolioChart extends JDialog {
     }
 
     private void createUIComponents() {
-        chartPanel = new CanvasPanel();
+        chartPanel = new PortfolioChartPanel();
     }
 }

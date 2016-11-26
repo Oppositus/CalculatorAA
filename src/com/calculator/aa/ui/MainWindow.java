@@ -357,7 +357,7 @@ public class MainWindow {
         }
     }
 
-    private void parseCSVAndLoadData(File f, String[] options) {
+    public void parseCSVAndLoadData(File f, String[] options) {
         try {
             List<String> columns = new ArrayList<>();
             List<String> labels = new ArrayList<>();
@@ -404,6 +404,8 @@ public class MainWindow {
             for (int i = 0; i < newModel.width; i++) {
                 mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.height));
             }
+
+            prop.setProperty("file", f.getCanonicalPath());
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(Main.getFrame(), e, "Ошибка", JOptionPane.ERROR_MESSAGE);
@@ -459,5 +461,13 @@ public class MainWindow {
 
     public JPanel GetMainPanel() {
         return mainPanel;
+    }
+
+    public double[][] getData() {
+        return ((AATableModel)mainTable.getModel()).data;
+    }
+
+    public String[] getPeriods() {
+        return ((AATableModel)mainTable.getModel()).periods;
     }
 }

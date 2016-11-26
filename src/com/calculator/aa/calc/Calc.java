@@ -49,6 +49,26 @@ public class Calc {
         return -1;
     }
 
+    private static int getMinimalValidIndex(double[][] arr, double[] weights) {
+        int rows = arr.length;
+        int cols = arr[0].length;
+
+        for (int row = 0; row < rows; row++) {
+            boolean valid = true;
+            for (int col = 0; col < cols; col++) {
+                if (arr[row][col] < 0.0 && weights[col] > 0.0) {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid) {
+                return row;
+            }
+        }
+
+        return -1;
+    }
+
     private static double correlation(double[] y1, double[] y2) {
         double avy1 = Arrays.stream(y1).average().orElse(0.0);
         double avy2 = Arrays.stream(y2).average().orElse(0.0);
@@ -201,19 +221,10 @@ public class Calc {
     }
 
     public static List<Portfolio> iteratePortfolios(double[][] correlations, double[] averageYields,
-                                                         double[] stdevYields, int[] minimals, int[] maximals,
-                                                         String[] instruments, int divStep) {
+                                                    double[] stdevYields, int[] minimals, int[] maximals,
+                                                    String[] instruments, int divStep) {
         List<Portfolio> result = new LinkedList<>();
         int length = averageYields.length;
-
-        for (int i = 0; i < length; i++) {
-            int min = minimals[i];
-            int max = maximals[i];
-
-            if (min < 0 || min > max || max > 100) {
-                return result;
-            }
-        }
 
         int[] weights = new int[length];
         System.arraycopy(minimals, 0, weights, 0, length);
@@ -293,7 +304,7 @@ public class Calc {
         return sum;
     }
 
-    private static void iteratePortfolioHelper(double[][] correlations, double[] averageYields, double[] stdevYields,
+    private static void iteratePortfolioHelper(double[][] correlations, double[] avYields, double[] sdYields,
                                                int[] minimals, int[] maximals, int step,
                                                int[] weights, String[] instruments, int index, List<Portfolio> acc) {
         while (weights[index] <= maximals[index]) {
@@ -305,13 +316,13 @@ public class Calc {
 
             if (sum == 100) {
                 acc.add(
-                        portfolio(correlations, averageYields, stdevYields,
+                        portfolio(correlations, avYields, sdYields,
                                 Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray(), instruments)
                 );
             }
 
             if (index < weights.length - 1 && sum < 100) {
-                iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, step, weights, instruments, index + 1, acc);
+                iteratePortfolioHelper(correlations, avYields, sdYields, minimals, maximals, step, weights, instruments, index + 1, acc);
             }
 
             weights[index] += step;
@@ -324,6 +335,63 @@ public class Calc {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    public static double[][] filterValidData(double[][] data, int[] maxWeights) {
+        return filterValidData(data, Arrays.stream(maxWeights).mapToDouble(i -> i / 100.0).toArray());
+    }
+
+    public static double[][] filterValidData(double[][] data, double[] weights) {
+        int index = getMinimalValidIndex(data, weights);
+        int length = data.length;
+        int wdt = data[0].length;
+        if (index < 0) {
+            return null;
+        }
+
+        double[][] result = new double[length - index][wdt];
+        int idx = 0;
+        for (int row = index; row < length; row++) {
+            System.arraycopy(data[row], 0, result[idx++], 0, wdt);
+        }
+
+        return result;
+    }
+
+    public static double minimum(double[] arr1, double[] arr2) {
+        int length = Math.max(arr1.length, arr2.length);
+        int length1 = arr1.length;
+        int length2 = arr2.length;
+        double min = Double.MAX_VALUE;
+
+        for (int i = 0; i < length; i++) {
+            if (i < length1 && min > arr1[i]) {
+                min = arr1[i];
+            }
+            if (i < length2 && min > arr2[i]) {
+                min = arr2[i];
+            }
+        }
+
+        return min;
+    }
+
+    public static double maximum(double[] arr1, double[] arr2) {
+        int length = Math.max(arr1.length, arr2.length);
+        int length1 = arr1.length;
+        int length2 = arr2.length;
+        double max = Double.MIN_VALUE;
+
+        for (int i = 0; i < length; i++) {
+            if (i < length1 && max < arr1[i]) {
+                max = arr1[i];
+            }
+            if (i < length2 && max < arr2[i]) {
+                max = arr2[i];
+            }
+        }
+
+        return max;
+    }
+
     public static String formatPercent2(double f) {
         return String.format("%.2f%%", f * 100);
     }
@@ -331,4 +399,9 @@ public class Calc {
     public static String formatPercent1(double f) {
         return String.format("%.1f%%", f * 100);
     }
+
+    public static String formatDouble2(double f) {
+        return String.format("%.2f", f);
+    }
 }
+

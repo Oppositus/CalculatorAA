@@ -25,7 +25,7 @@ public class Portfolio implements Comparable<Portfolio> {
         }
     }
 
-    public int compareToYield(Portfolio o) {
+    int compareToYield(Portfolio o) {
         double myYield = parameters.getY();
         double otherYield = o.parameters.getY();
 
@@ -62,6 +62,10 @@ public class Portfolio implements Comparable<Portfolio> {
         result[length + 1][0] = yield();
 
         return result;
+    }
+
+    public double[] weights() {
+        return weights;
     }
 
     public double yield() {

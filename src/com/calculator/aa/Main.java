@@ -8,6 +8,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Properties;
 
 public class Main {
@@ -29,7 +30,7 @@ public class Main {
         mainFrame = new JFrame("СПТ: калькулятор");
         mainWindow = new MainWindow();
         mainFrame.setContentPane(mainWindow.GetMainPanel());
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         mainFrame.setLocationRelativeTo(null);
 
         mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -78,7 +79,44 @@ public class Main {
         return program.properties;
     }
 
+    public static String[] getPeriods() {
+        return program.mainWindow.getPeriods();
+    }
+
+    public static String[] getPeriods(int last) {
+        String[] periods = program.mainWindow.getPeriods();
+        return Arrays.copyOfRange(periods, periods.length - last, periods.length);
+    }
+
+    public static double[][] getData() {
+        return program.mainWindow.getData();
+    }
+
     public static void main(String[] args) {
         program = new Main();
+
+        Properties prop = getProperties();
+        String[] savedOptions = new String[] {";", "\"", "."};
+
+        String s = prop.getProperty("import.delimeter");
+        if (s != null) {
+            savedOptions[0] = s;
+        }
+
+        s = prop.getProperty("import.mark");
+        if (s != null) {
+            savedOptions[1] = s;
+        }
+
+        s = prop.getProperty("import.decimal");
+        if (s != null) {
+            savedOptions[2] = s;
+        }
+
+        String file = prop.getProperty("file", "");
+
+        if (!file.isEmpty()) {
+            SwingUtilities.invokeLater(() -> program.mainWindow.parseCSVAndLoadData(new File(file), savedOptions));
+        }
     }
 }

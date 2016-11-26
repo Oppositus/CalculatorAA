@@ -1,5 +1,6 @@
 package com.calculator.aa.ui;
 
+import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.DoublePoint;
 import com.calculator.aa.calc.Portfolio;
@@ -14,7 +15,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-class CanvasPanel extends JPanel {
+class PortfolioChartPanel extends JPanel {
 
     private static final Color axisColor = Color.BLACK;
     private static final Color portfolioColor = Color.BLUE;
@@ -57,17 +58,21 @@ class CanvasPanel extends JPanel {
 
     private Portfolio nearest = null;
 
+    private double[][] dataFiltered;
+    private String[] periodsFiltered;
+
     private class mouseEnterExitListener implements MouseListener {
 
         @Override
         public void mouseClicked(MouseEvent mouseEvent) {
-            if (nearest != null) {
+            if (nearest == null) {
+                return;
+            }
 
-                String[] cols = { "Значение" };
-                String[] labels = nearest.labels();
-                double[][] table = nearest.values();
-
-                ShowTable.show("Портфель", table, labels, cols);
+            if (SwingUtilities.isLeftMouseButton(mouseEvent)) {
+                YieldsChart.showYields(periodsFiltered, dataFiltered, nearest);
+            } else if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                ShowTable.show("Портфель", nearest.values(), nearest.labels(), new String[] {"Значение"});
             }
         }
 
@@ -109,7 +114,7 @@ class CanvasPanel extends JPanel {
         }
     }
 
-    CanvasPanel() {
+    PortfolioChartPanel() {
         super();
 
         addMouseListener(new mouseEnterExitListener());
@@ -123,13 +128,15 @@ class CanvasPanel extends JPanel {
         );
     }
 
-    void setPortfolios(List<Portfolio> pfs) {
+    void setPortfolios(List<Portfolio> pfs, double[][] df, String[] pf) {
 
         if (pfs.isEmpty()) {
             return;
         }
 
         portfolios = pfs;
+        dataFiltered = df;
+        periodsFiltered = pf;
         optimalPortfolios = Calc.getOptimalBorder(portfolios);
 
         double minRisk = portfolios.get(0).risk();
@@ -230,8 +237,9 @@ class CanvasPanel extends JPanel {
 
         g.drawString(minRiskStr, drawingArea.x, drawingArea.y + drawingArea.height + stringHeight + safeTop);
         g.drawString(maxRiskStr, drawingArea.x + drawingArea.width - stringWidth, drawingArea.y + drawingArea.height + stringHeight + safeTop);
-        g.drawString(minYieldStr, drawingArea.x - stringWidth, drawingArea.y + drawingArea.height);
-        g.drawString(maxYieldStr, drawingArea.x - stringWidth, drawingArea.y + stringHeight);
+
+        g.drawString(minYieldStr, drawingArea.x - stringWidth - safeTop, drawingArea.y + drawingArea.height);
+        g.drawString(maxYieldStr, drawingArea.x - stringWidth - safeTop, drawingArea.y + stringHeight);
     }
 
     private void drawPortfolio(Graphics g, Portfolio pf) {
@@ -299,8 +307,8 @@ class CanvasPanel extends JPanel {
             return;
         }
 
-        String rString = "Риск: " + Calc.formatPercent2(nearest.risk());
-        String yString = "Дох.: " + Calc.formatPercent2(nearest.yield());
+        String rString = "Р: " + Calc.formatPercent2(nearest.risk());
+        String yString = "Д: " + Calc.formatPercent2(nearest.yield());
 
         FontMetrics fm = g.getFontMetrics();
         Rectangle2D boundsR = fm.getStringBounds(rString, g);
