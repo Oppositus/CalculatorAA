@@ -382,8 +382,13 @@ public class MainWindow {
                     if (!line.isEmpty()) {
                         labels.add(splitted[0]);
                         String[] numbers = Arrays.copyOfRange(splitted, 1, splitted.length);
-                        data.add(Arrays.stream(numbers).map(s -> s.replace(decimal, "."))
+                        ArrayList<Double> parsed = new ArrayList<>(Arrays.stream(numbers).map(s -> s.replace(decimal, "."))
                                 .map(s -> s.isEmpty() ? -1.0 : Double.valueOf(s)).collect(Collectors.toList()));
+
+                        while (parsed.size() < columns.size()) {
+                            parsed.add(-1.0);
+                        }
+                        data.add(parsed);
                     }
                 }
             });

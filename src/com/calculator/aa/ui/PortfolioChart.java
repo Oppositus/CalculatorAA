@@ -94,11 +94,12 @@ class PortfolioChart extends JDialog {
 
         int[] variants = new int[] {100, 50, 25, 20, 10, 5, 4, 2, 1};
         int length = variants.length;
+        int checkLen = minimals.length;
         int limit = 50000;
         int[] sum = new int[1];
         int nonEmpty = 0;
 
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < checkLen; i++) {
             if (maximals[i] - minimals[i] > 0) {
                 nonEmpty += 1;
             }
