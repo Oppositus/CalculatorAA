@@ -29,8 +29,10 @@ public class MainWindow {
     private JButton buttonCovariances;
     private JButton buttonPortfolio;
     private JButton buttonDeleteInvalid;
+    private JButton buttonSave;
 
     private String[] savedOptions;
+    private String lastFileName;
 
     private class AATableCellRenderer extends DefaultTableCellRenderer {
         private final Color back = new Color(212, 212, 212);
@@ -278,18 +280,7 @@ public class MainWindow {
             fc.setFileFilter(new FileFilter() {
                 @Override
                 public boolean accept(File file) {
-
-                    if (file.isDirectory()) {
-                        return true;
-                    }
-
-                    String extension = "";
-                    String fileName = file.getName().toLowerCase();
-                    int i = fileName.lastIndexOf('.');
-                    if (i >= 0) {
-                        extension = fileName.substring(i + 1);
-                    }
-                    return extension.equals("csv");
+                    return file.isDirectory() || file.getName().toLowerCase().endsWith(".csv");
                 }
 
                 @Override
@@ -356,6 +347,45 @@ public class MainWindow {
 
             for (int i = 0; i < model.width; i++) {
                 mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(model.height));
+            }
+        });
+
+        buttonSave.addActionListener(e -> {
+            JFileChooser fc = new JFileChooser(lastFileName == null ? "." : lastFileName);
+            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fc.setMultiSelectionEnabled(false);
+            fc.setFileFilter(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return file.isDirectory() || file.getName().toLowerCase().endsWith(".csv");
+                }
+
+                @Override
+                public String getDescription() {
+                    return Main.resourceBundle.getString("text.csv_extension");
+                }
+            });
+
+            int result = fc.showOpenDialog(Main.getFrame());
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File f = fc.getSelectedFile();
+                String filePath = f.getAbsolutePath();
+                if(!filePath.endsWith(".csv")) {
+                    f = new File(filePath + ".csv");
+                }
+
+                if (f.exists()) {
+                    int overwrite = JOptionPane.showConfirmDialog(
+                            mainPanel,
+                            String.format(Main.resourceBundle.getString("text.overwrite"), f.getName()),
+                            Main.resourceBundle.getString("text.warning"),
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.WARNING_MESSAGE);
+                    if (overwrite != JOptionPane.YES_OPTION) {
+                        return;
+                    }
+                }
+                //askExportOptions(f);
             }
         });
     }
@@ -443,6 +473,7 @@ public class MainWindow {
             }
 
             prop.setProperty("file", f.getCanonicalPath());
+            lastFileName = f.getCanonicalPath();
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
