@@ -65,11 +65,6 @@ class PortfolioChart extends JDialog {
                     return;
                 }
 
-                if (minValue == maxValue && minValue != 0) {
-                    minValue = Math.max(minValue - 5, 0);
-                    maxValue = Math.min(maxValue + 5, 100);
-                }
-
                 minimals[col] = minValue;
                 maximals[col] = maxValue;
             }
@@ -90,15 +85,10 @@ class PortfolioChart extends JDialog {
             int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length));
             List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers);
 
-            ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, dataFiltered, Main.getPeriods(dataFiltered.length), dividers);
+            ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, dataFiltered, Main.getPeriods(dataFiltered.length));
         });
 
-        buttonBorderOnly.addChangeListener(e -> {
-            boolean isSelected = buttonBorderOnly.isSelected();
-            buttonAccuracy.setEnabled(isSelected);
-            buttonAccuracyMax.setEnabled(isSelected);
-            ((PortfolioChartPanel) chartPanel).setBorderOnlyMode(isSelected);
-        });
+        buttonBorderOnly.addChangeListener(e -> ((PortfolioChartPanel) chartPanel).setBorderOnlyMode(buttonBorderOnly.isSelected()));
 
         buttonAccuracy.addActionListener(e -> {
             List<Portfolio> border = ((PortfolioChartPanel) chartPanel).getBorderPortfolios();
@@ -117,12 +107,12 @@ class PortfolioChart extends JDialog {
             }
         });
         buttonAccuracyMax.addActionListener(e -> {
-            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
             List<Portfolio> border = ((PortfolioChartPanel) chartPanel).getBorderPortfolios();
             if (border == null || border.isEmpty()) {
                 return;
             }
+
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
             List<Portfolio> accuracyPortfolios = addAccuracy();
             List<Portfolio> accuracyPortfolios2 = addAccuracy();
@@ -154,15 +144,17 @@ class PortfolioChart extends JDialog {
             }
         }
 
+        int lastNotZero = -1;
+
         for (int i = 0; i < length; i++) {
             sum[0] = 0;
 
             if (i == length - 2 && nonEmpty > 10) {
-                return 100 / variants[length - 3];
+                return 100 / variants[lastNotZero];
             }
 
             if (i == length - 1 && nonEmpty > 5) {
-                return 100 / variants[length - 2];
+                return 100 / variants[lastNotZero];
             }
 
             calculateDivisionHelper(
@@ -173,7 +165,11 @@ class PortfolioChart extends JDialog {
             );
 
             if (sum[0] > limit) {
-                return 100 / variants[i - 1];
+                return 100 / variants[lastNotZero];
+            }
+
+            if (sum[0] != 0) {
+                lastNotZero = i;
             }
         }
 
@@ -258,9 +254,6 @@ class PortfolioChart extends JDialog {
             return accuracyPortfolios;
         }
 
-        int index = 0;
-        int size = border.size() - 1;
-
         int length = instruments.length - 1;
         double[][] dataFiltered = ((PortfolioChartPanel)chartPanel).getDataFiltered();
         double[][] corrTable = Calc.correlationTable(dataFiltered);
@@ -272,18 +265,7 @@ class PortfolioChart extends JDialog {
             sdYields[col] = Calc.stdevYields(column);
         }
         String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
-        int dividers = ((PortfolioChartPanel)chartPanel).getDividers();
-        int[] variants = new int[] {1, 2, 4, 5, 10, 20, 25, 50, 100};
-        int variantsLen = variants.length;
-
-        if (dividers != 100) {
-            for (int v = 0; v < variantsLen; v++) {
-                if (variants[v] == dividers) {
-                    dividers = variants[v + 1];
-                    break;
-                }
-            }
-        }
+        int dividers = 100;
 
         DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
         int[] userMinimals = new int[length];
@@ -297,18 +279,15 @@ class PortfolioChart extends JDialog {
                 return accuracyPortfolios;
             }
 
-            if (minValue == maxValue && minValue != 0) {
-                minValue = Math.max(minValue - 5, 0);
-                maxValue = Math.min(maxValue + 5, 100);
-            }
-
             userMinimals[col] = minValue;
             userMaximals[col] = maxValue;
         }
 
+        int index = 0;
+        int size = border.size();
         while (index < size) {
             Portfolio first = border.get(index);
-            Portfolio next = border.get(index + 1);
+            Portfolio next = index < size - 1 ? border.get(index + 1) : first;
 
             int[] minimals = new int[length];
             int[] maximals = new int[length];
@@ -339,8 +318,9 @@ class PortfolioChart extends JDialog {
 
             index += 1;
         }
+
         accuracyPortfolios.sort(Portfolio::compareTo);
-        ((PortfolioChartPanel) chartPanel).setPortfolios(accuracyPortfolios, dataFiltered, Main.getPeriods(dataFiltered.length), dividers);
+        ((PortfolioChartPanel) chartPanel).setPortfolios(accuracyPortfolios, dataFiltered, Main.getPeriods(dataFiltered.length));
 
         return accuracyPortfolios;
     }

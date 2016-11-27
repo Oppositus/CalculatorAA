@@ -60,7 +60,6 @@ class PortfolioChartPanel extends JPanel {
 
     private double[][] dataFiltered;
     private String[] periodsFiltered;
-    private int dividers;
 
     private double zoomMin;
     private double zoomMax;
@@ -82,6 +81,10 @@ class PortfolioChartPanel extends JPanel {
 
         @Override
         public void mousePressed(MouseEvent mouseEvent) {
+            if (!SwingUtilities.isLeftMouseButton(mouseEvent)) {
+                return;
+            }
+
             dragMode = true;
             dragStartX = mouseEvent.getX();
             dragEndX = mouseEvent.getX();
@@ -89,6 +92,10 @@ class PortfolioChartPanel extends JPanel {
 
         @Override
         public void mouseReleased(MouseEvent mouseEvent) {
+            if (!SwingUtilities.isLeftMouseButton(mouseEvent)) {
+                return;
+            }
+
             dragEndX = mouseEvent.getX();
             if (dragMode) {
                 int from = Math.min(dragStartX, dragEndX);
@@ -142,10 +149,7 @@ class PortfolioChartPanel extends JPanel {
         );
     }
 
-    void setPortfolios(List<Portfolio> pfs, double[][] df, String[] pf, int dv) {
-
-        dividers = dv;
-
+    void setPortfolios(List<Portfolio> pfs, double[][] df, String[] pf) {
         if (pfs != null && pfs.isEmpty()) {
             return;
         }
@@ -223,7 +227,7 @@ class PortfolioChartPanel extends JPanel {
     void setBorderOnlyMode(boolean mode) {
         if (borderOnlyMode != mode) {
             borderOnlyMode = mode;
-            setPortfolios(null, null, null, dividers);
+            setPortfolios(null, null, null);
         }
     }
 
@@ -233,10 +237,6 @@ class PortfolioChartPanel extends JPanel {
 
     double[][] getDataFiltered() {
         return dataFiltered;
-    }
-
-    int getDividers() {
-        return dividers;
     }
 
     @Override
@@ -515,7 +515,7 @@ class PortfolioChartPanel extends JPanel {
                 .sorted(Portfolio::compareTo)
                 .collect(Collectors.toList());
 
-        setPortfolios(pfs, dataFiltered, periodsFiltered, dividers);
+        setPortfolios(pfs, dataFiltered, periodsFiltered);
     }
 
     private void startMouseCross(int x, int y) {
