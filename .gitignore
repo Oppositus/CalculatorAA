@@ -16,3 +16,6 @@ hs_err_pid*
 Будет удалено .gitignore
 Будет удалено .idea/workspace.xml
 Будет удалено out/
+.idea/workspace.xml
+calcaa.properties
+out/
