@@ -1,5 +1,7 @@
 package com.calculator.aa.calc;
 
+import java.util.Arrays;
+
 public class Portfolio implements Comparable<Portfolio> {
     private final DoublePoint parameters;
     private final double[] weights;
@@ -23,6 +25,36 @@ public class Portfolio implements Comparable<Portfolio> {
         } else {
             return 0;
         }
+    }
+
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Portfolio)) {
+            return false;
+        }
+
+        Portfolio oo = (Portfolio)o;
+
+        if (!parameters.equals(oo.parameters)) {
+            return false;
+        }
+
+        if (!Arrays.equals(instruments, oo.instruments)) {
+            return false;
+        }
+
+        double[] ws = oo.weights;
+        int length = weights.length;
+        if (length != ws.length) {
+            return false;
+        }
+
+        for (int i = 0; i < length; i++) {
+            if (Math.abs(weights[i] - ws[i]) > Calc.epsilon) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     int compareToYield(Portfolio o) {

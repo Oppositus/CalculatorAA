@@ -16,4 +16,11 @@ public class DoublePoint {
     public double getY() {
         return y;
     }
+
+    public boolean equals(Object o) {
+        return o != null &&
+                o instanceof DoublePoint &&
+                Math.abs(x - ((DoublePoint)o).x) < Calc.epsilon &&
+                Math.abs(y - ((DoublePoint)o).y) < Calc.epsilon;
+    }
 }

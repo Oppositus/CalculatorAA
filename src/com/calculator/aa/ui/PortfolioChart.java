@@ -21,6 +21,7 @@ class PortfolioChart extends JDialog {
     private JButton buttonCompute;
     private JToggleButton buttonBorderOnly;
     private JButton buttonAccuracy;
+    private JButton buttonAccuracyMax;
 
     private final String[] instruments;
     private final double[][] data;
@@ -64,6 +65,11 @@ class PortfolioChart extends JDialog {
                     return;
                 }
 
+                if (minValue == maxValue && minValue != 0) {
+                    minValue = Math.max(minValue - 5, 0);
+                    maxValue = Math.min(maxValue + 5, 100);
+                }
+
                 minimals[col] = minValue;
                 maximals[col] = maxValue;
             }
@@ -90,6 +96,7 @@ class PortfolioChart extends JDialog {
         buttonBorderOnly.addChangeListener(e -> {
             boolean isSelected = buttonBorderOnly.isSelected();
             buttonAccuracy.setEnabled(isSelected);
+            buttonAccuracyMax.setEnabled(isSelected);
             ((PortfolioChartPanel) chartPanel).setBorderOnlyMode(isSelected);
         });
 
@@ -99,59 +106,36 @@ class PortfolioChart extends JDialog {
                 return;
             }
 
-            int index = 0;
-            int size = border.size() - 1;
-            List<Portfolio> accuracyPortfolios = new LinkedList<>();
-            int length = instruments.length - 1;
-            double[][] dataFiltered = ((PortfolioChartPanel)chartPanel).getDataFiltered();
-            double[][] corrTable = Calc.correlationTable(dataFiltered);
-            double[] avYields = new double[length];
-            double[] sdYields = new double[length];
-            for (int col = 0; col < length; col++) {
-                double[] column = Calc.column(dataFiltered, col);
-                avYields[col] = Calc.averageYields(column);
-                sdYields[col] = Calc.stdevYields(column);
-            }
-            String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
-            int dividers = ((PortfolioChartPanel)chartPanel).getDividers();
-            int[] variants = new int[] {1, 2, 4, 5, 10, 20, 25, 50, 100};
-            int variantsLen = variants.length;
+            List<Portfolio> accuracyPortfolios = addAccuracy();
 
-            if (dividers != 100) {
-                for (int v = 0; v < variantsLen; v++) {
-                    if (variants[v] == dividers) {
-                        dividers = variants[v + 1];
-                        break;
+            if (accuracyPortfolios.isEmpty()) {
+                SwingUtilities.invokeLater(() -> {
+                    for(ActionListener a: buttonAccuracy.getActionListeners()) {
+                        a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
                     }
-                }
+                });
+            }
+        });
+        buttonAccuracyMax.addActionListener(e -> {
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+            List<Portfolio> border = ((PortfolioChartPanel) chartPanel).getBorderPortfolios();
+            if (border == null || border.isEmpty()) {
+                return;
             }
 
-            while (index < size) {
-                Portfolio first = border.get(index);
-                Portfolio next = border.get(index + 1);
+            List<Portfolio> accuracyPortfolios = addAccuracy();
+            List<Portfolio> accuracyPortfolios2 = addAccuracy();
 
-                int[] minimals = new int[length];
-                int[] maximals = new int[length];
-
-                for (int col = 0; col < length; col++) {
-                    minimals[col] = Math.min((int)(first.weights()[col] * 100), (int)(next.weights()[col] * 100)) - 100 / dividers;
-                    if (minimals[col] < 0) {
-                        minimals[col] = 0;
+            if (!accuracyPortfolios.equals(accuracyPortfolios2) || (accuracyPortfolios.size() == 0 && accuracyPortfolios2.size() == 0)) {
+                SwingUtilities.invokeLater(() -> {
+                    for(ActionListener a: buttonAccuracyMax.getActionListeners()) {
+                        a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
                     }
-
-                    maximals[col] = Math.max((int)(first.weights()[col] * 100), (int)(next.weights()[col] * 100)) + 100 / dividers;
-                    if (maximals[col] > 100) {
-                        maximals[col] = 100;
-                    }
-                }
-
-                accuracyPortfolios.addAll(
-                    Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers)
-                );
-
-                index += 1;
+                });
+            } else {
+                setCursor(Cursor.getDefaultCursor());
             }
-            ((PortfolioChartPanel)chartPanel).setPortfolios(accuracyPortfolios, dataFiltered, Main.getPeriods(dataFiltered.length), dividers);
         });
     }
 
@@ -264,5 +248,100 @@ class PortfolioChart extends JDialog {
 
     private void createUIComponents() {
         chartPanel = new PortfolioChartPanel();
+    }
+
+    private List<Portfolio> addAccuracy() {
+        List<Portfolio> border = ((PortfolioChartPanel) chartPanel).getBorderPortfolios();
+        List<Portfolio> accuracyPortfolios = new LinkedList<>();
+
+        if (border == null || border.isEmpty()) {
+            return accuracyPortfolios;
+        }
+
+        int index = 0;
+        int size = border.size() - 1;
+
+        int length = instruments.length - 1;
+        double[][] dataFiltered = ((PortfolioChartPanel)chartPanel).getDataFiltered();
+        double[][] corrTable = Calc.correlationTable(dataFiltered);
+        double[] avYields = new double[length];
+        double[] sdYields = new double[length];
+        for (int col = 0; col < length; col++) {
+            double[] column = Calc.column(dataFiltered, col);
+            avYields[col] = Calc.averageYields(column);
+            sdYields[col] = Calc.stdevYields(column);
+        }
+        String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
+        int dividers = ((PortfolioChartPanel)chartPanel).getDividers();
+        int[] variants = new int[] {1, 2, 4, 5, 10, 20, 25, 50, 100};
+        int variantsLen = variants.length;
+
+        if (dividers != 100) {
+            for (int v = 0; v < variantsLen; v++) {
+                if (variants[v] == dividers) {
+                    dividers = variants[v + 1];
+                    break;
+                }
+            }
+        }
+
+        DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
+        int[] userMinimals = new int[length];
+        int[] userMaximals = new int[length];
+
+        for (int col = 0; col < length; col++) {
+            int minValue = Integer.valueOf((String) model.getValueAt(0, col + 1));
+            int maxValue = Integer.valueOf((String) model.getValueAt(1, col + 1));
+
+            if (minValue < 0 || maxValue > 100 || minValue > maxValue) {
+                return accuracyPortfolios;
+            }
+
+            if (minValue == maxValue && minValue != 0) {
+                minValue = Math.max(minValue - 5, 0);
+                maxValue = Math.min(maxValue + 5, 100);
+            }
+
+            userMinimals[col] = minValue;
+            userMaximals[col] = maxValue;
+        }
+
+        while (index < size) {
+            Portfolio first = border.get(index);
+            Portfolio next = border.get(index + 1);
+
+            int[] minimals = new int[length];
+            int[] maximals = new int[length];
+
+            for (int col = 0; col < length; col++) {
+                minimals[col] = Math.min((int)(first.weights()[col] * 100), (int)(next.weights()[col] * 100)) - 100 / dividers;
+                if (minimals[col] < 0) {
+                    minimals[col] = 0;
+                }
+
+                maximals[col] = Math.max((int)(first.weights()[col] * 100), (int)(next.weights()[col] * 100)) + 100 / dividers;
+                if (maximals[col] > 100) {
+                    maximals[col] = 100;
+                }
+
+                if (minimals[col] < userMinimals[col]) {
+                    minimals[col] = userMinimals[col];
+                }
+
+                if (maximals[col] > userMaximals[col]) {
+                    maximals[col] = userMaximals[col];
+                }
+            }
+
+            accuracyPortfolios.addAll(
+                    Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers)
+            );
+
+            index += 1;
+        }
+        accuracyPortfolios.sort(Portfolio::compareTo);
+        ((PortfolioChartPanel) chartPanel).setPortfolios(accuracyPortfolios, dataFiltered, Main.getPeriods(dataFiltered.length), dividers);
+
+        return accuracyPortfolios;
     }
 }

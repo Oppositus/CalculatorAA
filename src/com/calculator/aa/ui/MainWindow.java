@@ -8,8 +8,6 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.font.TextAttribute;
 import java.io.BufferedReader;
 import java.io.File;
@@ -69,8 +67,8 @@ public class MainWindow {
 
         private final int width;
         private final int height;
-        private double[][]data;
-        private String[] instruments;
+        private final double[][]data;
+        private final String[] instruments;
         private final String[] periods;
         private final double[] averages;
         private final double[] deviations;

@@ -1,9 +1,6 @@
 package com.calculator.aa.ui;
 
-import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
-import com.calculator.aa.calc.DoublePoint;
-import com.calculator.aa.calc.Portfolio;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,8 +9,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
 
 class PortfolioYieldsPanel extends JPanel {
 

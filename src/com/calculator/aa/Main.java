@@ -25,7 +25,7 @@ public class Main {
             if (Files.exists(new File(propertiesFile).toPath())) {
                 properties.load(new BufferedInputStream(new FileInputStream(propertiesFile)));
             }
-        } catch (IOException e) {}
+        } catch (IOException ignored) {}
 
         mainFrame = new JFrame("СПТ: калькулятор");
         mainWindow = new MainWindow();
@@ -48,7 +48,7 @@ public class Main {
 
                     properties.store(new BufferedOutputStream(new FileOutputStream(propertiesFile)), "CalculatorAA");
 
-                } catch(Exception e) {}
+                } catch(Exception ignored) {}
                 System.exit(0);
             }
         });

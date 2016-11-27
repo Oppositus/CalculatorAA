@@ -1,6 +1,5 @@
 package com.calculator.aa.ui;
 
-import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.DoublePoint;
 import com.calculator.aa.calc.Portfolio;
@@ -14,6 +13,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class PortfolioChartPanel extends JPanel {
 
@@ -21,6 +21,7 @@ class PortfolioChartPanel extends JPanel {
     private static final Color portfolioColor = Color.BLUE;
     private static final Color backColor = Color.WHITE;
     private static final Color selectedColor = Color.RED;
+    private static final Color zoomColor = Color.GRAY;
     private static final int safeZone = 10;
     private static final int safeTop = 5;
 
@@ -51,9 +52,7 @@ class PortfolioChartPanel extends JPanel {
 
     private boolean dragMode = false;
     private int dragStartX = 0;
-    private int dragStartY = 0;
     private int dragEndX = 0;
-    private int dragEndY = 0;
 
     private boolean borderOnlyMode = false;
 
@@ -62,6 +61,9 @@ class PortfolioChartPanel extends JPanel {
     private double[][] dataFiltered;
     private String[] periodsFiltered;
     private int dividers;
+
+    private double zoomMin;
+    private double zoomMax;
 
     private class mouseEnterExitListener implements MouseListener {
 
@@ -82,14 +84,22 @@ class PortfolioChartPanel extends JPanel {
         public void mousePressed(MouseEvent mouseEvent) {
             dragMode = true;
             dragStartX = mouseEvent.getX();
-            dragStartY = mouseEvent.getY();
+            dragEndX = mouseEvent.getX();
         }
 
         @Override
         public void mouseReleased(MouseEvent mouseEvent) {
-            dragMode = false;
             dragEndX = mouseEvent.getX();
-            dragEndY = mouseEvent.getY();
+            if (dragMode) {
+                int from = Math.min(dragStartX, dragEndX);
+                int to = Math.max(dragStartX, dragEndX);
+
+                zoomMin = reMapX(from);
+                zoomMax = reMapX(to);
+
+                setZoom();
+            }
+            dragMode = false;
         }
 
         @Override
@@ -107,11 +117,13 @@ class PortfolioChartPanel extends JPanel {
 
         @Override
         public void mouseDragged(MouseEvent mouseEvent) {
-
+            dragEndX = mouseEvent.getX();
+            repaint();
         }
 
         @Override
         public void mouseMoved(MouseEvent mouseEvent) {
+            dragMode = false;
             moveMouseCross(mouseEvent.getX(), mouseEvent.getY());
         }
     }
@@ -163,8 +175,13 @@ class PortfolioChartPanel extends JPanel {
 
         double minRisk = portfolios.get(0).risk();
         double maxRisk = portfolios.get(portfolios.size() - 1).risk();
+        double dr;
+        if (pfs != null && pfs.size() == 1) {
+            dr = 0.05;
+        } else {
+            dr = (maxRisk - minRisk) * 0.05;
+        }
 
-        double dr = (maxRisk - minRisk) * 0.05;
         minX = minRisk - dr;
         maxX = maxRisk + dr;
 
@@ -179,7 +196,12 @@ class PortfolioChartPanel extends JPanel {
                 maxYield = p.yield();
             }
 
-            double dy = (maxYield - minYield) * 0.05;
+            double dy;
+            if (pfs != null && pfs.size() == 1) {
+                dy = 0.05;
+            } else {
+                dy = (maxYield - minYield) * 0.05;
+            }
             minY = minYield - dy;
             maxY = maxYield + dy;
         }
@@ -238,6 +260,11 @@ class PortfolioChartPanel extends JPanel {
 
         calculateDrawingArea(w, h);
 
+        if (dragMode) {
+            g.setColor(zoomColor);
+            drawZoom(g, w, h);
+        }
+
         g.setColor(axisColor);
         drawAxis(g);
 
@@ -258,6 +285,12 @@ class PortfolioChartPanel extends JPanel {
             g.setColor(axisColor);
             drawCross(g, w, h);
         }
+    }
+
+    private void drawZoom(Graphics g, int w, int h) {
+        int from = Math.min(dragStartX, dragEndX);
+        int to = Math.max(dragStartX, dragEndX);
+        g.fillRect(from, 0, to - from, h);
     }
 
     private void drawAxis(Graphics g) {
@@ -470,6 +503,19 @@ class PortfolioChartPanel extends JPanel {
             return dYield * pos + minY;
         }
         return -1;
+    }
+
+    private void setZoom() {
+        if (portfolios == null || portfolios.isEmpty()) {
+            return;
+        }
+
+        List<Portfolio> pfs = portfolios.stream()
+                .filter(p -> p.risk() >= zoomMin && p.risk() <= zoomMax)
+                .sorted(Portfolio::compareTo)
+                .collect(Collectors.toList());
+
+        setPortfolios(pfs, dataFiltered, periodsFiltered, dividers);
     }
 
     private void startMouseCross(int x, int y) {
