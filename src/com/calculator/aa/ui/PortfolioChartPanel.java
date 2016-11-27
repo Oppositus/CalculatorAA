@@ -30,7 +30,6 @@ class PortfolioChartPanel extends JPanel {
     private List<Portfolio> optimalPortfolios = new ArrayList<>();
 
     private double minX;
-    private double maxX;
     private double minY;
     private double maxY;
     private double dRisk;
@@ -187,7 +186,7 @@ class PortfolioChartPanel extends JPanel {
         }
 
         minX = minRisk - dr;
-        maxX = maxRisk + dr;
+        double maxX = maxRisk + dr;
 
         double minYield = Double.MAX_VALUE;
         double maxYield = Double.MIN_VALUE;
@@ -262,7 +261,7 @@ class PortfolioChartPanel extends JPanel {
 
         if (dragMode) {
             g.setColor(zoomColor);
-            drawZoom(g, w, h);
+            drawZoom(g, h);
         }
 
         g.setColor(axisColor);
@@ -287,7 +286,7 @@ class PortfolioChartPanel extends JPanel {
         }
     }
 
-    private void drawZoom(Graphics g, int w, int h) {
+    private void drawZoom(Graphics g, int h) {
         int from = Math.min(dragStartX, dragEndX);
         int to = Math.max(dragStartX, dragEndX);
         g.fillRect(from, 0, to - from, h);

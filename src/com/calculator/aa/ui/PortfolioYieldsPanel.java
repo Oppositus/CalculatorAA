@@ -21,7 +21,6 @@ class PortfolioYieldsPanel extends JPanel {
     private static final int safeTop = 5;
 
     private double minY;
-    private double maxY;
     private double dYield;
     private int dPeriod;
 
@@ -114,7 +113,7 @@ class PortfolioYieldsPanel extends JPanel {
 
         double dr = (maxYield - minYield) * 0.05;
         minY = minYield - dr;
-        maxY = maxYield + dr;
+        double maxY = maxYield + dr;
         dYield = maxY - minY;
 
         minYieldStr = Calc.formatDouble2(isLog ? Math.exp(minY) : minY);

@@ -79,17 +79,9 @@ public class Main {
         return program.properties;
     }
 
-    public static String[] getPeriods() {
-        return program.mainWindow.getPeriods();
-    }
-
     public static String[] getPeriods(int last) {
         String[] periods = program.mainWindow.getPeriods();
         return Arrays.copyOfRange(periods, periods.length - last, periods.length);
-    }
-
-    public static double[][] getData() {
-        return program.mainWindow.getData();
     }
 
     public static void main(String[] args) {

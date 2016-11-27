@@ -57,7 +57,7 @@ public class YieldsChart extends JDialog {
     private final int completePeriods;
 
     private YieldsChart(String[] ls, double[][] sourceData, Portfolio p) {
-        data = Calc.filterValidData(sourceData, p.weights());
+        data = sourceData;
         labels = Arrays.copyOfRange(ls, sourceData.length - data.length, ls.length);
         portfolio = p;
         completePeriods = data.length;
@@ -169,7 +169,12 @@ public class YieldsChart extends JDialog {
     }
 
     static void showYields(String[] labels, double[][] data, Portfolio portfolio) {
-        YieldsChart dialog = new YieldsChart(labels, data, portfolio);
+        double[][] filtered = Calc.filterValidData(data, portfolio.weights());
+        if (filtered == null) {
+            return;
+        }
+
+        YieldsChart dialog = new YieldsChart(labels, filtered, portfolio);
         dialog.pack();
 
         Properties properties = Main.getProperties();

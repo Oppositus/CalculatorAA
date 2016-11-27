@@ -233,13 +233,6 @@ public class MainWindow {
             return values;
         }
 
-        private void setCol(int sourceCol, int destCol, double[][] dest) {
-            int length = height - 2;
-            for (int i = 0; i < length; i++) {
-                dest[i][destCol] = data[i][sourceCol];
-            }
-        }
-
         private void updateAverage(int col) {
             averages[col] = Calc.averageYields(getCol(col));
         }
