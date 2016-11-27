@@ -37,6 +37,12 @@
               <text value="Удалить ряд"/>
             </properties>
           </component>
+          <component id="a1a2c" class="javax.swing.JButton" binding="buttonDeleteInvalid">
+            <constraints/>
+            <properties>
+              <text value="Удалить неполные ряды"/>
+            </properties>
+          </component>
         </children>
       </toolbar>
       <scrollpane id="3a3ae" binding="scrollPane">

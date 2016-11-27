@@ -25,6 +25,7 @@ class PortfolioChartPanel extends JPanel {
     private static final int safeTop = 5;
 
     private List<Portfolio> portfolios = new ArrayList<>();
+    private List<Portfolio> savedPortfolios;
     private List<Portfolio> optimalPortfolios = new ArrayList<>();
 
     private double minX;
@@ -60,6 +61,7 @@ class PortfolioChartPanel extends JPanel {
 
     private double[][] dataFiltered;
     private String[] periodsFiltered;
+    private int dividers;
 
     private class mouseEnterExitListener implements MouseListener {
 
@@ -128,16 +130,36 @@ class PortfolioChartPanel extends JPanel {
         );
     }
 
-    void setPortfolios(List<Portfolio> pfs, double[][] df, String[] pf) {
+    void setPortfolios(List<Portfolio> pfs, double[][] df, String[] pf, int dv) {
 
-        if (pfs.isEmpty()) {
+        dividers = dv;
+
+        if (pfs != null && pfs.isEmpty()) {
             return;
         }
 
-        portfolios = pfs;
-        dataFiltered = df;
-        periodsFiltered = pf;
-        optimalPortfolios = Calc.getOptimalBorder(portfolios);
+        if (pfs != null && df != null && pf != null) {
+            portfolios = pfs;
+            dataFiltered = df;
+            periodsFiltered = pf;
+        }
+
+        if (pfs != null) {
+            optimalPortfolios = Calc.getOptimalBorder(portfolios);
+        }
+
+        if (borderOnlyMode) {
+            savedPortfolios = portfolios;
+            portfolios = optimalPortfolios;
+        }
+
+        if (pfs == null && !borderOnlyMode) {
+            portfolios = savedPortfolios;
+        }
+
+        if (portfolios == null || portfolios.isEmpty()) {
+            return;
+        }
 
         double minRisk = portfolios.get(0).risk();
         double maxRisk = portfolios.get(portfolios.size() - 1).risk();
@@ -179,8 +201,20 @@ class PortfolioChartPanel extends JPanel {
     void setBorderOnlyMode(boolean mode) {
         if (borderOnlyMode != mode) {
             borderOnlyMode = mode;
-            repaint();
+            setPortfolios(null, null, null, dividers);
         }
+    }
+
+    List<Portfolio> getBorderPortfolios() {
+        return optimalPortfolios;
+    }
+
+    double[][] getDataFiltered() {
+        return dataFiltered;
+    }
+
+    int getDividers() {
+        return dividers;
     }
 
     @Override

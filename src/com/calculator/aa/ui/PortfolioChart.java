@@ -7,10 +7,9 @@ import com.calculator.aa.calc.Portfolio;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -21,6 +20,7 @@ class PortfolioChart extends JDialog {
     private JTable tableLimitations;
     private JButton buttonCompute;
     private JToggleButton buttonBorderOnly;
+    private JButton buttonAccuracy;
 
     private final String[] instruments;
     private final double[][] data;
@@ -81,16 +81,81 @@ class PortfolioChart extends JDialog {
             }
 
             String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
-            int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length), false);
+            int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length));
             List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers);
 
-            ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, dataFiltered, Main.getPeriods(dataFiltered.length));
+            ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, dataFiltered, Main.getPeriods(dataFiltered.length), dividers);
         });
 
-        buttonBorderOnly.addChangeListener(e -> ((PortfolioChartPanel)chartPanel).setBorderOnlyMode(buttonBorderOnly.isSelected()));
+        buttonBorderOnly.addChangeListener(e -> {
+            boolean isSelected = buttonBorderOnly.isSelected();
+            buttonAccuracy.setEnabled(isSelected);
+            ((PortfolioChartPanel) chartPanel).setBorderOnlyMode(isSelected);
+        });
+
+        buttonAccuracy.addActionListener(e -> {
+            List<Portfolio> border = ((PortfolioChartPanel) chartPanel).getBorderPortfolios();
+            if (border == null || border.isEmpty()) {
+                return;
+            }
+
+            int index = 0;
+            int size = border.size() - 1;
+            List<Portfolio> accuracyPortfolios = new LinkedList<>();
+            int length = instruments.length - 1;
+            double[][] dataFiltered = ((PortfolioChartPanel)chartPanel).getDataFiltered();
+            double[][] corrTable = Calc.correlationTable(dataFiltered);
+            double[] avYields = new double[length];
+            double[] sdYields = new double[length];
+            for (int col = 0; col < length; col++) {
+                double[] column = Calc.column(dataFiltered, col);
+                avYields[col] = Calc.averageYields(column);
+                sdYields[col] = Calc.stdevYields(column);
+            }
+            String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
+            int dividers = ((PortfolioChartPanel)chartPanel).getDividers();
+            int[] variants = new int[] {1, 2, 4, 5, 10, 20, 25, 50, 100};
+            int variantsLen = variants.length;
+
+            if (dividers != 100) {
+                for (int v = 0; v < variantsLen; v++) {
+                    if (variants[v] == dividers) {
+                        dividers = variants[v + 1];
+                        break;
+                    }
+                }
+            }
+
+            while (index < size) {
+                Portfolio first = border.get(index);
+                Portfolio next = border.get(index + 1);
+
+                int[] minimals = new int[length];
+                int[] maximals = new int[length];
+
+                for (int col = 0; col < length; col++) {
+                    minimals[col] = Math.min((int)(first.weights()[col] * 100), (int)(next.weights()[col] * 100)) - 100 / dividers;
+                    if (minimals[col] < 0) {
+                        minimals[col] = 0;
+                    }
+
+                    maximals[col] = Math.max((int)(first.weights()[col] * 100), (int)(next.weights()[col] * 100)) + 100 / dividers;
+                    if (maximals[col] > 100) {
+                        maximals[col] = 100;
+                    }
+                }
+
+                accuracyPortfolios.addAll(
+                    Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers)
+                );
+
+                index += 1;
+            }
+            ((PortfolioChartPanel)chartPanel).setPortfolios(accuracyPortfolios, dataFiltered, Main.getPeriods(dataFiltered.length), dividers);
+        });
     }
 
-    private int calculateDivision(int[] minimals, int[] maximals, boolean accuracy) {
+    private int calculateDivision(int[] minimals, int[] maximals) {
 
         int[] variants = new int[] {100, 50, 25, 20, 10, 5, 4, 2, 1};
         int length = variants.length;
@@ -124,7 +189,7 @@ class PortfolioChart extends JDialog {
             );
 
             if (sum[0] > limit) {
-                return 100 / variants[accuracy ? i : i - 1];
+                return 100 / variants[i - 1];
             }
         }
 

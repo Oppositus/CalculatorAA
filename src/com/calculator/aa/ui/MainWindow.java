@@ -8,6 +8,8 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.font.TextAttribute;
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,6 +30,7 @@ public class MainWindow {
     private JButton buttonCorrelations;
     private JButton buttonCovariances;
     private JButton buttonPortfolio;
+    private JButton buttonDeleteInvalid;
 
     private String[] savedOptions;
 
@@ -284,6 +287,11 @@ public class MainWindow {
             fc.setFileFilter(new FileFilter() {
                 @Override
                 public boolean accept(File file) {
+
+                    if (file.isDirectory()) {
+                        return true;
+                    }
+
                     String extension = "";
                     String fileName = file.getName().toLowerCase();
                     int i = fileName.lastIndexOf('.');
@@ -325,6 +333,39 @@ public class MainWindow {
         buttonPortfolio.addActionListener(actionEvent -> {
             AATableModel model = (AATableModel)mainTable.getModel();
             PortfolioChart.showChart(model.instruments, model.data);
+        });
+        buttonDeleteInvalid.addActionListener(e -> {
+            AATableModel model = (AATableModel)mainTable.getModel();
+            if (model.height < 5) {
+                return;
+            }
+
+            boolean valid = false;
+            while (!valid) {
+                double[] row = model.data[0];
+                for (double aRow : row) {
+                    if (aRow < 0) {
+                        model = new AATableModel(model.width - 1,
+                                model.height - 3,
+                                model,
+                                0);
+                        valid = false;
+                        break;
+                    } else {
+                        valid = true;
+                    }
+                }
+            }
+
+            if (model.height < 5) {
+                return;
+            }
+
+            mainTable.setModel(model);
+
+            for (int i = 0; i < model.width; i++) {
+                mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(model.height));
+            }
         });
     }
 
