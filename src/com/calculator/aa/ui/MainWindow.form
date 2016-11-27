@@ -22,25 +22,25 @@
           <component id="f126" class="javax.swing.JButton" binding="buttonOpen">
             <constraints/>
             <properties>
-              <text value="Открыть"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.open"/>
             </properties>
           </component>
           <component id="98ac0" class="javax.swing.JButton" binding="buttonAddRow">
             <constraints/>
             <properties>
-              <text value="Добавить ряд"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.add_row"/>
             </properties>
           </component>
           <component id="8605f" class="javax.swing.JButton" binding="buttonDeleteRow">
             <constraints/>
             <properties>
-              <text value="Удалить ряд"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.remove_row"/>
             </properties>
           </component>
           <component id="a1a2c" class="javax.swing.JButton" binding="buttonDeleteInvalid">
             <constraints/>
             <properties>
-              <text value="Удалить неполные ряды"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.remove_partial"/>
             </properties>
           </component>
         </children>
@@ -75,19 +75,19 @@
           <component id="a376c" class="javax.swing.JButton" binding="buttonCorrelations">
             <constraints/>
             <properties>
-              <text value="Таблица корреляций"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.correlations_table"/>
             </properties>
           </component>
           <component id="afa64" class="javax.swing.JButton" binding="buttonCovariances">
             <constraints/>
             <properties>
-              <text value="Таблица ковариаций"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.covariances_table"/>
             </properties>
           </component>
           <component id="69a1f" class="javax.swing.JButton" binding="buttonPortfolio">
             <constraints/>
             <properties>
-              <text value="Портфели"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.portfolios"/>
             </properties>
           </component>
         </children>

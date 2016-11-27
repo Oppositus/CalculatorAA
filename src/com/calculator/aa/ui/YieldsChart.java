@@ -86,7 +86,13 @@ public class YieldsChart extends JDialog {
 
         spinnerPeriods.addMouseWheelListener(new SpinnerWheelListener(spinnerPeriods));
 
-        buttonWeights.addActionListener(e -> ShowTable.show("Портфель", portfolio.values(), portfolio.labels(), new String[] {"Значение"}));
+        buttonWeights.addActionListener(e -> ShowTable.show(
+                Main.resourceBundle.getString("text.portfolio"),
+                portfolio.values(),
+                portfolio.labels(),
+                new String[] {Main.resourceBundle.getString("text.value")})
+        );
+
         buttonDraw.addActionListener(e -> {
             boolean isLog = buttonLogScale.isSelected();
             realYields = calculateRealYields(isLog);
@@ -196,7 +202,7 @@ public class YieldsChart extends JDialog {
         dialog.checkBoxSigma2.setSelected(s2);
         dialog.checkBoxSigma3.setSelected(s3);
 
-        dialog.setTitle("Доходность портфеля");
+        dialog.setTitle(Main.resourceBundle.getString("text.portfolio_yield"));
 
         SwingUtilities.invokeLater(() -> {
             for(ActionListener a: dialog.buttonDraw.getActionListeners()) {

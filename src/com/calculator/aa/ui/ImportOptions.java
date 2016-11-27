@@ -41,11 +41,10 @@ public class ImportOptions extends JDialog {
         result = options;
 
         if (result != null) {
-
             if (result[0].equals("\t")) {
-                result[0] = "табуляция";
+                result[0] = Main.resourceBundle.getString("text.tabulation");
             } else if (result[0].equals(" ")) {
-                result[0] = "пробел";
+                result[0] = Main.resourceBundle.getString("text.space");
             }
 
             comboBoxDelim.getModel().setSelectedItem(result[0]);
@@ -75,15 +74,15 @@ public class ImportOptions extends JDialog {
 
     static String[] showOptions(String[] options) {
         ImportOptions dialog = new ImportOptions(options);
-        dialog.setTitle("Импорт данных");
+        dialog.setTitle(Main.resourceBundle.getString("text.import_data"));
         dialog.setLocationRelativeTo(Main.getFrame());
         dialog.pack();
         dialog.setVisible(true);
 
         if (dialog.result != null) {
-            if (dialog.result[0].equals("табуляция")) {
+            if (dialog.result[0].equals(Main.resourceBundle.getString("text.tabulation"))) {
                 dialog.result[0] = "\t";
-            } else if (dialog.result[0].equals("пробел")) {
+            } else if (dialog.result[0].equals(Main.resourceBundle.getString("text.space"))) {
                 dialog.result[0] = " ";
             }
         }

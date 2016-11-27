@@ -1,5 +1,7 @@
 package com.calculator.aa.calc;
 
+import com.calculator.aa.Main;
+
 import java.util.Arrays;
 
 public class Portfolio implements Comparable<Portfolio> {
@@ -76,8 +78,8 @@ public class Portfolio implements Comparable<Portfolio> {
 
         System.arraycopy(instruments, 0, result, 0, length);
 
-        result[length] = "Риск";
-        result[length + 1] = "Доходность";
+        result[length] = Main.resourceBundle.getString("text.risk");
+        result[length + 1] = Main.resourceBundle.getString("text.yield");
 
         return result;
     }

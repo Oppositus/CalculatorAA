@@ -34,7 +34,7 @@
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Закрыть"/>
+                  <text resource-bundle="com/calculator/aa/messages" key="ui.close"/>
                 </properties>
               </component>
               <component id="4aac8" class="javax.swing.JButton" binding="buttonCompute">
@@ -42,7 +42,7 @@
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Нарисовать"/>
+                  <text resource-bundle="com/calculator/aa/messages" key="ui.draw"/>
                 </properties>
               </component>
             </children>
@@ -60,7 +60,7 @@
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Только граница"/>
+                  <text resource-bundle="com/calculator/aa/messages" key="ui.border_only"/>
                 </properties>
               </component>
               <component id="aa2e9" class="javax.swing.JButton" binding="buttonAccuracy">
@@ -69,7 +69,7 @@
                 </constraints>
                 <properties>
                   <enabled value="true"/>
-                  <text value="Повысить точность"/>
+                  <text resource-bundle="com/calculator/aa/messages" key="ui.increase_accuracy"/>
                 </properties>
               </component>
               <component id="7e97e" class="javax.swing.JButton" binding="buttonAccuracyMax">
@@ -78,7 +78,7 @@
                 </constraints>
                 <properties>
                   <enabled value="true"/>
-                  <text value="Максимальная точность"/>
+                  <text resource-bundle="com/calculator/aa/messages" key="ui.max_accuracy"/>
                 </properties>
               </component>
             </children>
@@ -126,7 +126,7 @@
           <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Ограничения:"/>
+          <text resource-bundle="com/calculator/aa/messages" key="ui.limitations"/>
         </properties>
       </component>
       <component id="5c0a2" class="javax.swing.JSeparator">

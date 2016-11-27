@@ -9,7 +9,9 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.ResourceBundle;
 
 public class Main {
     private static Main program;
@@ -17,6 +19,8 @@ public class Main {
     private final MainWindow mainWindow;
     private final Properties properties;
     private static final String propertiesFile = "calcaa.properties";
+
+    public static ResourceBundle resourceBundle;
 
     private Main() {
 
@@ -27,7 +31,7 @@ public class Main {
             }
         } catch (IOException ignored) {}
 
-        mainFrame = new JFrame("СПТ: калькулятор");
+        mainFrame = new JFrame(resourceBundle.getString("text.program_name"));
         mainWindow = new MainWindow();
         mainFrame.setContentPane(mainWindow.GetMainPanel());
         mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -85,6 +89,8 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        resourceBundle = ResourceBundle.getBundle("com.calculator.aa.messages", Locale.getDefault());
+
         program = new Main();
 
         Properties prop = getProperties();

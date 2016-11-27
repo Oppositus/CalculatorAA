@@ -212,8 +212,8 @@ class PortfolioChart extends JDialog {
         int length = instruments.length;
         String[][] limits = new String[2][length];
         for (int col = 0; col < instruments.length; col++) {
-            limits[0][col] = col == 0 ? "Мин" : "0";
-            limits[1][col] = col == 0 ? "Макс" : "100";
+            limits[0][col] = col == 0 ? Main.resourceBundle.getString("text.min") : "0";
+            limits[1][col] = col == 0 ? Main.resourceBundle.getString("text.max") : "100";
         }
 
         tableLimitations.setModel(new DefaultTableModel(limits, instruments));
@@ -221,7 +221,7 @@ class PortfolioChart extends JDialog {
 
     static void showChart(String[] instruments, double[][] data) {
         PortfolioChart dialog = new PortfolioChart(instruments, data);
-        dialog.setTitle("Портфели");
+        dialog.setTitle(Main.resourceBundle.getString("text.portfolios"));
         dialog.setLocationRelativeTo(Main.getFrame());
 
         dialog.pack();

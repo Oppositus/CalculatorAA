@@ -91,7 +91,7 @@ public class MainWindow {
             instruments[0] = "";
             for (int wh = 0; wh < width; wh++) {
                 if (wh > 0) {
-                    instruments[wh] = String.format("%s %d", "Инструмент", wh);
+                    instruments[wh] = String.format("%s %d", Main.resourceBundle.getString("text.instrument"), wh);
                 } else {
                     instruments[wh] = "";
                 }
@@ -100,7 +100,7 @@ public class MainWindow {
                     if (wh < width - 1) {
                         data[ht][wh] = 0.0f;
                     }
-                    periods[ht] = String.format("%s %d", "Период", ht);
+                    periods[ht] = String.format("%s %d", Main.resourceBundle.getString("text.period"), ht);
                 }
             }
         }
@@ -185,9 +185,9 @@ public class MainWindow {
         @Override
         public Object getValueAt(int row, int col) {
             if (row == height - 2) {
-                return col == 0 ? "Доходность" : (height < 4 ? "" : Calc.formatPercent2(averages[col - 1]));
+                return col == 0 ? Main.resourceBundle.getString("text.yield") : (height < 4 ? "" : Calc.formatPercent2(averages[col - 1]));
             } else if (row == height - 1) {
-                return col == 0 ? "Риск" : (height < 5 ? "" : Calc.formatPercent2(deviations[col - 1]));
+                return col == 0 ? Main.resourceBundle.getString("text.risk") : (height < 5 ? "" : Calc.formatPercent2(deviations[col - 1]));
             } else {
                 if (col == 0) {
                     return periods[row];
@@ -294,7 +294,7 @@ public class MainWindow {
 
                 @Override
                 public String getDescription() {
-                    return "CSV data files (.*csv)";
+                    return Main.resourceBundle.getString("text.csv_extension");
                 }
             });
 
@@ -312,14 +312,14 @@ public class MainWindow {
             double[][] corrTable = Calc.correlationTable(model.data);
             String[] cols = Arrays.copyOfRange(model.instruments, 1, model.instruments.length);
 
-            ShowTable.show("Таблица корреляций", corrTable, cols, cols);
+            ShowTable.show(Main.resourceBundle.getString("text.correlations_table"), corrTable, cols, cols);
         });
         buttonCovariances.addActionListener(actionEvent -> {
             AATableModel model = (AATableModel)mainTable.getModel();
             double[][] covTable = Calc.covarianceTable(model.data);
             String[] cols = Arrays.copyOfRange(model.instruments, 1, model.instruments.length);
 
-            ShowTable.show("Таблица ковариаций", covTable, cols, cols);
+            ShowTable.show(Main.resourceBundle.getString("text.covariances_table"), covTable, cols, cols);
         });
         buttonPortfolio.addActionListener(actionEvent -> {
             AATableModel model = (AATableModel)mainTable.getModel();
@@ -445,7 +445,7 @@ public class MainWindow {
             prop.setProperty("file", f.getCanonicalPath());
 
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(Main.getFrame(), e, "Ошибка", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
         }
     }
 

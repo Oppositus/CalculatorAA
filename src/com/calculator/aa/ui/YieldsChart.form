@@ -34,7 +34,7 @@
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Закрыть"/>
+                  <text resource-bundle="com/calculator/aa/messages" key="ui.close"/>
                 </properties>
               </component>
               <component id="ee1bb" class="javax.swing.JButton" binding="buttonDraw">
@@ -42,7 +42,7 @@
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Нарисовать"/>
+                  <text resource-bundle="com/calculator/aa/messages" key="ui.draw"/>
                 </properties>
               </component>
             </children>
@@ -60,7 +60,7 @@
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Логарифмическая шкала"/>
+                  <text resource-bundle="com/calculator/aa/messages" key="ui.log_scale"/>
                 </properties>
               </component>
             </children>
@@ -100,7 +100,7 @@
             </constraints>
             <properties>
               <labelFor value="c97ec"/>
-              <text value="Прогноз на период:"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.prognosis_for"/>
             </properties>
           </component>
           <component id="c97ec" class="javax.swing.JSpinner" binding="spinnerPeriods" custom-create="true">
@@ -116,7 +116,7 @@
               <grid row="0" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Состав портфеля"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.portfolio_components"/>
             </properties>
           </component>
           <component id="e0aac" class="javax.swing.JCheckBox" binding="checkBoxSigma1">
@@ -125,7 +125,7 @@
             </constraints>
             <properties>
               <selected value="true"/>
-              <text value="1σ"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.sigma_1"/>
             </properties>
           </component>
           <component id="61645" class="javax.swing.JCheckBox" binding="checkBoxSigma2">
@@ -133,7 +133,7 @@
               <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="2σ"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.sigma_2"/>
             </properties>
           </component>
           <component id="1a6d4" class="javax.swing.JCheckBox" binding="checkBoxSigma3">
@@ -141,7 +141,8 @@
               <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="3σ"/>
+              <selected value="false"/>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.sigma_3"/>
             </properties>
           </component>
           <hspacer id="7b68e">

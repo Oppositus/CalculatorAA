@@ -1,5 +1,6 @@
 package com.calculator.aa.ui;
 
+import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.DoublePoint;
 import com.calculator.aa.calc.Portfolio;
@@ -74,7 +75,11 @@ class PortfolioChartPanel extends JPanel {
             if (SwingUtilities.isLeftMouseButton(mouseEvent)) {
                 YieldsChart.showYields(periodsFiltered, dataFiltered, nearest);
             } else if (SwingUtilities.isRightMouseButton(mouseEvent)) {
-                ShowTable.show("Портфель", nearest.values(), nearest.labels(), new String[] {"Значение"});
+                ShowTable.show(
+                        Main.resourceBundle.getString("text.portfolio"),
+                        nearest.values(),
+                        nearest.labels(),
+                        new String[] {Main.resourceBundle.getString("text.value")});
             }
         }
 
@@ -373,8 +378,8 @@ class PortfolioChartPanel extends JPanel {
             return;
         }
 
-        String rString = "Р: " + Calc.formatPercent2(nearest.risk());
-        String yString = "Д: " + Calc.formatPercent2(nearest.yield());
+        String rString = Main.resourceBundle.getString("text.risk_short") + " " + Calc.formatPercent2(nearest.risk());
+        String yString = Main.resourceBundle.getString("text.yield_short") + " " + Calc.formatPercent2(nearest.yield());
 
         FontMetrics fm = g.getFontMetrics();
         Rectangle2D boundsR = fm.getStringBounds(rString, g);
