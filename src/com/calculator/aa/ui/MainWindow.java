@@ -2,6 +2,7 @@ package com.calculator.aa.ui;
 
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
+import com.sun.deploy.util.StringUtils;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -9,10 +10,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.font.TextAttribute;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
@@ -293,7 +291,13 @@ public class MainWindow {
             if (result == JFileChooser.APPROVE_OPTION) {
                 File f = fc.getSelectedFile();
                 if (f.exists()) {
-                    askImportOptions(f);
+                    askCSVOptions(() -> {
+                        try {
+                            parseCSVAndLoadData(f);
+                        } catch (Exception e) {
+                            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+                        }
+                    });
                 }
             }
         });
@@ -385,49 +389,37 @@ public class MainWindow {
                         return;
                     }
                 }
-                //askExportOptions(f);
+                File ff = f;
+                askCSVOptions(() -> parseCSVAndSaveData(ff));
             }
         });
     }
 
-    private void askImportOptions(File f) {
-
-        if (savedOptions == null) {
-            savedOptions = new String[] {";", "\"", "."};
-
-            Properties prop = Main.getProperties();
-            String s = prop.getProperty("import.delimeter");
-            if (s != null) {
-                savedOptions[0] = s;
-            }
-
-            s = prop.getProperty("import.mark");
-            if (s != null) {
-                savedOptions[1] = s;
-            }
-
-            s = prop.getProperty("import.decimal");
-            if (s != null) {
-                savedOptions[2] = s;
-            }
-        }
-
-        String[] options = ImportOptions.showOptions(savedOptions);
+    private void askCSVOptions(Runnable after) {
+        String[] options = CSVOptions.showOptions(savedOptions);
         if (options != null) {
             savedOptions = options;
-            parseCSVAndLoadData(f, options);
+            after.run();
         }
     }
 
     public void parseCSVAndLoadData(File f, String[] options) {
+        savedOptions = options;
+        try {
+            parseCSVAndLoadData(f);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void parseCSVAndLoadData(File f) throws Exception {
         try {
             List<String> columns = new ArrayList<>();
             List<String> labels = new ArrayList<>();
             List<List<Double>> data = new ArrayList<>();
 
-            String delim = options[0];
-            String mark = options[1];
-            String decimal = options[2];
+            String delim = savedOptions[0];
+            String mark = savedOptions[1];
+            String decimal = savedOptions[2];
 
             Properties prop = Main.getProperties();
             prop.setProperty("import.delimeter", delim);
@@ -471,6 +463,58 @@ public class MainWindow {
             for (int i = 0; i < newModel.width; i++) {
                 mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.height));
             }
+
+            prop.setProperty("file", f.getCanonicalPath());
+            lastFileName = f.getCanonicalPath();
+
+        } catch (Exception e) {
+
+        }
+    }
+
+    private void parseCSVAndSaveData(File f) {
+        try {
+            String delim = savedOptions[0];
+            String mark = savedOptions[1];
+            String decimal = savedOptions[2];
+
+            Properties prop = Main.getProperties();
+            prop.setProperty("import.delimeter", delim);
+            prop.setProperty("import.mark", mark);
+            prop.setProperty("import.decimal", decimal);
+
+            AATableModel model = (AATableModel)mainTable.getModel();
+
+            BufferedWriter os = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8));
+
+            os.write(
+                    StringUtils.join(
+                            Arrays.stream(model.instruments).map(i -> mark + i + mark).collect(Collectors.toList()),
+                            delim)
+            );
+            os.newLine();
+
+            int length = model.periods.length;
+
+            for (int i = 0; i < length; i++) {
+                os.write(mark);
+                os.write(model.periods[i]);
+                os.write(mark);
+                os.write(delim);
+                os.write(
+                        StringUtils.join(
+                            Arrays.stream(model.data[i])
+                                    .boxed()
+                                    .map(d -> d >= 0 ? String.valueOf(d) : "")
+                                    .map(s -> s.replace(".", decimal))
+                                    .collect(Collectors.toList()),
+                            delim)
+                );
+                os.newLine();
+            }
+            os.newLine();
+            os.flush();
+            os.close();
 
             prop.setProperty("file", f.getCanonicalPath());
             lastFileName = f.getCanonicalPath();

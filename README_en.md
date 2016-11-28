@@ -5,7 +5,7 @@
 You should have data for the calculator in CSV file.
 First row contains instruments names.
 First column contains periods names.
-Possible fields delimiters: comma, semicolon, space, tabulation.
+Possible fields delimiters: comma, colon, semicolon, space, tabulation.
 Possible text marks: double quote and quote. 
 Possible decimal points: point and comma.
 Empty lines are ignored.

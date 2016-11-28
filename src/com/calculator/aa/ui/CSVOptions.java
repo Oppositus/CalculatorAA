@@ -7,20 +7,23 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class ImportOptions extends JDialog {
+public class CSVOptions extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
     private JComboBox comboTextMark;
-    private JComboBox comboBoxDelim;
+    private JComboBox<String> comboBoxDelim;
     private JComboBox comboBoxDecimalPoint;
 
     private String[] result;
 
-    private ImportOptions(String[] options) {
+    private CSVOptions(String[] options) {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
+
+        String[] delims = {",", ";", ":", Main.resourceBundle.getString("text.tabulation"), Main.resourceBundle.getString("text.space")};
+        comboBoxDelim.setModel(new DefaultComboBoxModel<>(delims));
 
         buttonOK.addActionListener(e -> onOK());
 
@@ -73,7 +76,7 @@ public class ImportOptions extends JDialog {
     }
 
     static String[] showOptions(String[] options) {
-        ImportOptions dialog = new ImportOptions(options);
+        CSVOptions dialog = new CSVOptions(options);
         dialog.setTitle(Main.resourceBundle.getString("text.import_data"));
         dialog.setLocationRelativeTo(Main.getFrame());
         dialog.pack();
@@ -88,5 +91,9 @@ public class ImportOptions extends JDialog {
         }
 
         return dialog.result;
+    }
+
+    private void createUIComponents() {
+        comboBoxDelim = new JComboBox<>();
     }
 }
