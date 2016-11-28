@@ -45,4 +45,6 @@ ui.sigma_2=2\u03c3
 ui.sigma_3=3\u03c3
 ui.portfolio_components=Состав портфеля
 ui.log_scale=Логарифмическая шкала
+ui.rebalances=Ребалансировки
+ui.prognosis=Прогноз
 ui.save=Сохранить

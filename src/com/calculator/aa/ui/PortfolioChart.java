@@ -165,7 +165,7 @@ class PortfolioChart extends JDialog {
             );
 
             if (sum[0] > limit) {
-                return 100 / variants[lastNotZero];
+                return 100 / variants[lastNotZero >= 0 ? lastNotZero : i];
             }
 
             if (sum[0] != 0) {

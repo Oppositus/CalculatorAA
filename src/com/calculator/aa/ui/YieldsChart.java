@@ -47,6 +47,7 @@ public class YieldsChart extends JDialog {
     private JCheckBox checkBoxSigma1;
     private JCheckBox checkBoxSigma2;
     private JCheckBox checkBoxSigma3;
+    private JButton buttonRebalance;
 
     private final String[] labels;
     private final double[][] data;
@@ -55,6 +56,8 @@ public class YieldsChart extends JDialog {
     private double[] portfolioYields;
 
     private final int completePeriods;
+
+    private JButton lastModeButton;
 
     private YieldsChart(String[] ls, double[][] sourceData, Portfolio p) {
         data = sourceData;
@@ -94,6 +97,7 @@ public class YieldsChart extends JDialog {
         );
 
         buttonDraw.addActionListener(e -> {
+            lastModeButton = buttonDraw;
             boolean isLog = buttonLogScale.isSelected();
             realYields = calculateRealYields(isLog);
             portfolioYields = calculateModelYields(isLog);
@@ -105,9 +109,21 @@ public class YieldsChart extends JDialog {
             ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog);
         });
         buttonLogScale.addActionListener(e -> {
-            for(ActionListener a: buttonDraw.getActionListeners()) {
+            if (lastModeButton == null) {
+                lastModeButton = buttonDraw;
+            }
+            for(ActionListener a: lastModeButton.getActionListeners()) {
                 a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
             }
+        });
+        buttonRebalance.addActionListener(e -> {
+            lastModeButton = buttonRebalance;
+            boolean isLog = buttonLogScale.isSelected();
+            realYields = calculateRealYields(isLog);
+            portfolioYields = calculateRebalances(isLog);
+            boolean[] sigmas = new boolean[3];
+            Arrays.fill(sigmas, false);
+            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog);
         });
     }
 
@@ -174,6 +190,44 @@ public class YieldsChart extends JDialog {
         }
     }
 
+    private double[] calculateRebalances(boolean isLog) {
+        double[] weights = portfolio.weights();
+        int cols = weights.length;
+
+        double[][] dataWeighted = new double[completePeriods][cols];
+
+        for (int row = 0; row < completePeriods; row++) {
+            for (int col = 0; col < cols; col++) {
+                dataWeighted[row][col] = data[row][col] * weights[col];
+            }
+        }
+
+        double[] result = new double[completePeriods];
+        double[] prev = new double[cols];
+        double multiplier = 1.0;
+
+        System.arraycopy(dataWeighted[0], 0, prev, 0, cols);
+        result[0] = 1.0;
+
+        for (int row = 1; row < completePeriods; row++) {
+            double sum = 0;
+            for (int col = 0; col < cols; col++) {
+                if (weights[col] > 0) {
+                    sum += dataWeighted[row][col] / prev[col] * weights[col];
+                }
+            }
+            multiplier *= sum;
+            result[row] = multiplier;
+            System.arraycopy(dataWeighted[row], 0, prev, 0, cols);
+        }
+
+        if (isLog) {
+            return Arrays.stream(result).map(Math::log).toArray();
+        } else {
+            return result;
+        }
+    }
+
     static void showYields(String[] labels, double[][] data, Portfolio portfolio) {
         double[][] filtered = Calc.filterValidData(data, portfolio.weights());
         if (filtered == null) {
@@ -205,7 +259,10 @@ public class YieldsChart extends JDialog {
         dialog.setTitle(Main.resourceBundle.getString("text.portfolio_yield"));
 
         SwingUtilities.invokeLater(() -> {
-            for(ActionListener a: dialog.buttonDraw.getActionListeners()) {
+            if (dialog.lastModeButton == null) {
+                dialog.lastModeButton = dialog.buttonDraw;
+            }
+            for(ActionListener a: dialog.lastModeButton.getActionListeners()) {
                 a.actionPerformed(new ActionEvent(dialog, ActionEvent.ACTION_PERFORMED, null) {});
             }
         });

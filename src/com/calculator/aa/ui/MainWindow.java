@@ -412,64 +412,59 @@ public class MainWindow {
     }
 
     private void parseCSVAndLoadData(File f) throws Exception {
-        try {
-            List<String> columns = new ArrayList<>();
-            List<String> labels = new ArrayList<>();
-            List<List<Double>> data = new ArrayList<>();
+        List<String> columns = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        List<List<Double>> data = new ArrayList<>();
 
-            String delim = savedOptions[0];
-            String mark = savedOptions[1];
-            String decimal = savedOptions[2];
+        String delim = savedOptions[0];
+        String mark = savedOptions[1];
+        String decimal = savedOptions[2];
 
-            Properties prop = Main.getProperties();
-            prop.setProperty("import.delimeter", delim);
-            prop.setProperty("import.mark", mark);
-            prop.setProperty("import.decimal", decimal);
+        Properties prop = Main.getProperties();
+        prop.setProperty("import.delimeter", delim);
+        prop.setProperty("import.mark", mark);
+        prop.setProperty("import.decimal", decimal);
 
-            BufferedReader is = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
+        BufferedReader is = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
 
-            is.lines().forEach(line -> {
-                String[] splitted = processText(line, delim, mark);
-                if (columns.isEmpty()) {
-                    columns.addAll(Arrays.asList(Arrays.copyOfRange(splitted, 1, splitted.length)));
-                } else {
-                    if (!line.isEmpty()) {
-                        labels.add(splitted[0]);
-                        String[] numbers = Arrays.copyOfRange(splitted, 1, splitted.length);
-                        ArrayList<Double> parsed = new ArrayList<>(Arrays.stream(numbers).map(s -> s.replace(decimal, "."))
-                                .map(s -> s.isEmpty() ? -1.0 : Double.valueOf(s)).collect(Collectors.toList()));
+        is.lines().forEach(line -> {
+            String[] splitted = processText(line, delim, mark);
+            if (columns.isEmpty()) {
+                columns.addAll(Arrays.asList(Arrays.copyOfRange(splitted, 1, splitted.length)));
+            } else {
+                if (!line.isEmpty()) {
+                    labels.add(splitted[0]);
+                    String[] numbers = Arrays.copyOfRange(splitted, 1, splitted.length);
+                    ArrayList<Double> parsed = new ArrayList<>(Arrays.stream(numbers).map(s -> s.replace(decimal, "."))
+                            .map(s -> s.isEmpty() ? -1.0 : Double.valueOf(s)).collect(Collectors.toList()));
 
-                        while (parsed.size() < columns.size()) {
-                            parsed.add(-1.0);
-                        }
-                        data.add(parsed);
+                    while (parsed.size() < columns.size()) {
+                        parsed.add(-1.0);
                     }
-                }
-            });
-
-            double[][] rawData = new double[data.size()][columns.size()];
-            int htLength = data.size();
-            int whLength = columns.size();
-
-            for (int ht = 0; ht < htLength; ht++) {
-                for (int wh = 0; wh < whLength; wh++) {
-                    rawData[ht][wh] = data.get(ht).get(wh);
+                    data.add(parsed);
                 }
             }
+        });
 
-            AATableModel newModel = new AATableModel(whLength, htLength, rawData, labels.toArray(new String[0]), columns.toArray(new String[0]));
-            mainTable.setModel(newModel);
+        double[][] rawData = new double[data.size()][columns.size()];
+        int htLength = data.size();
+        int whLength = columns.size();
 
-            for (int i = 0; i < newModel.width; i++) {
-                mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.height));
+        for (int ht = 0; ht < htLength; ht++) {
+            for (int wh = 0; wh < whLength; wh++) {
+                rawData[ht][wh] = data.get(ht).get(wh);
             }
-
-            prop.setProperty("file", f.getCanonicalPath());
-            lastFileName = f.getCanonicalPath();
-
-        } catch (Exception e) {
-
         }
+
+        AATableModel newModel = new AATableModel(whLength, htLength, rawData, labels.toArray(new String[0]), columns.toArray(new String[0]));
+        mainTable.setModel(newModel);
+
+        for (int i = 0; i < newModel.width; i++) {
+            mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.height));
+        }
+
+        prop.setProperty("file", f.getCanonicalPath());
+        lastFileName = f.getCanonicalPath();
     }
 
     private void parseCSVAndSaveData(File f) {

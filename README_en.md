@@ -67,7 +67,8 @@ to include maximum available history.
 - Checkboxes 1σ, 2σ, 3σ enables risk borders.
 - "Portfolio components" button shows a table with portfolio components.
 - "Logarithmic scale" button switch vertical scale type.
-- "Draw" button redraws the chart.
+- "Rebalances" button shows portfolio yields with rebalances.
+- "Prognosis" button shows portfolio yields comparing to model yields.
 
 ## Installing and launching
 
