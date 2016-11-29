@@ -148,21 +148,14 @@ public class YieldsChart extends JDialog {
     private double[] calculateRealYields(boolean isLog) {
         double[] weights = portfolio.weights();
         int cols = weights.length;
-
-        double[][] dataWeighted = new double[completePeriods][cols];
-
-        for (int row = 0; row < completePeriods; row++) {
-            for (int col = 0; col < cols; col++) {
-                dataWeighted[row][col] = data[row][col] * weights[col];
-            }
-        }
-
-        double denom = Arrays.stream(dataWeighted[0]).sum();
-
         double[] result = new double[completePeriods];
 
         for (int row = 0; row < completePeriods; row++) {
-            result[row] = Arrays.stream(dataWeighted[row]).sum() / denom;
+            double sum = 0;
+            for (int col = 0; col < cols; col++) {
+                sum += data[row][col] / data[0][col] * weights[col];
+            }
+            result[row] = sum;
         }
 
         if (isLog) {

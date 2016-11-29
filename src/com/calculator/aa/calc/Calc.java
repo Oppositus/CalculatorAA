@@ -130,7 +130,9 @@ public class Calc {
 
     public static double averageYields(double[] values) {
         double[] filtered = Arrays.stream(values).filter(d -> d >= 0).toArray();
-        return Arrays.stream(yields(filtered)).average().orElse(0.0);
+        double[] yields = yields(filtered);
+        double lnYield = Arrays.stream(yields).sum() / yields.length;
+        return Math.exp(lnYield) - 1;
     }
 
     public static double stdevYields(double[] values) {
