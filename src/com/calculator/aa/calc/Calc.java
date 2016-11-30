@@ -239,6 +239,31 @@ public class Calc {
         return result;
     }
 
+    private static void iteratePortfolioHelper(double[][] correlations, double[] avYields, double[] sdYields,
+                                               int[] minimals, int[] maximals, int step,
+                                               int[] weights, String[] instruments, int index, List<Portfolio> acc) {
+        while (weights[index] <= maximals[index]) {
+
+            // clear tail
+            System.arraycopy(minimals, index + 1, weights, index + 1, weights.length - (index + 1));
+
+            int sum = sumIntArray(weights);
+
+            if (sum == 100) {
+                acc.add(
+                        portfolio(correlations, avYields, sdYields,
+                                Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray(), instruments)
+                );
+            }
+
+            if (index < weights.length - 1 && sum < 100) {
+                iteratePortfolioHelper(correlations, avYields, sdYields, minimals, maximals, step, weights, instruments, index + 1, acc);
+            }
+
+            weights[index] += step;
+        }
+    }
+
     public static List<Portfolio> getOptimalBorder(List<Portfolio> sourceSorted) {
         List<Portfolio> result = new LinkedList<>();
         List<Portfolio> rest = new ArrayList<>(sourceSorted);
@@ -305,31 +330,6 @@ public class Calc {
             sum += i;
         }
         return sum;
-    }
-
-    private static void iteratePortfolioHelper(double[][] correlations, double[] avYields, double[] sdYields,
-                                               int[] minimals, int[] maximals, int step,
-                                               int[] weights, String[] instruments, int index, List<Portfolio> acc) {
-        while (weights[index] <= maximals[index]) {
-
-            // clear tail
-            System.arraycopy(minimals, index + 1, weights, index + 1, weights.length - (index + 1));
-
-            int sum = sumIntArray(weights);
-
-            if (sum == 100) {
-                acc.add(
-                        portfolio(correlations, avYields, sdYields,
-                                Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray(), instruments)
-                );
-            }
-
-            if (index < weights.length - 1 && sum < 100) {
-                iteratePortfolioHelper(correlations, avYields, sdYields, minimals, maximals, step, weights, instruments, index + 1, acc);
-            }
-
-            weights[index] += step;
-        }
     }
 
     public static double distance(DoublePoint p1, DoublePoint p2) {
