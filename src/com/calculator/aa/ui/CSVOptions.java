@@ -14,6 +14,7 @@ public class CSVOptions extends JDialog {
     private JComboBox comboTextMark;
     private JComboBox<String> comboBoxDelim;
     private JComboBox comboBoxDecimalPoint;
+    private JComboBox<String> comboBoxDate;
 
     private String[] result;
 
@@ -24,6 +25,16 @@ public class CSVOptions extends JDialog {
 
         String[] delims = {",", ";", ":", Main.resourceBundle.getString("text.tabulation"), Main.resourceBundle.getString("text.space")};
         comboBoxDelim.setModel(new DefaultComboBoxModel<>(delims));
+
+        String[] dates = {
+                Main.resourceBundle.getString("text.date_format.1"),
+                Main.resourceBundle.getString("text.date_format.2"),
+                Main.resourceBundle.getString("text.date_format.3"),
+                Main.resourceBundle.getString("text.date_format.4"),
+                Main.resourceBundle.getString("text.date_format.5"),
+                Main.resourceBundle.getString("text.date_format.6")
+        };
+        comboBoxDate.setModel(new DefaultComboBoxModel<>(dates));
 
         buttonOK.addActionListener(e -> onOK());
 
@@ -53,17 +64,20 @@ public class CSVOptions extends JDialog {
             comboBoxDelim.getModel().setSelectedItem(result[0]);
             comboTextMark.getModel().setSelectedItem(result[1]);
             comboBoxDecimalPoint.getModel().setSelectedItem(result[2]);
+            comboBoxDate.getModel().setSelectedItem(result[3]);
         } else {
             result = new String[] {
                     (String)comboBoxDelim.getModel().getSelectedItem(),
                     (String)comboTextMark.getModel().getSelectedItem(),
-                    (String)comboBoxDecimalPoint.getModel().getSelectedItem()
+                    (String)comboBoxDecimalPoint.getModel().getSelectedItem(),
+                    (String)comboBoxDate.getModel().getSelectedItem()
             };
         }
 
         comboBoxDelim.addActionListener(actionEvent -> result[0] = (String)comboBoxDelim.getModel().getSelectedItem());
         comboTextMark.addActionListener(actionEvent -> result[1] = (String)comboTextMark.getModel().getSelectedItem());
         comboBoxDecimalPoint.addActionListener(actionEvent -> result[2] = (String)comboBoxDecimalPoint.getModel().getSelectedItem());
+        comboBoxDate.addActionListener(actionEvent -> result[3] = (String)comboBoxDate.getModel().getSelectedItem());
     }
 
     private void onOK() {
@@ -95,5 +109,6 @@ public class CSVOptions extends JDialog {
 
     private void createUIComponents() {
         comboBoxDelim = new JComboBox<>();
+        comboBoxDate = new JComboBox<>();
     }
 }

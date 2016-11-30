@@ -137,6 +137,7 @@ public class YieldsChart extends JDialog {
         properties.setProperty("sigma.1", checkBoxSigma1.isSelected() ? "1" : "0");
         properties.setProperty("sigma.2", checkBoxSigma2.isSelected() ? "1" : "0");
         properties.setProperty("sigma.3", checkBoxSigma3.isSelected() ? "1" : "0");
+        properties.setProperty("forecast.p", spinnerPeriods.getValue().toString());
         dispose();
     }
 
@@ -248,6 +249,12 @@ public class YieldsChart extends JDialog {
         dialog.checkBoxSigma1.setSelected(s1);
         dialog.checkBoxSigma2.setSelected(s2);
         dialog.checkBoxSigma3.setSelected(s3);
+
+        int forcast = 10;
+        try {
+            forcast = Integer.parseInt(properties.getProperty("forecast.p", "10"));
+        } catch (NumberFormatException ignored) {}
+        dialog.spinnerPeriods.setValue(forcast);
 
         dialog.setTitle(Main.resourceBundle.getString("text.portfolio_yield"));
 

@@ -14,6 +14,7 @@ class PortfolioYieldsPanel extends JPanel {
 
     private static final Color backColor = Color.WHITE;
     private static final Color axisColor = Color.BLACK;
+    private static final Color axisColor2 = Color.LIGHT_GRAY;
     private static final Color realColor = Color.BLUE;
     private static final Color modelColor = Color.RED;
     static final Color[] sigmaColor = new Color[] {new Color(255, 224, 224), new Color(255, 200, 200), new Color(255, 176, 176)};
@@ -21,6 +22,7 @@ class PortfolioYieldsPanel extends JPanel {
     private static final int safeTop = 5;
 
     private double minY;
+    private double maxY;
     private double dYield;
     private int dPeriod;
 
@@ -113,7 +115,7 @@ class PortfolioYieldsPanel extends JPanel {
 
         double dr = (maxYield - minYield) * 0.05;
         minY = minYield - dr;
-        double maxY = maxYield + dr;
+        maxY = maxYield + dr;
         dYield = maxY - minY;
 
         minYieldStr = Calc.formatDouble2(isLog ? Math.exp(minY) : minY);
@@ -152,7 +154,6 @@ class PortfolioYieldsPanel extends JPanel {
             }
         }
 
-        g.setColor(axisColor);
         drawAxis(g);
 
         g.setColor(realColor);
@@ -170,6 +171,28 @@ class PortfolioYieldsPanel extends JPanel {
     }
 
     private void drawAxis(Graphics g) {
+        g.setColor(axisColor2);
+
+        if (isLog) {
+            double max = Math.exp(maxY);
+            for (double y = 2; y < max; y *= 2) {
+                int yy = mapY(Math.log(y));
+                g.drawLine(drawingArea.x - safeZone / 2, yy, drawingArea.x + drawingArea.width, yy);
+            }
+        } else {
+            for (double y = 0; y < maxY; y += 10) {
+                int yy = mapY(y);
+                g.drawLine(drawingArea.x - safeZone / 2, yy, drawingArea.x + drawingArea.width, yy);
+            }
+        }
+
+        for (int p = 1; p < periods; p++) {
+            int xx = mapX(p);
+            g.drawLine(xx, drawingArea.y + drawingArea.height, xx, safeZone);
+        }
+
+        g.setColor(axisColor);
+
         g.drawRect(drawingArea.x, drawingArea.y, drawingArea.width, drawingArea.height);
 
         g.drawLine(drawingArea.x, drawingArea.y, drawingArea.x - safeZone / 2, drawingArea.y);

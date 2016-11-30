@@ -63,12 +63,12 @@ If there are instruments with different history length then table will be filter
 to include maximum available history.
 
 ## Working with yields chart
-- Field "Prognosis for" sets a length of the forecast for the portfolio.
+- Field "Forecast for" sets a length of the forecast for the portfolio.
 - Checkboxes 1σ, 2σ, 3σ enables risk borders.
 - "Portfolio components" button shows a table with portfolio components.
 - "Logarithmic scale" button switch vertical scale type.
 - "Rebalances" button shows portfolio yields with rebalances.
-- "Prognosis" button shows portfolio yields comparing to model yields.
+- "Forecast" button shows portfolio yields comparing to model yields.
 
 ## Installing and launching
 

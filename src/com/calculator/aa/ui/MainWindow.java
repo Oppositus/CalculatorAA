@@ -419,11 +419,13 @@ public class MainWindow {
         String delim = savedOptions[0];
         String mark = savedOptions[1];
         String decimal = savedOptions[2];
+        String dates = savedOptions[3];
 
         Properties prop = Main.getProperties();
         prop.setProperty("import.delimeter", delim);
         prop.setProperty("import.mark", mark);
         prop.setProperty("import.decimal", decimal);
+        prop.setProperty("import.date", dates);
 
         BufferedReader is = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
 
@@ -472,11 +474,13 @@ public class MainWindow {
             String delim = savedOptions[0];
             String mark = savedOptions[1];
             String decimal = savedOptions[2];
+            String dates = savedOptions[3];
 
             Properties prop = Main.getProperties();
             prop.setProperty("import.delimeter", delim);
             prop.setProperty("import.mark", mark);
             prop.setProperty("import.decimal", decimal);
+            prop.setProperty("import.date", dates);
 
             AATableModel model = (AATableModel)mainTable.getModel();
 

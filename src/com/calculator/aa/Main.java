@@ -94,7 +94,7 @@ public class Main {
         program = new Main();
 
         Properties prop = getProperties();
-        String[] savedOptions = new String[] {";", "\"", "."};
+        String[] savedOptions = new String[] {";", "\"", ".", resourceBundle.getString("text.date_format.1")};
 
         String s = prop.getProperty("import.delimeter");
         if (s != null) {
@@ -109,6 +109,11 @@ public class Main {
         s = prop.getProperty("import.decimal");
         if (s != null) {
             savedOptions[2] = s;
+        }
+
+        s = prop.getProperty("import.date");
+        if (s != null) {
+            savedOptions[3] = s;
         }
 
         String file = prop.getProperty("file", "");
