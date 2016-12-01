@@ -32,6 +32,24 @@ Example of correct CSV file:
 
 You can download an example file from the builds folder: [msci_year.csv](builds/msci_year.csv)
 
+If 1st column contains dates then the calculator will determine its format and
+sort rows in ascending order. This is the list of supported formats:
+
+    yyyy - year, always 4 digits.
+    mm yyyy - month (1 or 2 digits) and year (always 4 digits). The delimiter may be any (3.2016 equals to 03-2016).
+    yyyy mm - year (always 4 digits) and month (1 or 2 digits). The delimiter may be any.
+    dd mm yyyy - day (1 or 2 digits), month (1 or 2 digits) and year (always 4 digits). The delimiter may be any.
+    mm dd yyyy - month (1 or 2 digits), day (1 or 2 digits) and year (always 4 digits). The delimiter may be any.
+    yyyy mm dd - year (always 4 digits), month (1 or 2 digits) and day (1 or 2 digits). The delimiter may be any.
+
+If the application can't distinguish day from month using the whole column,
+it's behavior depends on current locale:
+    
+    Russian locale: first is day, second is month
+    English locale: 
+        American variant: first is month, second is day
+        Other variants: first is day, second is month
+
 ## Calculator functions
 
 - Data editing.
@@ -78,7 +96,7 @@ to include maximum available history.
 - For Windows: launch `calcaa.cmd`
 (it is possible you need to open properties and unlock the file)
 - For Linux: launch `./calcaa.sh`
-(may be you need to add executable rights: `chmod +x calcaa.sh`)
+(maybe you need to add executable rights: `chmod +x calcaa.sh`)
 
 ## Say thanks to author
 Discussion:

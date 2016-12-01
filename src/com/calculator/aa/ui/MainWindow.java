@@ -14,6 +14,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class MainWindow {
@@ -63,15 +65,33 @@ public class MainWindow {
         }
     }
 
+    enum DateFormats {
+        DATE_FORMAT_NONE,
+        DATE_FORMAT_YYYY,
+        DATE_FORMAT_MM_YYYY,
+        DATE_FORMAT_YYYY_MM,
+        DATE_FORMAT_DD_MM_YYYY,
+        DATE_FORMAT_MM_DD_YYYY,
+        DATE_FORMAT_YYYY_MM_DD
+    }
+
     private class AATableModel extends AbstractTableModel {
+
+        private final Pattern ptYYYY = Pattern.compile("^(\\d\\d\\d\\d)$");
+        private final Pattern ptMM_YYYY = Pattern.compile("^(\\d\\d?)[^\\d](\\d\\d\\d\\d)$");
+        private final Pattern ptYYYY_MM = Pattern.compile("^(\\d\\d\\d\\d)[^\\d](\\d\\d?)$");
+        private final Pattern ptXX_XX_YYYY = Pattern.compile("^(\\d\\d?)[^\\d](\\d\\d?)[^\\d](\\d\\d\\d\\d)$");
+        private final Pattern ptYYYY_MM_DD = Pattern.compile("^(\\d\\d\\d\\d)[^\\d](\\d\\d?)[^\\d](\\d\\d?)$");
 
         private final int width;
         private final int height;
-        private final double[][]data;
+        private double[][]data;
         private final String[] instruments;
-        private final String[] periods;
+        private Object[] periods;
         private final double[] averages;
         private final double[] deviations;
+
+        private DateFormats dateFormat;
 
         // Default constructor
         private AATableModel() {
@@ -87,6 +107,7 @@ public class MainWindow {
             periods = new String[height - 2];
             averages = new double[width - 1];
             deviations = new double[width - 1];
+            dateFormat = DateFormats.DATE_FORMAT_NONE;
 
             instruments[0] = "";
             for (int wh = 0; wh < width; wh++) {
@@ -109,7 +130,7 @@ public class MainWindow {
         private AATableModel(int w, int h, AATableModel prev, int ignoredRow) {
             this(w, h);
 
-            String[] prevPeriods = prev.periods;
+            Object[] prevPeriods = prev.periods;
             double[][] prevData = prev.data;
             int length = prevPeriods.length;
 
@@ -148,7 +169,7 @@ public class MainWindow {
         }
 
         // Create new table w*h and copy data from data
-        private AATableModel(int w, int h, double[][] d, String[] l, String[] i) {
+        private AATableModel(int w, int h, double[][] d, String[] l, String[] i, boolean useDates) {
             this(w, h);
 
             for (int wh = 0; wh < width; wh++) {
@@ -168,6 +189,12 @@ public class MainWindow {
                 if (wh > 0) {
                     updateAverage(wh - 1);
                     updateStDev(wh - 1);
+                }
+            }
+
+            if (useDates) {
+                if (tryFormatDates()) {
+                    sortByDates();
                 }
             }
         }
@@ -190,7 +217,7 @@ public class MainWindow {
                 return col == 0 ? Main.resourceBundle.getString("text.risk") : (height < 5 ? "" : Calc.formatPercent2(deviations[col - 1]));
             } else {
                 if (col == 0) {
-                    return periods[row];
+                    return formatPeriod(row);
                 }
 
                 double v = data[row][col - 1];
@@ -224,6 +251,73 @@ public class MainWindow {
             fireTableCellUpdated(row, col);
         }
 
+        public String formatPeriod(int p) {
+            Object period = periods[p];
+
+            if (period instanceof String) {
+                return  (String)period;
+            } else if (period instanceof Date) {
+                Locale l = Locale.getDefault();
+                Calendar c = Calendar.getInstance();
+                c.setTime((Date)period);
+
+                int year = c.get(Calendar.YEAR);
+                int month = c.get(Calendar.MONTH) + 1;
+                int day = c.get(Calendar.DAY_OF_MONTH);
+
+                switch (dateFormat) {
+                    case DATE_FORMAT_YYYY:
+                        return String.format(Main.resourceBundle.getString("text.date_format.yyyy"), year);
+                    case DATE_FORMAT_MM_YYYY:
+                        return String.format(Main.resourceBundle.getString("text.date_format.mm_yyyy"), month, year);
+                    case DATE_FORMAT_YYYY_MM:
+                        return String.format(Main.resourceBundle.getString("text.date_format.yyyy_mm"), year, month);
+                    case DATE_FORMAT_DD_MM_YYYY:
+                        return String.format(Main.resourceBundle.getString("text.date_format.xx_xx_yyyy"), day, month, year);
+                    case DATE_FORMAT_MM_DD_YYYY:
+                        return String.format(Main.resourceBundle.getString("text.date_format.xx_xx_yyyy"), month, day, year);
+                    case DATE_FORMAT_YYYY_MM_DD:
+                        return String.format(Main.resourceBundle.getString("text.date_format.yyyy_mm_dd"), year, month, day);
+                }
+
+                return "?/?/?";
+            } else {
+                return period.toString();
+            }
+        }
+
+        private void sortByDates() {
+            int length = periods.length;
+            List<AbstractMap.SimpleEntry<Date, Integer>> pairs = new ArrayList<>(length);
+            for (int i = 0; i < length; i++) {
+                pairs.add(new AbstractMap.SimpleEntry<>((Date)periods[i], i));
+            }
+            pairs.sort(Comparator.comparing(AbstractMap.SimpleEntry::getKey));
+
+            Object[] newPeriods = new Object[length];
+            double[][] newData = new double[height - 2][width - 1];
+
+            for (int i = 0; i < length; i++) {
+                int oldPos = pairs.get(i).getValue();
+                newPeriods[i] = periods[oldPos];
+                newData[i] = data[oldPos];
+            }
+
+            periods = newPeriods;
+            data = newData;
+        }
+
+        public String[] formatPeriods() {
+
+            int length = periods.length;
+            String[] result = new String[length];
+
+            for(int i = 0; i < length; i++) {
+                result[i] = formatPeriod(i);
+            }
+            return result;
+        }
+
         private double[] getCol(int col) {
             int length = height - 2;
             double[] values = new double[length];
@@ -245,6 +339,173 @@ public class MainWindow {
 
             deviations[col] = Calc.stdevYields(getCol(col), averages[col]);
         }
+
+        private boolean tryFormatDates() {
+            if (Arrays.stream((String[])periods).allMatch(this::acceptYYYY)) {
+                periods = Arrays.stream((String[])periods).map(this::formatYYYY).toArray();
+                return true;
+            } else if (Arrays.stream((String[])periods).allMatch(this::acceptMM_YYYY)) {
+                periods = Arrays.stream((String[])periods).map(this::formatMM_YYYY).toArray();
+                return true;
+            } else if (Arrays.stream((String[])periods).allMatch(this::acceptYYYY_MM)) {
+                periods = Arrays.stream((String[])periods).map(this::formatYYYY_MM).toArray();
+                return true;
+            } else if (Arrays.stream((String[])periods).allMatch(this::acceptXX_XX_YYYY)) {
+                periods = Arrays.stream((String[])periods).map(this::formatDD_MM_YYYY).toArray();
+                if (Arrays.stream(periods).anyMatch(Objects::isNull)) {
+                    periods = Arrays.stream((String[])periods).map(this::formatMM_DD_YYYY).toArray();
+                }
+                return true;
+            } else if (Arrays.stream((String[])periods).allMatch(this::acceptYYYY_MM_DD)) {
+                periods = Arrays.stream((String[])periods).map(this::formatYYYY_MM_DD).toArray();
+                return true;
+            }
+
+            return false;
+        }
+
+        private boolean acceptYYYY(String s) {
+            return ptYYYY.matcher(s).matches();
+        }
+
+        private Date formatYYYY(String s) {
+            dateFormat = DateFormats.DATE_FORMAT_YYYY;
+            Calendar c = Calendar.getInstance();
+            c.set(Integer.parseInt(s), 0, 1);
+
+            return c.getTime();
+        }
+
+        private boolean acceptMM_YYYY(String s) {
+            Matcher m = ptMM_YYYY.matcher(s);
+            if (m.matches()) {
+                try {
+                    int mm = Integer.parseInt(m.group(1));
+                    return mm >= 1 && mm <= 12;
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        private Date formatMM_YYYY(String s) {
+            Matcher m = ptMM_YYYY.matcher(s);
+            m.matches();
+            int mm = Integer.parseInt(m.group(1));
+            int yy = Integer.parseInt(m.group(2));
+
+            dateFormat = DateFormats.DATE_FORMAT_MM_YYYY;
+            Calendar c = Calendar.getInstance();
+            c.set(yy, mm - 1, 1);
+
+            return c.getTime();
+        }
+
+        private boolean acceptYYYY_MM(String s) {
+            Matcher m = ptYYYY_MM.matcher(s);
+            if (m.matches()) {
+                try {
+                    int mm = Integer.parseInt(m.group(2));
+                    return mm >= 1 && mm <= 12;
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        private Date formatYYYY_MM(String s) {
+            Matcher m = ptYYYY_MM.matcher(s);
+            m.matches();
+            int yy = Integer.parseInt(m.group(1));
+            int mm = Integer.parseInt(m.group(2));
+
+            dateFormat = DateFormats.DATE_FORMAT_YYYY_MM;
+            Calendar c = Calendar.getInstance();
+            c.set(yy, mm - 1, 1);
+
+            return c.getTime();
+        }
+
+        private boolean acceptXX_XX_YYYY(String s) {
+            Matcher m = ptXX_XX_YYYY.matcher(s);
+            if (m.matches()) {
+                try {
+                    int p1 = Integer.parseInt(m.group(1));
+                    int p2 = Integer.parseInt(m.group(2));
+                    return (p1 >= 1 && p1 <= 31 && p2 >= 1 && p2 <= 12) || (p1 >= 1 && p1 <= 12 && p2 >= 1 && p2 <= 31);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        private Date formatDD_MM_YYYY(String s) {
+            Matcher m = ptXX_XX_YYYY.matcher(s);
+            m.matches();
+            int dd = Integer.parseInt(m.group(1));
+            int mm = Integer.parseInt(m.group(2));
+            int yy = Integer.parseInt(m.group(3));
+
+            if (mm > 12) {
+                return null;
+            }
+
+            dateFormat = DateFormats.DATE_FORMAT_DD_MM_YYYY;
+            Calendar c = Calendar.getInstance();
+            c.set(yy, mm - 1, dd);
+
+            return c.getTime();
+        }
+
+        private Date formatMM_DD_YYYY(String s) {
+            Matcher m = ptXX_XX_YYYY.matcher(s);
+            m.matches();
+            int mm = Integer.parseInt(m.group(1));
+            int dd = Integer.parseInt(m.group(2));
+            int yy = Integer.parseInt(m.group(3));
+
+            if (mm > 12) {
+                return null;
+            }
+
+            dateFormat = DateFormats.DATE_FORMAT_MM_DD_YYYY;
+            Calendar c = Calendar.getInstance();
+            c.set(yy, mm - 1, dd);
+
+            return c.getTime();
+        }
+
+        private boolean acceptYYYY_MM_DD(String s) {
+            Matcher m = ptYYYY_MM_DD.matcher(s);
+            if (m.matches()) {
+                try {
+                    int mm = Integer.parseInt(m.group(2));
+                    int dd = Integer.parseInt(m.group(3));
+                    return mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31;
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        private Date formatYYYY_MM_DD(String s) {
+            Matcher m = ptYYYY_MM_DD.matcher(s);
+            m.matches();
+            int yy = Integer.parseInt(m.group(1));
+            int mm = Integer.parseInt(m.group(2));
+            int dd = Integer.parseInt(m.group(3));
+
+            dateFormat = DateFormats.DATE_FORMAT_YYYY_MM_DD;
+            Calendar c = Calendar.getInstance();
+            c.set(yy, mm - 1, dd);
+
+            return c.getTime();
+        }
+
     }
 
     public MainWindow() {
@@ -291,7 +552,7 @@ public class MainWindow {
             if (result == JFileChooser.APPROVE_OPTION) {
                 File f = fc.getSelectedFile();
                 if (f.exists()) {
-                    askCSVOptions(() -> {
+                    askCSVOptions(true, () -> {
                         try {
                             parseCSVAndLoadData(f);
                         } catch (Exception e) {
@@ -390,13 +651,13 @@ public class MainWindow {
                     }
                 }
                 File ff = f;
-                askCSVOptions(() -> parseCSVAndSaveData(ff));
+                askCSVOptions(false, () -> parseCSVAndSaveData(ff));
             }
         });
     }
 
-    private void askCSVOptions(Runnable after) {
-        String[] options = CSVOptions.showOptions(savedOptions);
+    private void askCSVOptions(boolean askDates, Runnable after) {
+        String[] options = CSVOptions.showOptions(savedOptions, askDates);
         if (options != null) {
             savedOptions = options;
             after.run();
@@ -422,7 +683,7 @@ public class MainWindow {
         String dates = savedOptions[3];
 
         Properties prop = Main.getProperties();
-        prop.setProperty("import.delimeter", delim);
+        prop.setProperty("import.delimiter", delim);
         prop.setProperty("import.mark", mark);
         prop.setProperty("import.decimal", decimal);
         prop.setProperty("import.date", dates);
@@ -458,7 +719,7 @@ public class MainWindow {
             }
         }
 
-        AATableModel newModel = new AATableModel(whLength, htLength, rawData, labels.toArray(new String[0]), columns.toArray(new String[0]));
+        AATableModel newModel = new AATableModel(whLength, htLength, rawData, labels.toArray(new String[0]), columns.toArray(new String[0]), "1".equals(dates));
         mainTable.setModel(newModel);
 
         for (int i = 0; i < newModel.width; i++) {
@@ -477,7 +738,7 @@ public class MainWindow {
             String dates = savedOptions[3];
 
             Properties prop = Main.getProperties();
-            prop.setProperty("import.delimeter", delim);
+            prop.setProperty("import.delimiter", delim);
             prop.setProperty("import.mark", mark);
             prop.setProperty("import.decimal", decimal);
             prop.setProperty("import.date", dates);
@@ -497,7 +758,7 @@ public class MainWindow {
 
             for (int i = 0; i < length; i++) {
                 os.write(mark);
-                os.write(model.periods[i]);
+                os.write(model.formatPeriod(i));
                 os.write(mark);
                 os.write(delim);
                 os.write(
@@ -579,6 +840,6 @@ public class MainWindow {
     }
 
     public String[] getPeriods() {
-        return ((AATableModel)mainTable.getModel()).periods;
+        return ((AATableModel)mainTable.getModel()).formatPeriods();
     }
 }

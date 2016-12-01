@@ -1,5 +1,6 @@
 package com.calculator.aa.ui;
 
+import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 
 import javax.swing.*;
@@ -121,7 +122,10 @@ class PortfolioYieldsPanel extends JPanel {
         minYieldStr = Calc.formatDouble2(isLog ? Math.exp(minY) : minY);
         maxYieldStr = Calc.formatDouble2(isLog ? Math.exp(maxY) : maxY);
         minPeriodStr = labels[0];
-        maxPeriodStr = labels[labels.length - 1] + "+" + (modelYields.length - realYields.length);
+        maxPeriodStr = labels[labels.length - 1];
+        if (modelYields.length - realYields.length > 0) {
+            maxPeriodStr += "+" + (modelYields.length - realYields.length);
+        }
 
         stringHeight = -1;
         stringWidth = -1;
@@ -178,17 +182,26 @@ class PortfolioYieldsPanel extends JPanel {
             for (double y = 2; y < max; y *= 2) {
                 int yy = mapY(Math.log(y));
                 g.drawLine(drawingArea.x - safeZone / 2, yy, drawingArea.x + drawingArea.width, yy);
+                g.drawString(String.valueOf(y), drawingArea.x - stringWidth - safeTop, yy + stringHeight);
             }
         } else {
-            for (double y = 0; y < maxY; y += 10) {
+            int step = maxY < 10 ? 1 : (maxY < 100 ? 10 : (maxY < 1000 ? 100 : 1000));
+            for (double y = 0; y < maxY; y += step) {
                 int yy = mapY(y);
                 g.drawLine(drawingArea.x - safeZone / 2, yy, drawingArea.x + drawingArea.width, yy);
+                g.drawString(String.valueOf(y), drawingArea.x - stringWidth - safeTop, yy + stringHeight);
             }
         }
 
-        for (int p = 1; p < periods; p++) {
+        int lastXPos = drawingArea.x + stringPeriodWidth;
+        int length = labels.length;
+        for (int p = 1; p < length; p++) {
             int xx = mapX(p);
-            g.drawLine(xx, drawingArea.y + drawingArea.height, xx, safeZone);
+            g.drawLine(xx, drawingArea.y + drawingArea.height + safeTop, xx, safeZone);
+            if (xx > lastXPos && xx + stringPeriodWidth < drawingArea.x + dPeriod * periods - stringPeriodWidth) {
+                lastXPos = xx + stringPeriodWidth;
+                g.drawString(labels[p], xx, drawingArea.y + drawingArea.height + stringHeight + safeTop);
+            }
         }
 
         g.setColor(axisColor);

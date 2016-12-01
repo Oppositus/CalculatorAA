@@ -53,7 +53,7 @@ class ShowTable extends JDialog {
             int colsLength = srcColLabels.length + 1;
 
             Properties prop = Main.getProperties();
-            String delim = prop.getProperty("import.delimeter", ";");
+            String delim = prop.getProperty("import.delimiter", ";");
             String mark = prop.getProperty("import.mark", "\"");
             String decimal = prop.getProperty("import.decimal", ".");
 

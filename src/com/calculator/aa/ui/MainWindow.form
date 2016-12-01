@@ -61,8 +61,11 @@
           <component id="c4918" class="javax.swing.JTable" binding="mainTable" custom-create="true">
             <constraints/>
             <properties>
-              <autoResizeMode value="0"/>
-              <updateSelectionOnSort value="true"/>
+              <autoResizeMode value="4"/>
+              <cellSelectionEnabled value="false"/>
+              <columnSelectionAllowed value="false"/>
+              <rowSelectionAllowed value="false"/>
+              <updateSelectionOnSort value="false"/>
             </properties>
           </component>
         </children>

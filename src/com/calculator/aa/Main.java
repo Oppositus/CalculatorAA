@@ -88,15 +88,19 @@ public class Main {
         return Arrays.copyOfRange(periods, periods.length - last, periods.length);
     }
 
+    public static String getPeriod(int p) {
+        return program.mainWindow.getPeriods()[p];
+    }
+
     public static void main(String[] args) {
         resourceBundle = ResourceBundle.getBundle("com.calculator.aa.messages", Locale.getDefault());
 
         program = new Main();
 
         Properties prop = getProperties();
-        String[] savedOptions = new String[] {";", "\"", ".", resourceBundle.getString("text.date_format.1")};
+        String[] savedOptions = new String[] {";", "\"", ".", "1"};
 
-        String s = prop.getProperty("import.delimeter");
+        String s = prop.getProperty("import.delimiter");
         if (s != null) {
             savedOptions[0] = s;
         }
