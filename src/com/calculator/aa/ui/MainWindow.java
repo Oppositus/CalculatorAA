@@ -104,7 +104,7 @@ public class MainWindow {
             height = h + 2;
             data = new double[height - 2][width - 1];
             instruments = new String[width];
-            periods = new String[height - 2];
+            periods = new Object[height - 2];
             averages = new double[width - 1];
             deviations = new double[width - 1];
             dateFormat = DateFormats.DATE_FORMAT_NONE;
@@ -129,6 +129,8 @@ public class MainWindow {
         // Create new table w*h and copy data from previous model
         private AATableModel(int w, int h, AATableModel prev, int ignoredRow) {
             this(w, h);
+
+            dateFormat = prev.dateFormat;
 
             Object[] prevPeriods = prev.periods;
             double[][] prevData = prev.data;
@@ -341,43 +343,43 @@ public class MainWindow {
         }
 
         private boolean tryFormatDates() {
-            if (Arrays.stream((String[])periods).allMatch(this::acceptYYYY)) {
-                periods = Arrays.stream((String[])periods).map(this::formatYYYY).toArray();
+            if (Arrays.stream(periods).allMatch(this::acceptYYYY)) {
+                periods = Arrays.stream(periods).map(this::formatYYYY).toArray();
                 return true;
-            } else if (Arrays.stream((String[])periods).allMatch(this::acceptMM_YYYY)) {
-                periods = Arrays.stream((String[])periods).map(this::formatMM_YYYY).toArray();
+            } else if (Arrays.stream(periods).allMatch(this::acceptMM_YYYY)) {
+                periods = Arrays.stream(periods).map(this::formatMM_YYYY).toArray();
                 return true;
-            } else if (Arrays.stream((String[])periods).allMatch(this::acceptYYYY_MM)) {
-                periods = Arrays.stream((String[])periods).map(this::formatYYYY_MM).toArray();
+            } else if (Arrays.stream(periods).allMatch(this::acceptYYYY_MM)) {
+                periods = Arrays.stream(periods).map(this::formatYYYY_MM).toArray();
                 return true;
-            } else if (Arrays.stream((String[])periods).allMatch(this::acceptXX_XX_YYYY)) {
-                periods = Arrays.stream((String[])periods).map(this::formatDD_MM_YYYY).toArray();
+            } else if (Arrays.stream(periods).allMatch(this::acceptXX_XX_YYYY)) {
+                periods = Arrays.stream(periods).map(this::formatDD_MM_YYYY).toArray();
                 if (Arrays.stream(periods).anyMatch(Objects::isNull)) {
-                    periods = Arrays.stream((String[])periods).map(this::formatMM_DD_YYYY).toArray();
+                    periods = Arrays.stream(periods).map(this::formatMM_DD_YYYY).toArray();
                 }
                 return true;
-            } else if (Arrays.stream((String[])periods).allMatch(this::acceptYYYY_MM_DD)) {
-                periods = Arrays.stream((String[])periods).map(this::formatYYYY_MM_DD).toArray();
+            } else if (Arrays.stream(periods).allMatch(this::acceptYYYY_MM_DD)) {
+                periods = Arrays.stream(periods).map(this::formatYYYY_MM_DD).toArray();
                 return true;
             }
 
             return false;
         }
 
-        private boolean acceptYYYY(String s) {
-            return ptYYYY.matcher(s).matches();
+        private boolean acceptYYYY(Object s) {
+            return ptYYYY.matcher(s.toString()).matches();
         }
 
-        private Date formatYYYY(String s) {
+        private Date formatYYYY(Object s) {
             dateFormat = DateFormats.DATE_FORMAT_YYYY;
             Calendar c = Calendar.getInstance();
-            c.set(Integer.parseInt(s), 0, 1);
+            c.set(Integer.parseInt(s.toString()), 0, 1);
 
             return c.getTime();
         }
 
-        private boolean acceptMM_YYYY(String s) {
-            Matcher m = ptMM_YYYY.matcher(s);
+        private boolean acceptMM_YYYY(Object s) {
+            Matcher m = ptMM_YYYY.matcher(s.toString());
             if (m.matches()) {
                 try {
                     int mm = Integer.parseInt(m.group(1));
@@ -389,8 +391,8 @@ public class MainWindow {
             return false;
         }
 
-        private Date formatMM_YYYY(String s) {
-            Matcher m = ptMM_YYYY.matcher(s);
+        private Date formatMM_YYYY(Object s) {
+            Matcher m = ptMM_YYYY.matcher(s.toString());
             m.matches();
             int mm = Integer.parseInt(m.group(1));
             int yy = Integer.parseInt(m.group(2));
@@ -402,8 +404,8 @@ public class MainWindow {
             return c.getTime();
         }
 
-        private boolean acceptYYYY_MM(String s) {
-            Matcher m = ptYYYY_MM.matcher(s);
+        private boolean acceptYYYY_MM(Object s) {
+            Matcher m = ptYYYY_MM.matcher(s.toString());
             if (m.matches()) {
                 try {
                     int mm = Integer.parseInt(m.group(2));
@@ -415,8 +417,8 @@ public class MainWindow {
             return false;
         }
 
-        private Date formatYYYY_MM(String s) {
-            Matcher m = ptYYYY_MM.matcher(s);
+        private Date formatYYYY_MM(Object s) {
+            Matcher m = ptYYYY_MM.matcher(s.toString());
             m.matches();
             int yy = Integer.parseInt(m.group(1));
             int mm = Integer.parseInt(m.group(2));
@@ -428,8 +430,8 @@ public class MainWindow {
             return c.getTime();
         }
 
-        private boolean acceptXX_XX_YYYY(String s) {
-            Matcher m = ptXX_XX_YYYY.matcher(s);
+        private boolean acceptXX_XX_YYYY(Object s) {
+            Matcher m = ptXX_XX_YYYY.matcher(s.toString());
             if (m.matches()) {
                 try {
                     int p1 = Integer.parseInt(m.group(1));
@@ -442,8 +444,8 @@ public class MainWindow {
             return false;
         }
 
-        private Date formatDD_MM_YYYY(String s) {
-            Matcher m = ptXX_XX_YYYY.matcher(s);
+        private Date formatDD_MM_YYYY(Object s) {
+            Matcher m = ptXX_XX_YYYY.matcher(s.toString());
             m.matches();
             int dd = Integer.parseInt(m.group(1));
             int mm = Integer.parseInt(m.group(2));
@@ -460,8 +462,8 @@ public class MainWindow {
             return c.getTime();
         }
 
-        private Date formatMM_DD_YYYY(String s) {
-            Matcher m = ptXX_XX_YYYY.matcher(s);
+        private Date formatMM_DD_YYYY(Object s) {
+            Matcher m = ptXX_XX_YYYY.matcher(s.toString());
             m.matches();
             int mm = Integer.parseInt(m.group(1));
             int dd = Integer.parseInt(m.group(2));
@@ -478,8 +480,8 @@ public class MainWindow {
             return c.getTime();
         }
 
-        private boolean acceptYYYY_MM_DD(String s) {
-            Matcher m = ptYYYY_MM_DD.matcher(s);
+        private boolean acceptYYYY_MM_DD(Object s) {
+            Matcher m = ptYYYY_MM_DD.matcher(s.toString());
             if (m.matches()) {
                 try {
                     int mm = Integer.parseInt(m.group(2));
@@ -492,8 +494,8 @@ public class MainWindow {
             return false;
         }
 
-        private Date formatYYYY_MM_DD(String s) {
-            Matcher m = ptYYYY_MM_DD.matcher(s);
+        private Date formatYYYY_MM_DD(Object s) {
+            Matcher m = ptYYYY_MM_DD.matcher(s.toString());
             m.matches();
             int yy = Integer.parseInt(m.group(1));
             int mm = Integer.parseInt(m.group(2));
