@@ -22,9 +22,14 @@ class PortfolioChart extends JDialog {
     private JToggleButton buttonBorderOnly;
     private JButton buttonAccuracy;
     private JButton buttonAccuracyMax;
+    private JComboBox<String> comboBoxFrom;
+    private JComboBox<String> comboBoxTo;
 
     private final String[] instruments;
     private final double[][] data;
+
+    private int indexFrom;
+    private int indexTo;
 
     private PortfolioChart(String[] i, double[][] d) {
 
@@ -36,6 +41,12 @@ class PortfolioChart extends JDialog {
         getRootPane().setDefaultButton(buttonOK);
 
         buttonOK.addActionListener(e -> onOK());
+
+        String[] periods = Main.getPeriods(0, Integer.MAX_VALUE);
+        comboBoxFrom.setModel(new DefaultComboBoxModel<>(Arrays.copyOfRange(periods, 0, periods.length - 2)));
+        comboBoxFrom.setSelectedIndex(0);
+        comboBoxTo.setModel(new DefaultComboBoxModel<>(Arrays.copyOfRange(periods, 2, periods.length)));
+        comboBoxTo.setSelectedIndex(periods.length - 3);
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -56,6 +67,7 @@ class PortfolioChart extends JDialog {
 
             int[] minimals = new int[length];
             int[] maximals = new int[length];
+            int[] compares = new int[length];
 
             for (int col = 0; col < length; col++) {
                 int minValue = Integer.valueOf((String) model.getValueAt(0, col + 1));
@@ -67,9 +79,26 @@ class PortfolioChart extends JDialog {
 
                 minimals[col] = minValue;
                 maximals[col] = maxValue;
+                compares[col] = Integer.valueOf((String) model.getValueAt(2, col + 1));
             }
 
-            double[][] dataFiltered = Calc.filterValidData(data, maximals);
+            List<String> periodsList = Arrays.asList(periods);
+
+            int[] fromIndex = new int[1];
+            fromIndex[0]= periodsList.indexOf((String)comboBoxFrom.getSelectedItem());
+            if (fromIndex[0] < 0) {
+                fromIndex[0] = 0;
+            }
+
+            int[] toIndex = new int[1];
+            toIndex[0] = periodsList.indexOf((String)comboBoxTo.getSelectedItem());
+            if (toIndex[0] < 0) {
+                toIndex[0] = data.length - 1;
+            }
+
+            double[][] dataFiltered = Calc.filterValidData(data, maximals, fromIndex, toIndex);
+            indexFrom = fromIndex[0];
+            indexTo = toIndex[0];
 
             double[][] corrTable = Calc.correlationTable(dataFiltered);
             double[] avYields = new double[length];
@@ -85,7 +114,12 @@ class PortfolioChart extends JDialog {
             int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length));
             List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers);
 
-            ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, dataFiltered, Main.getPeriods(dataFiltered.length));
+            List<Portfolio> portfoliosCompare = null;
+            if (Arrays.stream(compares).sum() == 100) {
+                portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, 100);
+            }
+
+            ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
         });
 
         buttonBorderOnly.addChangeListener(e -> ((PortfolioChartPanel) chartPanel).setBorderOnlyMode(buttonBorderOnly.isSelected()));
@@ -210,40 +244,20 @@ class PortfolioChart extends JDialog {
 
     private void updateLimitations() {
         int length = instruments.length;
-        String[][] limits = new String[2][length];
+        String[][] limits = new String[3][length];
         for (int col = 0; col < instruments.length; col++) {
             limits[0][col] = col == 0 ? Main.resourceBundle.getString("text.min") : "0";
             limits[1][col] = col == 0 ? Main.resourceBundle.getString("text.max") : "100";
+            limits[2][col] = col == 0 ? Main.resourceBundle.getString("text.compare") : "0";
         }
 
         tableLimitations.setModel(new DefaultTableModel(limits, instruments));
     }
 
-    static void showChart(String[] instruments, double[][] data) {
-        PortfolioChart dialog = new PortfolioChart(instruments, data);
-        dialog.setTitle(Main.resourceBundle.getString("text.portfolios"));
-        dialog.setLocationRelativeTo(Main.getFrame());
-
-        dialog.pack();
-
-        Properties properties = Main.getProperties();
-        int x = Integer.parseInt(properties.getProperty("portfolio.x", "-1"));
-        int y = Integer.parseInt(properties.getProperty("portfolio.y", "-1"));
-        int w = Integer.parseInt(properties.getProperty("portfolio.w", "-1"));
-        int h = Integer.parseInt(properties.getProperty("portfolio.h", "-1"));
-
-        if (x >= 0 && y >= 0 && w >= 0 && h >= 0) {
-            Rectangle rec = new Rectangle(x, y, w, h);
-            dialog.setBounds(rec);
-        }
-
-        dialog.updateLimitations();
-
-        dialog.setVisible(true);
-    }
-
     private void createUIComponents() {
         chartPanel = new PortfolioChartPanel();
+        comboBoxFrom = new JComboBox<>();
+        comboBoxTo = new JComboBox<>();
     }
 
     private List<Portfolio> addAccuracy() {
@@ -270,6 +284,7 @@ class PortfolioChart extends JDialog {
         DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
         int[] userMinimals = new int[length];
         int[] userMaximals = new int[length];
+        int[] compares = new int[length];
 
         for (int col = 0; col < length; col++) {
             int minValue = Integer.valueOf((String) model.getValueAt(0, col + 1));
@@ -281,6 +296,7 @@ class PortfolioChart extends JDialog {
 
             userMinimals[col] = minValue;
             userMaximals[col] = maxValue;
+            compares[col] = Integer.valueOf((String) model.getValueAt(2, col + 1));
         }
 
         int index = 0;
@@ -320,8 +336,37 @@ class PortfolioChart extends JDialog {
         }
 
         accuracyPortfolios.sort(Portfolio::compareTo);
-        ((PortfolioChartPanel) chartPanel).setPortfolios(accuracyPortfolios, dataFiltered, Main.getPeriods(dataFiltered.length));
+
+        List<Portfolio> portfoliosCompare = null;
+        if (Arrays.stream(compares).sum() == 100) {
+            portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, 100);
+        }
+
+        ((PortfolioChartPanel) chartPanel).setPortfolios(accuracyPortfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
 
         return accuracyPortfolios;
+    }
+
+    static void showChart(String[] instruments, double[][] data) {
+        PortfolioChart dialog = new PortfolioChart(instruments, data);
+        dialog.setTitle(Main.resourceBundle.getString("text.portfolios"));
+        dialog.setLocationRelativeTo(Main.getFrame());
+
+        dialog.pack();
+
+        Properties properties = Main.getProperties();
+        int x = Integer.parseInt(properties.getProperty("portfolio.x", "-1"));
+        int y = Integer.parseInt(properties.getProperty("portfolio.y", "-1"));
+        int w = Integer.parseInt(properties.getProperty("portfolio.w", "-1"));
+        int h = Integer.parseInt(properties.getProperty("portfolio.h", "-1"));
+
+        if (x >= 0 && y >= 0 && w >= 0 && h >= 0) {
+            Rectangle rec = new Rectangle(x, y, w, h);
+            dialog.setBounds(rec);
+        }
+
+        dialog.updateLimitations();
+
+        dialog.setVisible(true);
     }
 }

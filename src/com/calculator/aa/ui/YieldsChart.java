@@ -223,7 +223,7 @@ public class YieldsChart extends JDialog {
     }
 
     static void showYields(String[] labels, double[][] data, Portfolio portfolio) {
-        double[][] filtered = Calc.filterValidData(data, portfolio.weights());
+        double[][] filtered = Calc.filterValidData(data, portfolio.weights(), new int[] {0}, new int[] {data.length - 1});
         if (filtered == null) {
             return;
         }

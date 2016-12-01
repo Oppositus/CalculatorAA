@@ -64,6 +64,11 @@ rows with incomplete data .
 ## Working with portfolio chart
 
 - Table of limitations. Allows to set min and max weights for instruments in the portfolio (in percents).
+- If the row labeled "Compare" has sum weights of 100,
+then additional portfolio with those weight will be drawn (in green color).
+This feature allows to watch portfolio evolution.
+- Drop down lists "From" and "To" set interval for which yields will be calculated. If "From" value is
+less than minimal date with full instruments history, the minimal date will be used.
 - "Border only" button switches drawing mode: all portfolios or effective portfolios.
 - "Draw" button redraws the chart.
 - The nearest portfolio is highlighted then the mouse is moved.

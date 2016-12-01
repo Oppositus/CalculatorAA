@@ -83,13 +83,10 @@ public class Main {
         return program.properties;
     }
 
-    public static String[] getPeriods(int last) {
+    public static String[] getPeriods(int fromIndex, int toIndex) {
         String[] periods = program.mainWindow.getPeriods();
-        return Arrays.copyOfRange(periods, periods.length - last, periods.length);
-    }
-
-    public static String getPeriod(int p) {
-        return program.mainWindow.getPeriods()[p];
+        int max = Math.min(toIndex, periods.length - 1) + 1;
+        return Arrays.copyOfRange(periods, fromIndex, max);
     }
 
     public static void main(String[] args) {

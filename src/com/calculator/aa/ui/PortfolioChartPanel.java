@@ -20,6 +20,7 @@ class PortfolioChartPanel extends JPanel {
 
     private static final Color axisColor = Color.BLACK;
     private static final Color portfolioColor = Color.BLUE;
+    private static final Color portfolioCompareColor = Color.GREEN;
     private static final Color backColor = Color.WHITE;
     private static final Color selectedColor = Color.RED;
     private static final Color zoomColor = Color.GRAY;
@@ -27,6 +28,7 @@ class PortfolioChartPanel extends JPanel {
     private static final int safeTop = 5;
 
     private List<Portfolio> portfolios = new ArrayList<>();
+    private List<Portfolio> portfoliosCompare = new ArrayList<>();
     private List<Portfolio> savedPortfolios;
     private List<Portfolio> optimalPortfolios = new ArrayList<>();
 
@@ -153,7 +155,7 @@ class PortfolioChartPanel extends JPanel {
         );
     }
 
-    void setPortfolios(List<Portfolio> pfs, double[][] df, String[] pf) {
+    void setPortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp, double[][] df, String[] pf) {
         if (pfs != null && pfs.isEmpty()) {
             return;
         }
@@ -181,8 +183,16 @@ class PortfolioChartPanel extends JPanel {
             return;
         }
 
-        double minRisk = portfolios.get(0).risk();
-        double maxRisk = portfolios.get(portfolios.size() - 1).risk();
+        portfoliosCompare = pfsComp;
+
+        double minRisk = Math.min(
+                portfolios.get(0).risk(),
+                portfoliosCompare != null ? portfoliosCompare.get(0).risk() : Double.MAX_VALUE);
+
+        double maxRisk = Math.max(
+                portfolios.get(portfolios.size() - 1).risk(),
+                portfoliosCompare != null ? portfoliosCompare.get(portfoliosCompare.size() - 1).risk() : Double.MIN_VALUE);
+
         double dr;
         if (pfs != null && pfs.size() == 1) {
             dr = 0.05;
@@ -196,7 +206,16 @@ class PortfolioChartPanel extends JPanel {
         double minYield = Double.MAX_VALUE;
         double maxYield = Double.MIN_VALUE;
 
-        for (Portfolio p : portfolios) {
+        List<Portfolio> tmp;
+        if (portfoliosCompare != null) {
+            tmp = new ArrayList<>(portfolios.size() + portfoliosCompare.size());
+            tmp.addAll(portfolios);
+            tmp.addAll(portfoliosCompare);
+        } else {
+            tmp = portfolios;
+        }
+
+        for (Portfolio p : tmp) {
             if (p.yield() < minYield) {
                 minYield = p.yield();
             }
@@ -231,7 +250,7 @@ class PortfolioChartPanel extends JPanel {
     void setBorderOnlyMode(boolean mode) {
         if (borderOnlyMode != mode) {
             borderOnlyMode = mode;
-            setPortfolios(null, null, null);
+            setPortfolios(null, portfoliosCompare, null, null);
         }
     }
 
@@ -273,7 +292,6 @@ class PortfolioChartPanel extends JPanel {
         drawAxis(g);
 
         g.setColor(portfolioColor);
-
         if (borderOnlyMode) {
             optimalPortfolios.forEach(pf -> drawPortfolio(g, pf));
         } else {
@@ -282,6 +300,11 @@ class PortfolioChartPanel extends JPanel {
 
         if (!optimalPortfolios.isEmpty() && optimalPortfolios.size() > 1) {
             drawOptimalBorder(g);
+        }
+
+        g.setColor(portfolioCompareColor);
+        if (portfoliosCompare != null) {
+            portfoliosCompare.forEach(pf -> drawLargePortfolio(g, pf));
         }
 
         if (mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) {
@@ -317,6 +340,11 @@ class PortfolioChartPanel extends JPanel {
         g.drawRect(mapX(pf.risk()) - 1, mapY(pf.yield()) - 1, 2, 2);
     }
 
+    private void drawLargePortfolio(Graphics g, Portfolio pf) {
+        g.fillRect(mapX(pf.risk()) - 2, mapY(pf.yield()) - 2, 4, 4);
+        g.drawRect(mapX(pf.risk()) - 2, mapY(pf.yield()) - 2, 4, 4);
+    }
+
     private void drawNearest(Graphics g) {
 
         if (!drawingArea.contains(mouseX, mouseY)) {
@@ -328,6 +356,7 @@ class PortfolioChartPanel extends JPanel {
 
         double distance = Double.MAX_VALUE;
         Portfolio nearestPortfolio = null;
+        Portfolio nearestPortfolioCompare = null;
 
         List<Portfolio> pfs = borderOnlyMode ? optimalPortfolios : portfolios;
 
@@ -337,6 +366,20 @@ class PortfolioChartPanel extends JPanel {
                 distance = dst;
                 nearestPortfolio = pf;
             }
+        }
+
+        if (portfoliosCompare != null) {
+            for (Portfolio pf : portfoliosCompare) {
+                double dst = Calc.distance(p, pf.performance());
+                if (dst < distance) {
+                    distance = dst;
+                    nearestPortfolioCompare = pf;
+                }
+            }
+        }
+
+        if (nearestPortfolioCompare != null) {
+            nearestPortfolio = nearestPortfolioCompare;
         }
 
         nearest = nearestPortfolio;
@@ -519,7 +562,19 @@ class PortfolioChartPanel extends JPanel {
                 .sorted(Portfolio::compareTo)
                 .collect(Collectors.toList());
 
-        setPortfolios(pfs, dataFiltered, periodsFiltered);
+        List<Portfolio> pfsComp = null;
+
+        if (portfoliosCompare != null) {
+            pfsComp = portfoliosCompare.stream()
+                    .filter(p -> p.risk() >= zoomMin && p.risk() <= zoomMax)
+                    .sorted(Portfolio::compareTo)
+                    .collect(Collectors.toList());
+        }
+        if (pfsComp != null && pfsComp.size() == 0) {
+            pfsComp = null;
+        }
+
+        setPortfolios(pfs, pfsComp, dataFiltered, periodsFiltered);
     }
 
     private void startMouseCross(int x, int y) {

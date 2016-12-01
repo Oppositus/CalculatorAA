@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 public class Calc {
 
     private static Object lock = new Object();
-    public static final double epsilon = 1.0 / 100000.0;
+    static final double epsilon = 1.0 / 100000.0;
 
     private static double[] yields(double[] values) {
         int length = values.length;
@@ -338,17 +338,29 @@ public class Calc {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    public static double[][] filterValidData(double[][] data, int[] maxWeights) {
-        return filterValidData(data, Arrays.stream(maxWeights).mapToDouble(i -> i / 100.0).toArray());
+    public static double[][] filterValidData(double[][] data, int[] maxWeights, int[] fromIndex, int[] toIndex) {
+        return filterValidData(data, Arrays.stream(maxWeights).mapToDouble(i -> i / 100.0).toArray(), fromIndex, toIndex);
     }
 
-    public static double[][] filterValidData(double[][] data, double[] weights) {
+    public static double[][] filterValidData(double[][] data, double[] weights, int[] fromIndex, int[] toIndex) {
         int index = getMinimalValidIndex(data, weights);
-        int length = data.length;
-        int wdt = data[0].length;
         if (index < 0) {
             return null;
         }
+        if (index < fromIndex[0]) {
+            index = fromIndex[0];
+        } else {
+            fromIndex[0] = index;
+        }
+
+        int length = data.length;
+        if (length > toIndex[0] + 1) {
+            length = toIndex[0] + 1;
+        } else {
+            toIndex[0] = length - 1;
+        }
+
+        int wdt = data[0].length;
 
         double[][] result = new double[length - index][wdt];
         int idx = 0;
