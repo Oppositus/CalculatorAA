@@ -25,6 +25,12 @@
               <text resource-bundle="com/calculator/aa/messages" key="ui.open"/>
             </properties>
           </component>
+          <component id="98c9" class="javax.swing.JButton" binding="buttonMerge">
+            <constraints/>
+            <properties>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.merge"/>
+            </properties>
+          </component>
           <component id="a7739" class="javax.swing.JButton" binding="buttonSave">
             <constraints/>
             <properties>

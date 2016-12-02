@@ -2,6 +2,7 @@ package com.calculator.aa.ui;
 
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
+import com.calculator.aa.calc.Zipper;
 import com.sun.deploy.util.StringUtils;
 
 import javax.swing.*;
@@ -30,6 +31,7 @@ public class MainWindow {
     private JButton buttonPortfolio;
     private JButton buttonDeleteInvalid;
     private JButton buttonSave;
+    private JButton buttonMerge;
 
     private String[] savedOptions;
     private String lastFileName;
@@ -75,7 +77,7 @@ public class MainWindow {
         DATE_FORMAT_YYYY_MM_DD
     }
 
-    private class AATableModel extends AbstractTableModel {
+    private static class AATableModel extends AbstractTableModel {
 
         private final Pattern ptYYYY = Pattern.compile("^(\\d\\d\\d\\d)$");
         private final Pattern ptMM_YYYY = Pattern.compile("^(\\d\\d?)[^\\d](\\d\\d\\d\\d)$");
@@ -88,6 +90,7 @@ public class MainWindow {
         private double[][]data;
         private final String[] instruments;
         private Object[] periods;
+        private final String[] periodsSource;
         private final double[] averages;
         private final double[] deviations;
 
@@ -105,6 +108,7 @@ public class MainWindow {
             data = new double[height - 2][width - 1];
             instruments = new String[width];
             periods = new Object[height - 2];
+            periodsSource = new String[height - 2];
             averages = new double[width - 1];
             deviations = new double[width - 1];
             dateFormat = DateFormats.DATE_FORMAT_NONE;
@@ -122,6 +126,7 @@ public class MainWindow {
                         data[ht][wh] = 0.0f;
                     }
                     periods[ht] = String.format("%s %d", Main.resourceBundle.getString("text.period"), ht);
+                    periodsSource[ht] = String.format("%s %d", Main.resourceBundle.getString("text.period"), ht);
                 }
             }
         }
@@ -133,6 +138,7 @@ public class MainWindow {
             dateFormat = prev.dateFormat;
 
             Object[] prevPeriods = prev.periods;
+            String[] prevPeriodsSource = prev.periodsSource;
             double[][] prevData = prev.data;
             int length = prevPeriods.length;
 
@@ -161,6 +167,7 @@ public class MainWindow {
                     }
 
                     periods[ht] = prevPeriods[ht];
+                    periodsSource[ht] = prevPeriodsSource[ht];
                 }
 
                 if (wh > 0) {
@@ -186,6 +193,7 @@ public class MainWindow {
                         data[ht][wh] = d[ht][wh];
                     }
                     periods[ht] = l[ht];
+                    periodsSource[ht] = l[ht];
                 }
 
                 if (wh > 0) {
@@ -253,13 +261,12 @@ public class MainWindow {
             fireTableCellUpdated(row, col);
         }
 
-        public String formatPeriod(int p) {
+        String formatPeriod(int p) {
             Object period = periods[p];
 
             if (period instanceof String) {
                 return  (String)period;
             } else if (period instanceof Date) {
-                Locale l = Locale.getDefault();
                 Calendar c = Calendar.getInstance();
                 c.setTime((Date)period);
 
@@ -309,7 +316,7 @@ public class MainWindow {
             data = newData;
         }
 
-        public String[] formatPeriods() {
+        String[] formatPeriods() {
 
             int length = periods.length;
             String[] result = new String[length];
@@ -318,6 +325,45 @@ public class MainWindow {
                 result[i] = formatPeriod(i);
             }
             return result;
+        }
+
+        Zipper<String, Double, String> toZipper() {
+
+            int cols = data[0].length;
+
+            List<String> keys = Arrays.asList(periodsSource);
+            List<List<Double>> values = new LinkedList<>();
+            List<String> labels = Arrays.asList(Arrays.copyOfRange(instruments, 1, instruments.length));
+
+            for (double[] row : data) {
+                List<Double> r = new LinkedList<>();
+                for (int col = 0; col < cols; col++) {
+                    r.add(row[col]);
+                }
+                values.add(r);
+            }
+
+            return new Zipper<>(keys, values, labels);
+        }
+
+        static AATableModel fromZipper(Zipper<String, Double, String> z, String[] options) {
+            String dates = options != null ? options[3] : Main.getProperties().getProperty("import.date", "1");
+
+            List<String> labels = z.keys();
+            List<List<Double>> datas = z.values();
+            List<String> columns = z.labels();
+
+            int htLength = datas.size();
+            int whLength = columns.size();
+            double[][] rawData = new double[htLength][whLength];
+
+            for (int ht = 0; ht < htLength; ht++) {
+                for (int wh = 0; wh < whLength; wh++) {
+                    rawData[ht][wh] = datas.get(ht).get(wh);
+                }
+            }
+
+            return new AATableModel(whLength, htLength, rawData, labels.toArray(new String[0]), columns.toArray(new String[0]), "1".equals(dates));
         }
 
         private double[] getCol(int col) {
@@ -353,10 +399,20 @@ public class MainWindow {
                 periods = Arrays.stream(periods).map(this::formatYYYY_MM).toArray();
                 return true;
             } else if (Arrays.stream(periods).allMatch(this::acceptXX_XX_YYYY)) {
-                periods = Arrays.stream(periods).map(this::formatDD_MM_YYYY).toArray();
-                if (Arrays.stream(periods).anyMatch(Objects::isNull)) {
+                Locale l = Locale.getDefault();
+
+                if ("US".equals(l.getCountry().toUpperCase())) {
                     periods = Arrays.stream(periods).map(this::formatMM_DD_YYYY).toArray();
+                    if (Arrays.stream(periods).anyMatch(Objects::isNull)) {
+                        periods = Arrays.stream(periods).map(this::formatDD_MM_YYYY).toArray();
+                    }
+                } else {
+                    periods = Arrays.stream(periods).map(this::formatDD_MM_YYYY).toArray();
+                    if (Arrays.stream(periods).anyMatch(Objects::isNull)) {
+                        periods = Arrays.stream(periods).map(this::formatMM_DD_YYYY).toArray();
+                    }
                 }
+
                 return true;
             } else if (Arrays.stream(periods).allMatch(this::acceptYYYY_MM_DD)) {
                 periods = Arrays.stream(periods).map(this::formatYYYY_MM_DD).toArray();
@@ -535,33 +591,21 @@ public class MainWindow {
             }
         });
         buttonOpen.addActionListener(actionEvent -> {
-            JFileChooser fc = new JFileChooser(".");
-            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            fc.setMultiSelectionEnabled(false);
-            fc.setFileFilter(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    return file.isDirectory() || file.getName().toLowerCase().endsWith(".csv");
-                }
+            File f = openExistingFile();
+            if (f != null) {
+                askCSVOptions(true, () -> {
+                    try {
+                        AATableModel newModel = parseCSVAndLoadData(f);
+                        setNewModel(newModel);
 
-                @Override
-                public String getDescription() {
-                    return Main.resourceBundle.getString("text.csv_extension");
-                }
-            });
+                        Properties prop = Main.getProperties();
+                        prop.setProperty("file", f.getCanonicalPath());
+                        lastFileName = f.getCanonicalPath();
 
-            int result = fc.showOpenDialog(Main.getFrame());
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File f = fc.getSelectedFile();
-                if (f.exists()) {
-                    askCSVOptions(true, () -> {
-                        try {
-                            parseCSVAndLoadData(f);
-                        } catch (Exception e) {
-                            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
-                        }
-                    });
-                }
+                    } catch (Exception e) {
+                        JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+                    }
+                });
             }
         });
         buttonCorrelations.addActionListener(actionEvent -> {
@@ -656,6 +700,18 @@ public class MainWindow {
                 askCSVOptions(false, () -> parseCSVAndSaveData(ff));
             }
         });
+        buttonMerge.addActionListener(actionEvent -> {
+            File f = openExistingFile();
+            if (f != null) {
+                askCSVOptions(true, () -> {
+                    try {
+                        parseCSVAndMergeData(f);
+                    } catch (Exception e) {
+                        JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+            }
+        });
     }
 
     private void askCSVOptions(boolean askDates, Runnable after) {
@@ -666,15 +722,37 @@ public class MainWindow {
         }
     }
 
+    private void parseCSVAndMergeData(File f) {
+        try {
+            AATableModel oldModel = (AATableModel)mainTable.getModel();
+            AATableModel newModel = parseCSVAndLoadData(f);
+
+            Zipper<String, Double, String> oldZ = oldModel.toZipper();
+            Zipper<String, Double, String> newZ = newModel.toZipper();
+            Zipper<String, Double, String> result = oldZ.zip(newZ, -1.0);
+
+            AATableModel zippedModel = AATableModel.fromZipper(result, savedOptions);
+            setNewModel(zippedModel);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     public void parseCSVAndLoadData(File f, String[] options) {
         savedOptions = options;
         try {
-            parseCSVAndLoadData(f);
+            AATableModel model = parseCSVAndLoadData(f);
+            setNewModel(model);
+
+            Properties prop = Main.getProperties();
+            prop.setProperty("file", f.getCanonicalPath());
+            lastFileName = f.getCanonicalPath();
         } catch (Exception ignored) {
         }
     }
 
-    private void parseCSVAndLoadData(File f) throws Exception {
+    private AATableModel parseCSVAndLoadData(File f) throws Exception {
         List<String> columns = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         List<List<Double>> data = new ArrayList<>();
@@ -711,9 +789,9 @@ public class MainWindow {
             }
         });
 
-        double[][] rawData = new double[data.size()][columns.size()];
         int htLength = data.size();
         int whLength = columns.size();
+        double[][] rawData = new double[htLength][whLength];
 
         for (int ht = 0; ht < htLength; ht++) {
             for (int wh = 0; wh < whLength; wh++) {
@@ -721,15 +799,15 @@ public class MainWindow {
             }
         }
 
-        AATableModel newModel = new AATableModel(whLength, htLength, rawData, labels.toArray(new String[0]), columns.toArray(new String[0]), "1".equals(dates));
+        return new AATableModel(whLength, htLength, rawData, labels.toArray(new String[0]), columns.toArray(new String[0]), "1".equals(dates));
+    }
+
+    private void setNewModel(AATableModel newModel) {
         mainTable.setModel(newModel);
 
         for (int i = 0; i < newModel.width; i++) {
             mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.height));
         }
-
-        prop.setProperty("file", f.getCanonicalPath());
-        lastFileName = f.getCanonicalPath();
     }
 
     private void parseCSVAndSaveData(File f) {
@@ -833,12 +911,35 @@ public class MainWindow {
         mainTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     }
 
-    public JPanel GetMainPanel() {
-        return mainPanel;
+    private File openExistingFile() {
+        JFileChooser fc = new JFileChooser(".");
+        fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fc.setMultiSelectionEnabled(false);
+        fc.setFileFilter(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isDirectory() || file.getName().toLowerCase().endsWith(".csv");
+            }
+
+            @Override
+            public String getDescription() {
+                return Main.resourceBundle.getString("text.csv_extension");
+            }
+        });
+
+        int result = fc.showOpenDialog(Main.getFrame());
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File f = fc.getSelectedFile();
+            if (f.exists()) {
+                return f;
+            }
+        }
+
+        return null;
     }
 
-    public double[][] getData() {
-        return ((AATableModel)mainTable.getModel()).data;
+    public JPanel GetMainPanel() {
+        return mainPanel;
     }
 
     public String[] getPeriods() {

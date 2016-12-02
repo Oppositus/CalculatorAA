@@ -1,6 +1,5 @@
 package com.calculator.aa.ui;
 
-import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 
 import javax.swing.*;

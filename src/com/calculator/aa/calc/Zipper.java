@@ -31,7 +31,7 @@ public class Zipper<K, V, L> {
         labelList.add(label);
     }
 
-    private Zipper(List<K> keys, List<List<V>> values, List<L> labels) {
+    public Zipper(List<K> keys, List<List<V>> values, List<L> labels) {
         if (keys.size() != values.size()) {
             throw new IllegalArgumentException("Keys and values have different length");
         }
@@ -90,8 +90,8 @@ public class Zipper<K, V, L> {
             List<V> value = new ArrayList<>(valueList.get(i));
 
             if (index >= 0) {
-                if (key != other.keyList.get(index)) {
-                    throw new IllegalArgumentException("Zipper.zip: different keys");
+                if (!key.equals(other.keyList.get(index))) {
+                    throw new IllegalArgumentException("Zipper.zip: different keys: " + key.toString() + " - " + other.keyList.get(index).toString());
                 }
                 value.addAll(other.valueList.get(index));
             }
