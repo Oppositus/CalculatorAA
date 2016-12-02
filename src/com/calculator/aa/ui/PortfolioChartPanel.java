@@ -32,6 +32,9 @@ class PortfolioChartPanel extends JPanel {
 
     private static JPopupMenu popupMenu = null;
 
+    private static Action setComparePortfolio;
+    private static Action showPortfolioComponents;
+
     private List<Portfolio> portfolios = new ArrayList<>();
     private List<Portfolio> portfoliosCompare = new ArrayList<>();
     private List<Portfolio> savedPortfolios;
@@ -76,7 +79,13 @@ class PortfolioChartPanel extends JPanel {
         @Override
         public void mouseClicked(MouseEvent mouseEvent) {
             if (nearest != null && SwingUtilities.isLeftMouseButton(mouseEvent)) {
-                YieldsChart.showYields(periodsFiltered, dataFiltered, nearest);
+                if (mouseEvent.isShiftDown()) {
+                    showPortfolioComponents.actionPerformed(new ActionEvent(nearest, ActionEvent.ACTION_PERFORMED, null));
+                } else if (mouseEvent.isControlDown()) {
+                    setComparePortfolio.actionPerformed(new ActionEvent(nearest, ActionEvent.ACTION_PERFORMED, null));
+                } else {
+                    YieldsChart.showYields(periodsFiltered, dataFiltered, nearest);
+                }
             }
         }
 
@@ -86,6 +95,10 @@ class PortfolioChartPanel extends JPanel {
                 if (mouseEvent.isPopupTrigger()) {
                     showPopupMenu(mouseEvent.getX(), mouseEvent.getY());
                 }
+                return;
+            }
+
+            if ((portfolios == null || portfolios.isEmpty()) && (optimalPortfolios == null || optimalPortfolios.isEmpty())) {
                 return;
             }
 
@@ -105,6 +118,7 @@ class PortfolioChartPanel extends JPanel {
 
             dragEndX = mouseEvent.getX();
             if (dragMode) {
+                dragMode = false;
                 int from = Math.min(dragStartX, dragEndX);
                 int to = Math.max(dragStartX, dragEndX);
 
@@ -112,8 +126,9 @@ class PortfolioChartPanel extends JPanel {
                 zoomMax = reMapX(to);
 
                 setZoom();
+            } else {
+                moveMouseCross(mouseEvent.getX(), mouseEvent.getY());
             }
-            dragMode = false;
         }
 
         @Override
@@ -131,8 +146,12 @@ class PortfolioChartPanel extends JPanel {
 
         @Override
         public void mouseDragged(MouseEvent mouseEvent) {
-            dragEndX = mouseEvent.getX();
-            repaint();
+            if (dragMode) {
+                dragEndX = mouseEvent.getX();
+                repaint();
+            } else {
+                moveMouseCross(mouseEvent.getX(), mouseEvent.getY());
+            }
         }
 
         @Override
@@ -344,7 +363,6 @@ class PortfolioChartPanel extends JPanel {
     }
 
     private void drawNearest(Graphics g) {
-
         if (!drawingArea.contains(mouseX, mouseY)) {
             nearest = null;
             return;
@@ -597,20 +615,20 @@ class PortfolioChartPanel extends JPanel {
 
     private void createPopupMenu() {
         if (popupMenu == null) {
-            PortfolioChartPanel self = this;
-
-            JMenuItem menuItem;
-
-            popupMenu = new JPopupMenu();
-
-            menuItem = new JMenuItem(Main.resourceBundle.getString("ui.set_compare_portfolio"));
-            menuItem.addActionListener(new AbstractAction() {
+            setComparePortfolio = new AbstractAction() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
+                    Portfolio np;
+                    Object src = actionEvent.getSource();
+                    if (src instanceof Portfolio) {
+                        np = (Portfolio)src;
+                    } else {
+                        np = nearest;
+                    }
 
-                    if (nearest != null) {
+                    if (np != null) {
                         PortfolioChart chart;
-                        Component parent = self.getParent();
+                        Component parent = getParent();
                         while (parent != null && !(parent instanceof PortfolioChart)) {
                             parent = parent.getParent();
                         }
@@ -619,45 +637,63 @@ class PortfolioChartPanel extends JPanel {
                             return;
                         }
 
-                        chart = (PortfolioChart)parent;
+                        chart = (PortfolioChart) parent;
                         chart.setPortfolioToCompare(
-                                Arrays.stream(nearest.weights()).mapToInt(d -> (int)(d * 100)).toArray()
+                                Arrays.stream(np.weights()).mapToInt(d -> (int) (d * 100)).toArray()
                         );
                     }
-
                 }
-            });
-            popupMenu.add(menuItem);
+            };
 
-            menuItem = new JMenuItem(Main.resourceBundle.getString("ui.portfolio_components_2"));
-            menuItem.addActionListener(new AbstractAction() {
+            showPortfolioComponents = new AbstractAction() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
-                    if (nearest != null) {
+                    Portfolio np;
+                    Object src = actionEvent.getSource();
+                    if (src instanceof Portfolio) {
+                        np = (Portfolio)src;
+                    } else {
+                        np = nearest;
+                    }
+
+                    if (np != null) {
                         ShowTable.show(
                                 Main.resourceBundle.getString("text.portfolio"),
-                                nearest.values(),
-                                nearest.labels(),
+                                np.values(),
+                                np.labels(),
                                 new String[]{Main.resourceBundle.getString("text.value")});
                     }
                 }
-            });
-            popupMenu.add(menuItem);
+            };
 
-            popupMenu.addPopupMenuListener(new PopupMenuListener() {
+            PopupMenuListener menuHideListener = new PopupMenuListener() {
                 @Override
                 public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {}
 
                 @Override
                 public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {
-                    self.setCursor(Main.voidCursor);
+                    setCursor(Main.voidCursor);
                 }
 
                 @Override
                 public void popupMenuCanceled(PopupMenuEvent popupMenuEvent) {
-                    self.setCursor(Main.voidCursor);
+                    setCursor(Main.voidCursor);
                 }
-            });
+            };
+
+            JMenuItem menuItem;
+
+            popupMenu = new JPopupMenu();
+
+            menuItem = new JMenuItem(Main.resourceBundle.getString("ui.set_compare_portfolio"));
+            menuItem.addActionListener(setComparePortfolio);
+            popupMenu.add(menuItem);
+
+            menuItem = new JMenuItem(Main.resourceBundle.getString("ui.portfolio_components_2"));
+            menuItem.addActionListener(showPortfolioComponents);
+            popupMenu.add(menuItem);
+
+            popupMenu.addPopupMenuListener(menuHideListener);
         }
     }
 

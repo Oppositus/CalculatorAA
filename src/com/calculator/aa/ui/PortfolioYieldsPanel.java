@@ -176,14 +176,17 @@ class PortfolioYieldsPanel extends JPanel {
             for (double y = 2; y < max; y *= 2) {
                 int yy = mapY(Math.log(y));
                 g.drawLine(drawingArea.x - safeZone / 2, yy, drawingArea.x + drawingArea.width, yy);
-                g.drawString(String.valueOf(y), drawingArea.x - stringWidth - safeTop, yy + stringHeight);
+                g.drawString(String.valueOf(y), drawingArea.x - stringWidth - safeTop, yy + safeTop);
             }
         } else {
             int step = maxY < 10 ? 1 : (maxY < 100 ? 10 : (maxY < 1000 ? 100 : 1000));
             for (double y = 0; y < maxY; y += step) {
+                if (y == 1) {
+                    continue;
+                }
                 int yy = mapY(y);
                 g.drawLine(drawingArea.x - safeZone / 2, yy, drawingArea.x + drawingArea.width, yy);
-                g.drawString(String.valueOf(y), drawingArea.x - stringWidth - safeTop, yy + stringHeight);
+                g.drawString(String.valueOf(y), drawingArea.x - stringWidth - safeTop, yy + safeTop);
             }
         }
 

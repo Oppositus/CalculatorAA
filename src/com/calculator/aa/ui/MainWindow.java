@@ -10,6 +10,8 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.font.TextAttribute;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -641,10 +643,19 @@ public class MainWindow {
 
             ShowTable.show(Main.resourceBundle.getString("text.covariances_table"), covTable, cols, cols);
         });
-        buttonPortfolio.addActionListener(actionEvent -> {
-            AATableModel model = (AATableModel)mainTable.getModel();
-            PortfolioChart.showChart(model.instruments, model.data);
-        });
+
+        Action showPortfolioAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AATableModel model = (AATableModel)mainTable.getModel();
+                PortfolioChart.showChart(model.instruments, model.data);
+            }
+        };
+        KeyStroke keyShiftEnter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, ActionEvent.CTRL_MASK);
+        buttonPortfolio.getActionMap().put("showPortfolioAction", showPortfolioAction);
+        buttonPortfolio.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyShiftEnter, "showPortfolioAction");
+        buttonPortfolio.addActionListener(showPortfolioAction);
+
         buttonDeleteInvalid.addActionListener(e -> {
             AATableModel model = (AATableModel)mainTable.getModel();
             if (model.height < 5) {
