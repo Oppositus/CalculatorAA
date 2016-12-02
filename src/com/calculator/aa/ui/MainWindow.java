@@ -330,7 +330,7 @@ public class MainWindow {
         }
 
         private void updateAverage(int col) {
-            averages[col] = Calc.averageYields(getCol(col));
+            averages[col] = Calc.averageRealYields(getCol(col));
         }
 
         private void updateStDev(int col) {
@@ -339,7 +339,7 @@ public class MainWindow {
                 return;
             }
 
-            deviations[col] = Calc.stdevYields(getCol(col), averages[col]);
+            deviations[col] = Calc.stdevYields(getCol(col));
         }
 
         private boolean tryFormatDates() {

@@ -128,19 +128,31 @@ public class Calc {
         return result;
     }
 
-    public static double averageYields(double[] values) {
+    public static double averageRealYields(double[] values) {
         double[] filtered = Arrays.stream(values).filter(d -> d >= 0).toArray();
+        if (filtered.length < 2) {
+            return 0;
+        }
         double[] yields = yields(filtered);
         double lnYield = Arrays.stream(yields).sum() / yields.length;
         return Math.exp(lnYield) - 1;
     }
 
-    public static double stdevYields(double[] values) {
-        return stdevYields(values, averageYields(values));
+    private static double averageLogYields(double[] values) {
+        double[] filtered = Arrays.stream(values).filter(d -> d >= 0).toArray();
+        if (filtered.length < 2) {
+            return 0;
+        }
+        double[] yields = yields(filtered);
+        return Arrays.stream(yields).sum() / yields.length;
     }
 
-    public static double stdevYields(double[] values, double average) {
+    public static double stdevYields(double[] values) {
         double[] filtered = Arrays.stream(values).filter(d -> d >= 0).toArray();
+        if (filtered.length < 2) {
+            return 0;
+        }
+        double average = averageLogYields(values);
         double[] yields = yields(filtered);
         double sum = Arrays.stream(yields).map(d -> d - average).map(d -> d * d).sum();
         return Math.sqrt(1.0 / (yields.length - 1) * sum);
@@ -157,8 +169,19 @@ public class Calc {
                 double[] valuesC2 = column(values, col2);
 
                 int index = getMinimalValidIndex(valuesC1, valuesC2);
+                if (index < 0) {
+                    corrTable[col1][col2] = 0;
+                    corrTable[col2][col1] = 0;
+                    continue;
+                }
                 double[] valuesC1Ready = Arrays.copyOfRange(valuesC1, index, valuesC1.length);
                 double[] valuesC2Ready = Arrays.copyOfRange(valuesC2, index, valuesC2.length);
+
+                if (valuesC1Ready.length < 2 || valuesC2Ready.length < 2) {
+                    corrTable[col1][col2] = 0;
+                    corrTable[col2][col1] = 0;
+                    continue;
+                }
 
                 double[] y1 = yields(valuesC1Ready);
                 double[] y2 = yields(valuesC2Ready);
@@ -182,6 +205,10 @@ public class Calc {
                 double[] valuesC2 = column(values, col2);
 
                 int index = getMinimalValidIndex(valuesC1, valuesC2);
+                if (index < 0) {
+                    continue;
+                }
+
                 double[] valuesC1Ready = Arrays.copyOfRange(valuesC1, index, valuesC1.length);
                 double[] valuesC2Ready = Arrays.copyOfRange(valuesC2, index, valuesC2.length);
 
@@ -358,6 +385,10 @@ public class Calc {
             length = toIndex[0] + 1;
         } else {
             toIndex[0] = length - 1;
+        }
+
+        if (fromIndex[0] >= toIndex[0]) {
+            return null;
         }
 
         int wdt = data[0].length;
