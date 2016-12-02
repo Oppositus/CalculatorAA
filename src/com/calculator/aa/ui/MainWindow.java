@@ -974,6 +974,9 @@ public class MainWindow {
         int result = fc.showOpenDialog(Main.getFrame());
         if (result == JFileChooser.APPROVE_OPTION) {
             File[] fs = fc.getSelectedFiles();
+            if (fs.length == 0) {
+                fs = new File[] { fc.getSelectedFile() };
+            }
             return Arrays.stream(fs).allMatch(File::exists) ? fs : null;
         }
 

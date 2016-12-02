@@ -32,7 +32,6 @@ class PortfolioChart extends JDialog {
     private int indexTo;
 
     private PortfolioChart(String[] i, double[][] d) {
-
         instruments = i;
         data = d;
 
@@ -363,6 +362,7 @@ class PortfolioChart extends JDialog {
 
     static void showChart(String[] instruments, double[][] data) {
         PortfolioChart dialog = new PortfolioChart(instruments, data);
+        dialog.updateLimitations();
         dialog.setTitle(Main.resourceBundle.getString("text.portfolios"));
         dialog.setLocationRelativeTo(Main.getFrame());
 
@@ -378,8 +378,6 @@ class PortfolioChart extends JDialog {
             Rectangle rec = new Rectangle(x, y, w, h);
             dialog.setBounds(rec);
         }
-
-        dialog.updateLimitations();
 
         dialog.setVisible(true);
     }
