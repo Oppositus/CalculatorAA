@@ -44,6 +44,9 @@
           <component id="69a1f" class="javax.swing.JButton" binding="buttonPortfolio">
             <constraints/>
             <properties>
+              <background color="-16192"/>
+              <enabled value="true"/>
+              <hideActionText value="false"/>
               <text resource-bundle="com/calculator/aa/messages" key="ui.portfolios"/>
             </properties>
           </component>
@@ -115,6 +118,16 @@
             <constraints/>
             <properties>
               <text resource-bundle="com/calculator/aa/messages" key="ui.remove_row"/>
+            </properties>
+          </component>
+          <component id="4fd98" class="javax.swing.JToolBar$Separator">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="80a64" class="javax.swing.JButton" binding="buttonRemoveColumn">
+            <constraints/>
+            <properties>
+              <text resource-bundle="com/calculator/aa/messages" key="ui.remove_column"/>
             </properties>
           </component>
         </children>

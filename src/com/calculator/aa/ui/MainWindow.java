@@ -33,6 +33,7 @@ public class MainWindow {
     private JButton buttonDeleteInvalid;
     private JButton buttonSave;
     private JButton buttonMerge;
+    private JButton buttonRemoveColumn;
 
     private String[] savedOptions;
     private String lastFileName;
@@ -133,20 +134,33 @@ public class MainWindow {
         }
 
         // Create new table w*h and copy data from previous model
-        private AATableModel(int w, int h, AATableModel prev, int ignoredRow) {
+        private AATableModel(int w, int h, AATableModel prev, int ignoredRow, int ignoredColumn) {
             this(w, h);
 
             dateFormat = prev.dateFormat;
 
             Object[] prevPeriods = prev.periods;
             String[] prevPeriodsSource = prev.periodsSource;
+            String[] prevInstruments = prev.instruments;
             double[][] prevData = prev.data;
-            int length = prevPeriods.length;
+            int lengthPer = prevPeriods.length;
+            int lengthInstr = prevInstruments.length;
 
             if (ignoredRow >= 0) {
-                for (int ht = ignoredRow; ht < length - 1; ht++) {
+                for (int ht = ignoredRow; ht < lengthPer - 1; ht++) {
                     prevPeriods[ht] = prevPeriods[ht + 1];
                     prevData[ht] = prevData[ht + 1];
+                }
+            }
+
+            if (ignoredColumn >= 0) {
+                for (int wh = ignoredColumn; wh < lengthInstr - 1; wh++) {
+                    prevInstruments[wh] = prevInstruments[wh + 1];
+                    for (int ht = 0; ht < lengthPer; ht++) {
+                        if (wh < lengthInstr - 1) {
+                            prevData[ht][wh - 1] = prevData[ht][wh];
+                        }
+                    }
                 }
             }
 
@@ -570,7 +584,7 @@ public class MainWindow {
     public MainWindow() {
         buttonAddRow.addActionListener(actionEvent -> {
             AATableModel oldModel = (AATableModel)mainTable.getModel();
-            AATableModel newModel = new AATableModel(oldModel.width - 1, oldModel.height - 1, oldModel, -1);
+            AATableModel newModel = new AATableModel(oldModel.width - 1, oldModel.height - 1, oldModel, -1, -1);
             mainTable.setModel(newModel);
 
             for (int i = 0; i < newModel.width; i++) {
@@ -583,7 +597,7 @@ public class MainWindow {
                 AATableModel newModel = new AATableModel(oldModel.width - 1,
                         oldModel.height - 3,
                         oldModel,
-                        mainTable.getSelectedRow());
+                        mainTable.getSelectedRow(), -1);
                 mainTable.setModel(newModel);
 
                 for (int i = 0; i < newModel.width; i++) {
@@ -644,7 +658,7 @@ public class MainWindow {
                         model = new AATableModel(model.width - 1,
                                 model.height - 3,
                                 model,
-                                0);
+                                0, -1);
                         valid = false;
                         break;
                     } else {
@@ -713,6 +727,21 @@ public class MainWindow {
                         JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
                     }
                 });
+            }
+        });
+        buttonRemoveColumn.addActionListener(actionEvent -> {
+            AATableModel oldModel = (AATableModel)mainTable.getModel();
+            if (oldModel.width > 2) {
+                AATableModel newModel = new AATableModel(oldModel.width - 2,
+                        oldModel.height - 2,
+                        oldModel,
+                        -1, mainTable.getSelectedColumn());
+
+                mainTable.setModel(newModel);
+
+                for (int i = 0; i < newModel.width; i++) {
+                    mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.height));
+                }
             }
         });
     }

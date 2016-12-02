@@ -93,7 +93,8 @@ and labels must match from bottom to top. The example of the valid files for mer
 ## Calculator functions
 
 - Data editing.
-- Removing rows. The selected row is removed or the last row if there is no selection.
+- Removing rows and columns. The selected row/column is removed or the last row/column
+if there is no selection.
 - Adding rows. The row is added after selected one or to the end if there is no selection.
 - Data normalization. If histories have different length then pressing "Delete partial rows" will remove
 rows with incomplete data .
