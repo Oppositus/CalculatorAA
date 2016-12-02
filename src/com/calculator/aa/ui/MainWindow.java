@@ -407,33 +407,33 @@ public class MainWindow {
         }
 
         private boolean tryFormatDates() {
-            if (Arrays.stream(periods).allMatch(this::acceptYYYY)) {
-                periods = Arrays.stream(periods).map(this::formatYYYY).toArray();
+            if (Arrays.stream(periodsSource).allMatch(this::acceptYYYY)) {
+                periods = Arrays.stream(periodsSource).map(this::formatYYYY).toArray();
                 return true;
-            } else if (Arrays.stream(periods).allMatch(this::acceptMM_YYYY)) {
-                periods = Arrays.stream(periods).map(this::formatMM_YYYY).toArray();
+            } else if (Arrays.stream(periodsSource).allMatch(this::acceptMM_YYYY)) {
+                periods = Arrays.stream(periodsSource).map(this::formatMM_YYYY).toArray();
                 return true;
-            } else if (Arrays.stream(periods).allMatch(this::acceptYYYY_MM)) {
-                periods = Arrays.stream(periods).map(this::formatYYYY_MM).toArray();
+            } else if (Arrays.stream(periodsSource).allMatch(this::acceptYYYY_MM)) {
+                periods = Arrays.stream(periodsSource).map(this::formatYYYY_MM).toArray();
                 return true;
-            } else if (Arrays.stream(periods).allMatch(this::acceptXX_XX_YYYY)) {
+            } else if (Arrays.stream(periodsSource).allMatch(this::acceptXX_XX_YYYY)) {
                 Locale l = Locale.getDefault();
 
                 if ("US".equals(l.getCountry().toUpperCase())) {
-                    periods = Arrays.stream(periods).map(this::formatMM_DD_YYYY).toArray();
+                    periods = Arrays.stream(periodsSource).map(this::formatMM_DD_YYYY).toArray();
                     if (Arrays.stream(periods).anyMatch(Objects::isNull)) {
-                        periods = Arrays.stream(periods).map(this::formatDD_MM_YYYY).toArray();
+                        periods = Arrays.stream(periodsSource).map(this::formatDD_MM_YYYY).toArray();
                     }
                 } else {
-                    periods = Arrays.stream(periods).map(this::formatDD_MM_YYYY).toArray();
+                    periods = Arrays.stream(periodsSource).map(this::formatDD_MM_YYYY).toArray();
                     if (Arrays.stream(periods).anyMatch(Objects::isNull)) {
-                        periods = Arrays.stream(periods).map(this::formatMM_DD_YYYY).toArray();
+                        periods = Arrays.stream(periodsSource).map(this::formatMM_DD_YYYY).toArray();
                     }
                 }
 
                 return true;
-            } else if (Arrays.stream(periods).allMatch(this::acceptYYYY_MM_DD)) {
-                periods = Arrays.stream(periods).map(this::formatYYYY_MM_DD).toArray();
+            } else if (Arrays.stream(periodsSource).allMatch(this::acceptYYYY_MM_DD)) {
+                periods = Arrays.stream(periodsSource).map(this::formatYYYY_MM_DD).toArray();
                 return true;
             }
 

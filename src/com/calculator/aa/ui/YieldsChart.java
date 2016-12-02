@@ -41,13 +41,13 @@ public class YieldsChart extends JDialog {
     private JButton buttonOK;
     private JPanel yieldsPanel;
     private JToggleButton buttonLogScale;
-    private JButton buttonDraw;
+    private JToggleButton buttonDraw;
     private JSpinner spinnerPeriods;
     private JButton buttonWeights;
     private JCheckBox checkBoxSigma1;
     private JCheckBox checkBoxSigma2;
     private JCheckBox checkBoxSigma3;
-    private JButton buttonRebalance;
+    private JToggleButton buttonRebalance;
 
     private final String[] labels;
     private final double[][] data;
@@ -57,7 +57,7 @@ public class YieldsChart extends JDialog {
 
     private final int completePeriods;
 
-    private JButton lastModeButton;
+    private JToggleButton lastModeButton;
 
     private YieldsChart(String[] ls, double[][] sourceData, Portfolio p) {
         data = sourceData;
@@ -98,6 +98,7 @@ public class YieldsChart extends JDialog {
 
         buttonDraw.addActionListener(e -> {
             lastModeButton = buttonDraw;
+            buttonRebalance.setSelected(false);
             boolean isLog = buttonLogScale.isSelected();
             realYields = calculateRealYields(isLog);
             portfolioYields = calculateModelYields(isLog);
@@ -118,6 +119,7 @@ public class YieldsChart extends JDialog {
         });
         buttonRebalance.addActionListener(e -> {
             lastModeButton = buttonRebalance;
+            buttonDraw.setSelected(false);
             boolean isLog = buttonLogScale.isSelected();
             realYields = calculateRealYields(isLog);
             portfolioYields = calculateRebalances(isLog);
@@ -261,6 +263,8 @@ public class YieldsChart extends JDialog {
         SwingUtilities.invokeLater(() -> {
             if (dialog.lastModeButton == null) {
                 dialog.lastModeButton = dialog.buttonDraw;
+                dialog.buttonDraw.setSelected(true);
+                dialog.buttonRebalance.setSelected(false);
             }
             for(ActionListener a: dialog.lastModeButton.getActionListeners()) {
                 a.actionPerformed(new ActionEvent(dialog, ActionEvent.ACTION_PERFORMED, null) {});
