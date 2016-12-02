@@ -149,6 +149,7 @@ public class MainWindow {
             if (ignoredRow >= 0) {
                 for (int ht = ignoredRow; ht < lengthPer - 1; ht++) {
                     prevPeriods[ht] = prevPeriods[ht + 1];
+                    prevPeriodsSource[ht] = prev.periodsSource[ht + 1];
                     prevData[ht] = prevData[ht + 1];
                 }
             }

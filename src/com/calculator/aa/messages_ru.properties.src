@@ -59,3 +59,5 @@ ui.parse_dates=1-я колонка содержит даты
 ui.periods_from=От
 ui.periods_to=До
 ui.merge=Добавить
+ui.set_compare_portfolio=Использовать для сравнения
+ui.portfolio_components_2=Состав портфеля

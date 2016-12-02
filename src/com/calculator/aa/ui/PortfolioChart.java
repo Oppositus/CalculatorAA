@@ -352,6 +352,15 @@ class PortfolioChart extends JDialog {
         return accuracyPortfolios;
     }
 
+    void setPortfolioToCompare(int[] weights) {
+        DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
+
+        int length = weights.length;
+        for (int i = 0; i < length; i++) {
+            model.setValueAt(String.valueOf(weights[i]), 2, i + 1);
+        }
+    }
+
     static void showChart(String[] instruments, double[][] data) {
         PortfolioChart dialog = new PortfolioChart(instruments, data);
         dialog.setTitle(Main.resourceBundle.getString("text.portfolios"));

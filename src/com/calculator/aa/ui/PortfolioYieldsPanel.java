@@ -1,5 +1,6 @@
 package com.calculator.aa.ui;
 
+import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 
 import javax.swing.*;
@@ -8,7 +9,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 
 class PortfolioYieldsPanel extends JPanel {
 
@@ -93,12 +93,7 @@ class PortfolioYieldsPanel extends JPanel {
         addMouseListener(new mouseEnterExitListener());
         addMouseMotionListener(new mouseMoveListener());
 
-        setCursor(
-                getToolkit().createCustomCursor(
-                        new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
-                        new Point(0, 0),
-                        "null")
-        );
+        setCursor(Main.voidCursor);
     }
 
     void setData(String[] ls, double[] ry, double[] my, double r, boolean[] ss, boolean lg) {

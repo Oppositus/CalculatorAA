@@ -6,13 +6,16 @@ import com.calculator.aa.calc.DoublePoint;
 import com.calculator.aa.calc.Portfolio;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +29,8 @@ class PortfolioChartPanel extends JPanel {
     private static final Color zoomColor = Color.GRAY;
     private static final int safeZone = 10;
     private static final int safeTop = 5;
+
+    private static JPopupMenu popupMenu = null;
 
     private List<Portfolio> portfolios = new ArrayList<>();
     private List<Portfolio> portfoliosCompare = new ArrayList<>();
@@ -70,24 +75,17 @@ class PortfolioChartPanel extends JPanel {
 
         @Override
         public void mouseClicked(MouseEvent mouseEvent) {
-            if (nearest == null) {
-                return;
-            }
-
-            if (SwingUtilities.isLeftMouseButton(mouseEvent)) {
+            if (nearest != null && SwingUtilities.isLeftMouseButton(mouseEvent)) {
                 YieldsChart.showYields(periodsFiltered, dataFiltered, nearest);
-            } else if (SwingUtilities.isRightMouseButton(mouseEvent)) {
-                ShowTable.show(
-                        Main.resourceBundle.getString("text.portfolio"),
-                        nearest.values(),
-                        nearest.labels(),
-                        new String[] {Main.resourceBundle.getString("text.value")});
             }
         }
 
         @Override
         public void mousePressed(MouseEvent mouseEvent) {
             if (!SwingUtilities.isLeftMouseButton(mouseEvent)) {
+                if (mouseEvent.isPopupTrigger()) {
+                    showPopupMenu(mouseEvent.getX(), mouseEvent.getY());
+                }
                 return;
             }
 
@@ -99,6 +97,9 @@ class PortfolioChartPanel extends JPanel {
         @Override
         public void mouseReleased(MouseEvent mouseEvent) {
             if (!SwingUtilities.isLeftMouseButton(mouseEvent)) {
+                if (mouseEvent.isPopupTrigger()) {
+                    showPopupMenu(mouseEvent.getX(), mouseEvent.getY());
+                }
                 return;
             }
 
@@ -147,12 +148,9 @@ class PortfolioChartPanel extends JPanel {
         addMouseListener(new mouseEnterExitListener());
         addMouseMotionListener(new mouseMoveListener());
 
-        setCursor(
-                getToolkit().createCustomCursor(
-                        new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
-                        new Point(0, 0),
-                        "null")
-        );
+        setCursor(Main.voidCursor);
+
+        createPopupMenu();
     }
 
     void setPortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp, double[][] df, String[] pf) {
@@ -307,7 +305,7 @@ class PortfolioChartPanel extends JPanel {
             portfoliosCompare.forEach(pf -> drawLargePortfolio(g, pf));
         }
 
-        if (mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) {
+        if ((mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) || popupMenu.isVisible()) {
             drawNearest(g);
             g.setColor(axisColor);
             drawCross(g, w, h);
@@ -437,12 +435,14 @@ class PortfolioChartPanel extends JPanel {
         int textX = mouseX + safeZone + plus2;
         int textY = mouseY + stringHeight + plus;
 
-        if (textX + max > drawingArea.x + drawingArea.width - safeZone) {
+        boolean popupVisible = popupMenu.isVisible();
+
+        if (textX + max > drawingArea.x + drawingArea.width - safeZone || popupVisible) {
             rectX -= max + safeZone * 2 + plus;
             textX -= max + safeZone * 2 + plus;
         }
 
-        if (textY + stringHeight * 2 > drawingArea.y + drawingArea.height) {
+        if (textY + stringHeight * 2 > drawingArea.y + drawingArea.height || popupVisible) {
             rectY -= stringHeight * 4 - plus;
             textY -= stringHeight * 4 - plus;
         }
@@ -470,7 +470,7 @@ class PortfolioChartPanel extends JPanel {
         textX = mouseX - 1;
         textY = drawingArea.y + drawingArea.height + stringHeight + safeTop;
 
-        if (textX + rWidth + 1 > w - safeZone) {
+        if (textX + rWidth + 1 > w - safeZone || popupVisible) {
             textX = w - safeZone - rWidth + 1;
             rectX = w - safeZone - rWidth + 1;
         }
@@ -583,13 +583,88 @@ class PortfolioChartPanel extends JPanel {
     }
 
     private void moveMouseCross(int x, int y) {
-        mouseX = x;
-        mouseY = y;
+        if (!popupMenu.isVisible()) {
+            mouseX = x;
+            mouseY = y;
+        }
         repaint();
     }
 
     private void stopMouseCross() {
         mouseCrossEnabled = false;
         repaint();
+    }
+
+    private void createPopupMenu() {
+        if (popupMenu == null) {
+            PortfolioChartPanel self = this;
+
+            JMenuItem menuItem;
+
+            popupMenu = new JPopupMenu();
+
+            menuItem = new JMenuItem(Main.resourceBundle.getString("ui.set_compare_portfolio"));
+            menuItem.addActionListener(new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+
+                    if (nearest != null) {
+                        PortfolioChart chart;
+                        Component parent = self.getParent();
+                        while (parent != null && !(parent instanceof PortfolioChart)) {
+                            parent = parent.getParent();
+                        }
+
+                        if (parent == null) {
+                            return;
+                        }
+
+                        chart = (PortfolioChart)parent;
+                        chart.setPortfolioToCompare(
+                                Arrays.stream(nearest.weights()).mapToInt(d -> (int)(d * 100)).toArray()
+                        );
+                    }
+
+                }
+            });
+            popupMenu.add(menuItem);
+
+            menuItem = new JMenuItem(Main.resourceBundle.getString("ui.portfolio_components_2"));
+            menuItem.addActionListener(new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    if (nearest != null) {
+                        ShowTable.show(
+                                Main.resourceBundle.getString("text.portfolio"),
+                                nearest.values(),
+                                nearest.labels(),
+                                new String[]{Main.resourceBundle.getString("text.value")});
+                    }
+                }
+            });
+            popupMenu.add(menuItem);
+
+            popupMenu.addPopupMenuListener(new PopupMenuListener() {
+                @Override
+                public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {}
+
+                @Override
+                public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {
+                    self.setCursor(Main.voidCursor);
+                }
+
+                @Override
+                public void popupMenuCanceled(PopupMenuEvent popupMenuEvent) {
+                    self.setCursor(Main.voidCursor);
+                }
+            });
+        }
+    }
+
+    private void showPopupMenu(int x, int y) {
+        if (nearest != null) {
+            setCursor(Cursor.getDefaultCursor());
+            popupMenu.show(this, x, y);
+        }
     }
 }

@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -21,6 +22,7 @@ public class Main {
     private static final String propertiesFile = "calcaa.properties";
 
     public static ResourceBundle resourceBundle;
+    public static Cursor voidCursor;
 
     private Main() {
 
@@ -91,6 +93,11 @@ public class Main {
 
     public static void main(String[] args) {
         resourceBundle = ResourceBundle.getBundle("com.calculator.aa.messages", Locale.getDefault());
+
+        voidCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+                new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
+                new Point(0, 0),
+                "null");
 
         program = new Main();
 

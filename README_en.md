@@ -116,7 +116,8 @@ the minimal date will be used.
 - The nearest portfolio is highlighted then the mouse is moved.
 - Left mouse button click opens yields chart for the portfolio.
 - Dragging the mouse with left button pressed allows zooming the chart.
-- Left mouse button click opens portfolio components table.
+- Right mouse button click shows popup menu where user can select to use highlighted portfolio
+for comparing or to view it's components.
 - "Increase accuracy" button recalculate effective border with more accuracy.
 - "Maximize accuracy" button recalculate effective border with maximum accuracy.
 
