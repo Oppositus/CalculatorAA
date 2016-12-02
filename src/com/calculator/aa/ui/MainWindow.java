@@ -706,7 +706,7 @@ public class MainWindow {
                 }
             });
 
-            int result = fc.showOpenDialog(Main.getFrame());
+            int result = fc.showSaveDialog(Main.getFrame());
             if (result == JFileChooser.APPROVE_OPTION) {
                 File f = fc.getSelectedFile();
                 String filePath = f.getAbsolutePath();
