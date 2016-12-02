@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MainWindow {
     private JTable mainTable;
@@ -591,16 +592,18 @@ public class MainWindow {
             }
         });
         buttonOpen.addActionListener(actionEvent -> {
-            File f = openExistingFile();
+            File[] f = openExistingFile(true);
             if (f != null) {
                 askCSVOptions(true, () -> {
                     try {
-                        AATableModel newModel = parseCSVAndLoadData(f);
+                        AATableModel newModel = parseCSVAndLoadData(f[0]);
                         setNewModel(newModel);
 
+                        Stream.of(Arrays.copyOfRange(f, 1, f.length)).forEach(this::parseCSVAndMergeData);
+
                         Properties prop = Main.getProperties();
-                        prop.setProperty("file", f.getCanonicalPath());
-                        lastFileName = f.getCanonicalPath();
+                        prop.setProperty("file", f[0].getCanonicalPath());
+                        lastFileName = f[0].getCanonicalPath();
 
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
@@ -701,11 +704,11 @@ public class MainWindow {
             }
         });
         buttonMerge.addActionListener(actionEvent -> {
-            File f = openExistingFile();
+            File[] f = openExistingFile(false);
             if (f != null) {
                 askCSVOptions(true, () -> {
                     try {
-                        parseCSVAndMergeData(f);
+                        parseCSVAndMergeData(f[0]);
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
                     }
@@ -911,10 +914,10 @@ public class MainWindow {
         mainTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     }
 
-    private File openExistingFile() {
+    private File[] openExistingFile(boolean enableMultiSelect) {
         JFileChooser fc = new JFileChooser(".");
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fc.setMultiSelectionEnabled(false);
+        fc.setMultiSelectionEnabled(enableMultiSelect);
         fc.setFileFilter(new FileFilter() {
             @Override
             public boolean accept(File file) {
@@ -929,10 +932,8 @@ public class MainWindow {
 
         int result = fc.showOpenDialog(Main.getFrame());
         if (result == JFileChooser.APPROVE_OPTION) {
-            File f = fc.getSelectedFile();
-            if (f.exists()) {
-                return f;
-            }
+            File[] fs = fc.getSelectedFiles();
+            return Arrays.stream(fs).allMatch(File::exists) ? fs : null;
         }
 
         return null;
