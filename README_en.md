@@ -50,6 +50,46 @@ it's behavior depends on current locale:
         American variant: first is month, second is day
         Other variants: first is day, second is month
 
+- "Open" button allows you to open a CSV file with data. Multiple files can be selected.
+In the case of multiple files are selected they will be merged.
+- "Merge" button adds data from another CSV file to the current table.
+
+Merging is done by comparing text labels for data rows. Data is aligned by bottom
+and labels must match from bottom to top. The example of the valid files for merging:
+
+    msci_year_korea_brasil.csv      msci_year_russia.csv
+    
+     ;Korea;Brasil
+    31.12.1987;100;100
+    30.12.1988;194,002;193,081
+    29.12.1989;194,835;258,685
+    31.12.1990;139,363;89,166
+    31.12.1991;115,605;243,548
+    31.12.1992;115,611;255,82
+    31.12.1993;149,238;448,352       ;Russia
+    30.12.1994;182,257;734,482      30.12.1994;100
+    29.12.1995;173,813;578,125      29.12.1995;71,999
+    31.12.1996;107,099;797,876      31.12.1996;180,763
+    31.12.1997;35,075;984,389       31.12.1997;382,434
+    31.12.1998;83,318;550,538       31.12.1998;64,408
+    31.12.1999;158,449;889,491      31.12.1999;222,982
+    29.12.2000;78,674;763,19        29.12.2000;155,225
+    31.12.2001;114,841;597,056      31.12.2001;237,762
+    31.12.2002;123,371;395,362      31.12.2002;270,735
+    31.12.2003;163,589;801,998      31.12.2003;461,107
+    31.12.2004;196,24;1046,551      31.12.2004;479,901
+    30.12.2005;302,755;1569,439     30.12.2005;813,412
+    29.12.2006;336,677;2205,429     29.12.2006;1250,283
+    31.12.2007;437,522;3867,159     31.12.2007;1536,372
+    31.12.2008;193,085;1638,168     31.12.2008;397,021
+    31.12.2009;327,118;3624,512     31.12.2009;795,317
+    31.12.2010;409,853;3761,353     31.12.2010;931,99
+    30.12.2011;357,222;2826,654     30.12.2011;736,762
+    31.12.2012;429,222;2727,71      31.12.2012;807,527
+    31.12.2013;442,514;2218,127     31.12.2013;786,89
+    31.12.2014;386,693;1832,343     31.12.2014;404,92
+    31.12.2015;356,002;1036,234     31.12.2015;404,732
+
 ## Calculator functions
 
 - Data editing.
@@ -64,11 +104,12 @@ rows with incomplete data .
 ## Working with portfolio chart
 
 - Table of limitations. Allows to set min and max weights for instruments in the portfolio (in percents).
-- If the row labeled "Compare" has sum weights of 100,
+- If the row labeled "Compare" has summary weights of 100,
 then additional portfolio with those weight will be drawn (in green color).
-This feature allows to watch portfolio evolution.
-- Drop down lists "From" and "To" set interval for which yields will be calculated. If "From" value is
-less than minimal date with full instruments history, the minimal date will be used.
+This feature allows watching portfolio evolution.
+- Drop down lists "From" and "To" set the interval for which yields will be calculated.
+If "From" value is less than the minimal date with full instruments history,
+the minimal date will be used.
 - "Border only" button switches drawing mode: all portfolios or effective portfolios.
 - "Draw" button redraws the chart.
 - The nearest portfolio is highlighted then the mouse is moved.
