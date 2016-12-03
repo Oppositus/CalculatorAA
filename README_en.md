@@ -30,7 +30,7 @@ Example of correct CSV file:
     "2015";149,434;150,996;655,431;156,432
     "2016";138,672;146,816;758,51;158,006
 
-You can download an example file from the builds folder: [msci_year.csv](builds/msci_year.csv)
+You can download an example files from the [builds/datas folder](builds/datas)
 
 If 1st column contains dates then the calculator will determine its format and
 sort rows in ascending order. This is the list of supported formats:
@@ -111,15 +111,15 @@ This feature allows watching portfolio evolution.
 - Drop down lists "From" and "To" set the interval for which yields will be calculated.
 If "From" value is less than the minimal date with full instruments history,
 the minimal date will be used.
-- "Border only" button switches drawing mode: all portfolios or effective portfolios.
+- "Frontier only" button switches drawing mode: all portfolios or efficient-frontier portfolios.
 - "Draw" button redraws the chart.
 - The nearest portfolio is highlighted then the mouse is moved.
 - Left mouse button click opens yields chart for the portfolio.
 - Dragging the mouse with left button pressed allows zooming the chart.
 - Right mouse button click shows popup menu where user can select to use highlighted portfolio
 for comparing or to view it's components.
-- "Increase accuracy" button recalculate effective border with more accuracy.
-- "Maximize accuracy" button recalculate effective border with maximum accuracy.
+- "Increase accuracy" button recalculate efficient frontier with more accuracy.
+- "Maximize accuracy" button recalculate efficient frontier with maximum accuracy.
 
 When drawing portfolios the application is behaves depending on instruments count and weights limitations.
 Depending on its the step between portfolios is selected. If there are too many instruments then calculations
@@ -130,7 +130,7 @@ to include maximum available history.
 
 ## Working with yields chart
 - Field "Forecast for" sets a length of the forecast for the portfolio.
-- Checkboxes 1σ, 2σ, 3σ enables risk borders.
+- Checkboxes 1σ, 2σ, 3σ enables drawing risk deviations.
 - "Portfolio components" button shows a table with portfolio components.
 - "Logarithmic scale" button switch vertical scale type.
 - "Rebalances" button shows portfolio yields with rebalances.

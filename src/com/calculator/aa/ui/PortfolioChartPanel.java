@@ -38,7 +38,7 @@ class PortfolioChartPanel extends JPanel {
     private List<Portfolio> portfolios = new ArrayList<>();
     private List<Portfolio> portfoliosCompare = new ArrayList<>();
     private List<Portfolio> savedPortfolios;
-    private List<Portfolio> optimalPortfolios = new ArrayList<>();
+    private List<Portfolio> frontierPortfolios = new ArrayList<>();
 
     private double minX;
     private double minY;
@@ -64,7 +64,7 @@ class PortfolioChartPanel extends JPanel {
     private int dragStartX = 0;
     private int dragEndX = 0;
 
-    private boolean borderOnlyMode = false;
+    private boolean frontierOnlyMode = false;
 
     private Portfolio nearest = null;
 
@@ -98,7 +98,7 @@ class PortfolioChartPanel extends JPanel {
                 return;
             }
 
-            if ((portfolios == null || portfolios.isEmpty()) && (optimalPortfolios == null || optimalPortfolios.isEmpty())) {
+            if ((portfolios == null || portfolios.isEmpty()) && (frontierPortfolios == null || frontierPortfolios.isEmpty())) {
                 return;
             }
 
@@ -184,15 +184,15 @@ class PortfolioChartPanel extends JPanel {
         }
 
         if (pfs != null) {
-            optimalPortfolios = Calc.getOptimalBorder(portfolios);
+            frontierPortfolios = Calc.getEfficientFrontier(portfolios);
         }
 
-        if (borderOnlyMode) {
+        if (frontierOnlyMode) {
             savedPortfolios = portfolios;
-            portfolios = optimalPortfolios;
+            portfolios = frontierPortfolios;
         }
 
-        if (pfs == null && !borderOnlyMode) {
+        if (pfs == null && !frontierOnlyMode) {
             portfolios = savedPortfolios;
         }
 
@@ -264,15 +264,15 @@ class PortfolioChartPanel extends JPanel {
         repaint();
     }
 
-    void setBorderOnlyMode(boolean mode) {
-        if (borderOnlyMode != mode) {
-            borderOnlyMode = mode;
+    void setFrontierOnlyMode(boolean mode) {
+        if (frontierOnlyMode != mode) {
+            frontierOnlyMode = mode;
             setPortfolios(null, portfoliosCompare, null, null);
         }
     }
 
-    List<Portfolio> getBorderPortfolios() {
-        return optimalPortfolios;
+    List<Portfolio> getFrontierPortfolios() {
+        return frontierPortfolios;
     }
 
     double[][] getDataFiltered() {
@@ -309,14 +309,14 @@ class PortfolioChartPanel extends JPanel {
         drawAxis(g);
 
         g.setColor(portfolioColor);
-        if (borderOnlyMode) {
-            optimalPortfolios.forEach(pf -> drawPortfolio(g, pf));
+        if (frontierOnlyMode) {
+            frontierPortfolios.forEach(pf -> drawPortfolio(g, pf));
         } else {
             portfolios.forEach(pf -> drawPortfolio(g, pf));
         }
 
-        if (!optimalPortfolios.isEmpty() && optimalPortfolios.size() > 1) {
-            drawOptimalBorder(g);
+        if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
+            drawEfficientFrontier(g);
         }
 
         g.setColor(portfolioCompareColor);
@@ -374,7 +374,7 @@ class PortfolioChartPanel extends JPanel {
         Portfolio nearestPortfolio = null;
         Portfolio nearestPortfolioCompare = null;
 
-        List<Portfolio> pfs = borderOnlyMode ? optimalPortfolios : portfolios;
+        List<Portfolio> pfs = frontierOnlyMode ? frontierPortfolios : portfolios;
 
         for (Portfolio pf : pfs) {
             double dst = Calc.distance(p, pf.performance());
@@ -405,14 +405,14 @@ class PortfolioChartPanel extends JPanel {
         }
     }
 
-    private void drawOptimalBorder(Graphics g) {
+    private void drawEfficientFrontier(Graphics g) {
 
-        int length = optimalPortfolios.size();
+        int length = frontierPortfolios.size();
         int[] xxs = new int[length];
         int[] yys = new int[length];
         int i = 0;
 
-        for (Portfolio p : optimalPortfolios) {
+        for (Portfolio p : frontierPortfolios) {
             xxs[i] = mapX(p.risk());
             yys[i] = mapY(p.yield());
             i += 1;

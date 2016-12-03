@@ -10,7 +10,7 @@ import java.awt.event.*;
 import java.util.Arrays;
 import java.util.Properties;
 
-public class YieldsChart extends JDialog {
+class YieldsChart extends JDialog {
 
     final class SpinnerWheelListener implements MouseWheelListener {
 
@@ -107,7 +107,7 @@ public class YieldsChart extends JDialog {
                     checkBoxSigma2.isSelected(),
                     checkBoxSigma3.isSelected()
             };
-            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog);
+            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog, PortfolioYieldsPanel.PortfolioPerformanceMode.MODE_CALCULATION);
         });
         buttonLogScale.addActionListener(e -> {
             if (lastModeButton == null) {
@@ -125,7 +125,7 @@ public class YieldsChart extends JDialog {
             portfolioYields = calculateRebalances(isLog);
             boolean[] sigmas = new boolean[3];
             Arrays.fill(sigmas, false);
-            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog);
+            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog, PortfolioYieldsPanel.PortfolioPerformanceMode.MODE_REBALANCES);
         });
     }
 

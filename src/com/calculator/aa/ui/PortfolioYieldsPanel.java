@@ -9,8 +9,14 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 
 class PortfolioYieldsPanel extends JPanel {
+
+    enum PortfolioPerformanceMode {
+        MODE_CALCULATION,
+        MODE_REBALANCES
+    }
 
     private static final Color backColor = Color.WHITE;
     private static final Color axisColor = Color.BLACK;
@@ -41,6 +47,9 @@ class PortfolioYieldsPanel extends JPanel {
     private int mouseX = 0;
     private int mouseY = 0;
 
+    private BufferedImage labelCalculations;
+    private BufferedImage labelRebalances;
+
     private double[] realYields;
     private double[] modelYields;
     private int periods;
@@ -48,6 +57,7 @@ class PortfolioYieldsPanel extends JPanel {
     private boolean[] sigmas;
     private String[] labels;
     private boolean isLog;
+    private PortfolioPerformanceMode performanceMode;
 
     private class mouseEnterExitListener implements MouseListener {
 
@@ -96,7 +106,7 @@ class PortfolioYieldsPanel extends JPanel {
         setCursor(Main.voidCursor);
     }
 
-    void setData(String[] ls, double[] ry, double[] my, double r, boolean[] ss, boolean lg) {
+    void setData(String[] ls, double[] ry, double[] my, double r, boolean[] ss, boolean lg, PortfolioPerformanceMode md) {
         isLog = lg;
         labels = ls;
         realYields = ry;
@@ -104,6 +114,7 @@ class PortfolioYieldsPanel extends JPanel {
         periods = realYields.length + (modelYields.length - realYields.length);
         risk = r;
         sigmas = ss;
+        performanceMode = md;
 
         double minYield = Calc.minimum(realYields, modelYields);
         double maxYield = Calc.maximum(realYields, modelYields);
@@ -143,6 +154,10 @@ class PortfolioYieldsPanel extends JPanel {
             calculateStringMetrics(g);
         }
 
+        if (labelCalculations == null || labelRebalances == null) {
+            createLabels(g);
+        }
+
         calculateDrawingArea(w, h);
 
         for (int i = sigmas.length - 1; i >= 0; i--) {
@@ -166,6 +181,8 @@ class PortfolioYieldsPanel extends JPanel {
         }
 
         drawCrossYields(g);
+
+        drawLabels(g);
     }
 
     private void drawAxis(Graphics g) {
@@ -369,6 +386,11 @@ class PortfolioYieldsPanel extends JPanel {
         g.setClip(null);
     }
 
+    private void drawLabels(Graphics g) {
+        BufferedImage label = performanceMode == PortfolioPerformanceMode.MODE_CALCULATION ? labelCalculations : labelRebalances;
+        g.drawImage(label, drawingArea.x + safeZone, drawingArea.y + safeZone, null);
+    }
+
     private void calculateStringMetrics(Graphics g) {
         FontMetrics fm = g.getFontMetrics();
 
@@ -377,6 +399,62 @@ class PortfolioYieldsPanel extends JPanel {
 
         Rectangle2D bounds = fm.getStringBounds(maxPeriodStr, g);
         stringPeriodWidth = (int)Math.ceil(bounds.getWidth());
+    }
+
+    private void createLabels(Graphics g) {
+        String strReal = Main.resourceBundle.getString("text.label_real_performance");
+        String strCalc = Main.resourceBundle.getString("text.label_calculated_performance");
+        String strReb = Main.resourceBundle.getString("text.label_rebalances_performance");
+        FontMetrics fm = g.getFontMetrics();
+
+        Rectangle2D boundsReal = fm.getStringBounds(strReal, g);
+        Rectangle2D boundsCalc = fm.getStringBounds(strCalc, g);
+        Rectangle2D boundsReb = fm.getStringBounds(strReb, g);
+
+        int lineWidth = 20;
+        int labelCalculationsWidth = safeZone + lineWidth + safeTop + Math.max((int)boundsReal.getWidth(), (int)boundsCalc.getWidth()) + safeZone;
+        int labelRebalancesWidth = safeZone + lineWidth + safeTop + Math.max((int)boundsReal.getWidth(), (int)boundsReb.getWidth()) + safeZone;
+        int labelHeight = (int)(boundsReal.getHeight() * 2);
+        int labelHeightDiv2 = labelHeight / 2;
+
+        labelCalculations = new BufferedImage(labelCalculationsWidth, labelHeight + safeTop, BufferedImage.TYPE_INT_ARGB);
+        labelRebalances = new BufferedImage(labelRebalancesWidth, labelHeight + safeTop, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D glc = labelCalculations.createGraphics();
+
+        glc.setColor(backColor);
+        glc.fillRect(0, 0, labelCalculationsWidth, labelHeight + safeTop);
+
+        glc.setColor(axisColor);
+        glc.drawRect(0, 0, labelCalculationsWidth - 1, labelHeight + safeTop - 1);
+
+        glc.setColor(modelColor);
+        glc.drawLine(safeZone, labelHeightDiv2 - safeTop, safeTop + lineWidth, labelHeightDiv2 - safeTop);
+        glc.drawString(strCalc, safeZone + lineWidth + safeTop, labelHeightDiv2);
+
+        glc.setColor(realColor);
+        glc.drawLine(safeZone, labelHeight - safeTop, safeTop + lineWidth, labelHeight - safeTop);
+        glc.drawString(strReal, safeZone + lineWidth + safeTop, labelHeight);
+
+        glc.dispose();
+
+        Graphics2D glr = labelRebalances.createGraphics();
+
+        glr.setColor(backColor);
+        glr.fillRect(0, 0, labelRebalancesWidth, labelHeight + safeTop);
+
+        glr.setColor(axisColor);
+        glr.drawRect(0, 0, labelRebalancesWidth - 1, labelHeight + safeTop - 1);
+
+        glr.setColor(modelColor);
+        glr.drawLine(safeZone, labelHeightDiv2 - safeTop, safeTop + lineWidth, labelHeightDiv2 - safeTop);
+        glr.drawString(strReb, safeZone + lineWidth + safeTop, labelHeightDiv2);
+
+        glr.setColor(realColor);
+        glr.drawLine(safeZone, labelHeight - safeTop, safeTop + lineWidth, labelHeight - safeTop);
+        glr.drawString(strReal, safeZone + lineWidth + safeTop, labelHeight);
+
+        glr.dispose();
     }
 
     private void calculateStringMetricsHelper(Graphics g, FontMetrics fm, String test) {

@@ -55,12 +55,12 @@
             <properties/>
             <border type="none"/>
             <children>
-              <component id="ec46d" class="javax.swing.JToggleButton" binding="buttonBorderOnly">
+              <component id="ec46d" class="javax.swing.JToggleButton" binding="buttonFrontierOnly">
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text resource-bundle="com/calculator/aa/messages" key="ui.border_only"/>
+                  <text resource-bundle="com/calculator/aa/messages" key="ui.frontier_only"/>
                 </properties>
               </component>
               <component id="aa2e9" class="javax.swing.JButton" binding="buttonAccuracy">

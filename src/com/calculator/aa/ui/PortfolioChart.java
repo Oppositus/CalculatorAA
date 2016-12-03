@@ -19,7 +19,7 @@ class PortfolioChart extends JDialog {
     private JPanel chartPanel;
     private JTable tableLimitations;
     private JButton buttonCompute;
-    private JToggleButton buttonBorderOnly;
+    private JToggleButton buttonFrontierOnly;
     private JButton buttonAccuracy;
     private JButton buttonAccuracyMax;
     private JComboBox<String> comboBoxFrom;
@@ -126,11 +126,11 @@ class PortfolioChart extends JDialog {
             ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
         });
 
-        buttonBorderOnly.addChangeListener(e -> ((PortfolioChartPanel) chartPanel).setBorderOnlyMode(buttonBorderOnly.isSelected()));
+        buttonFrontierOnly.addChangeListener(e -> ((PortfolioChartPanel) chartPanel).setFrontierOnlyMode(buttonFrontierOnly.isSelected()));
 
         buttonAccuracy.addActionListener(e -> {
-            List<Portfolio> border = ((PortfolioChartPanel) chartPanel).getBorderPortfolios();
-            if (border == null || border.isEmpty()) {
+            List<Portfolio> frontier = ((PortfolioChartPanel) chartPanel).getFrontierPortfolios();
+            if (frontier == null || frontier.isEmpty()) {
                 return;
             }
 
@@ -145,8 +145,8 @@ class PortfolioChart extends JDialog {
             }
         });
         buttonAccuracyMax.addActionListener(e -> {
-            List<Portfolio> border = ((PortfolioChartPanel) chartPanel).getBorderPortfolios();
-            if (border == null || border.isEmpty()) {
+            List<Portfolio> frontier = ((PortfolioChartPanel) chartPanel).getFrontierPortfolios();
+            if (frontier == null || frontier.isEmpty()) {
                 return;
             }
 
@@ -265,10 +265,10 @@ class PortfolioChart extends JDialog {
     }
 
     private List<Portfolio> addAccuracy() {
-        List<Portfolio> border = ((PortfolioChartPanel) chartPanel).getBorderPortfolios();
+        List<Portfolio> frontier = ((PortfolioChartPanel) chartPanel).getFrontierPortfolios();
         List<Portfolio> accuracyPortfolios = new LinkedList<>();
 
-        if (border == null || border.isEmpty()) {
+        if (frontier == null || frontier.isEmpty()) {
             return accuracyPortfolios;
         }
 
@@ -304,10 +304,10 @@ class PortfolioChart extends JDialog {
         }
 
         int index = 0;
-        int size = border.size();
+        int size = frontier.size();
         while (index < size) {
-            Portfolio first = border.get(index);
-            Portfolio next = index < size - 1 ? border.get(index + 1) : first;
+            Portfolio first = frontier.get(index);
+            Portfolio next = index < size - 1 ? frontier.get(index + 1) : first;
 
             int[] minimals = new int[length];
             int[] maximals = new int[length];

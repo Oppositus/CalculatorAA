@@ -291,7 +291,7 @@ public class Calc {
         }
     }
 
-    public static List<Portfolio> getOptimalBorder(List<Portfolio> sourceSorted) {
+    public static List<Portfolio> getEfficientFrontier(List<Portfolio> sourceSorted) {
         List<Portfolio> result = new LinkedList<>();
         List<Portfolio> rest = new ArrayList<>(sourceSorted);
 
