@@ -616,10 +616,20 @@ public class MainWindow {
                         AATableModel newModel = parseCSVAndLoadData(f[0]);
                         setNewModel(newModel);
 
-                        Stream.of(Arrays.copyOfRange(f, 1, f.length)).forEach(this::parseCSVAndMergeData);
+                        Stream.of(Arrays.copyOfRange(f, 1, f.length)).forEach(this::verboseParseCSVAndMergeData);
 
                         Properties prop = Main.getProperties();
-                        prop.setProperty("file", f[0].getCanonicalPath());
+
+                        String files = StringUtils.join(
+                                Arrays.stream(f).map(fl -> {
+                                    try {
+                                        return fl.getCanonicalPath();
+                                    } catch (IOException e) {
+                                        return "";
+                                    }
+                                }).collect(Collectors.toList()), ";");
+
+                        prop.setProperty("file", files);
                         lastFileName = f[0].getCanonicalPath();
 
                     } catch (Exception e) {
@@ -733,10 +743,19 @@ public class MainWindow {
             File[] f = openExistingFile(false);
             if (f != null) {
                 askCSVOptions(true, () -> {
+                    verboseParseCSVAndMergeData(f[0]);
+
+                    Properties prop = Main.getProperties();
+                    String names = prop.getProperty("file", "");
                     try {
-                        parseCSVAndMergeData(f[0]);
-                    } catch (Exception e) {
-                        JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+                        String path = f[0].getCanonicalPath();
+                        if (names.isEmpty()) {
+                            prop.setProperty("file", path);
+                        } else if (!names.contains(path)) {
+                            prop.setProperty("file", names + ";" + path);
+                        }
+                    } catch (Exception ignored) {
+
                     }
                 });
             }
@@ -766,7 +785,15 @@ public class MainWindow {
         }
     }
 
-    private void parseCSVAndMergeData(File f) {
+    public void silentParseCSVAndMergeData(File f) {
+        parseCSVAndMergeData(f, false);
+    }
+
+    private void verboseParseCSVAndMergeData(File f) {
+        parseCSVAndMergeData(f, true);
+    }
+
+    private void parseCSVAndMergeData(File f, boolean displayError) {
         try {
             AATableModel oldModel = (AATableModel)mainTable.getModel();
             AATableModel newModel = parseCSVAndLoadData(f);
@@ -779,7 +806,9 @@ public class MainWindow {
             setNewModel(zippedModel);
 
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+            if (displayError) {
+                JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -788,10 +817,6 @@ public class MainWindow {
         try {
             AATableModel model = parseCSVAndLoadData(f);
             setNewModel(model);
-
-            Properties prop = Main.getProperties();
-            prop.setProperty("file", f.getCanonicalPath());
-            lastFileName = f.getCanonicalPath();
         } catch (Exception ignored) {
         }
     }

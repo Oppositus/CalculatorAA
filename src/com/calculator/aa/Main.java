@@ -1,6 +1,7 @@
 package com.calculator.aa;
 
 import com.calculator.aa.ui.MainWindow;
+import com.sun.deploy.util.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,6 +14,7 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.stream.Stream;
 
 public class Main {
     private static Main program;
@@ -127,7 +129,13 @@ public class Main {
         String file = prop.getProperty("file", "");
 
         if (!file.isEmpty()) {
-            SwingUtilities.invokeLater(() -> program.mainWindow.parseCSVAndLoadData(new File(file), savedOptions));
+            SwingUtilities.invokeLater(() -> {
+                String[] files = StringUtils.splitString(file, ";");
+                if (files.length > 0) {
+                    program.mainWindow.parseCSVAndLoadData(new File(files[0]), savedOptions);
+                }
+                Stream.of(Arrays.copyOfRange(files, 1, files.length)).map(File::new).forEach(program.mainWindow::silentParseCSVAndMergeData);
+            });
         }
     }
 }
