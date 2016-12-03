@@ -428,9 +428,9 @@ class PortfolioChartPanel extends JPanel {
 
         int center = drawingArea.x + drawingArea.width / 2 - rebWidth / 2;
 
-        g.drawString(minRebY, center, drawingArea.y + drawingArea.height + stringHeight);
+        g.drawString(minRebY, center, drawingArea.y + drawingArea.height + stringHeight + safeTop);
         g.drawImage(rebalancesGradient, center + addWidth + safeZone, drawingArea.y + drawingArea.height + safeTop, null);
-        g.drawString(maxRebY, center + addWidth + 200 + safeZone * 2, drawingArea.y + drawingArea.height + stringHeight);
+        g.drawString(maxRebY, center + addWidth + 200 + safeZone * 2, drawingArea.y + drawingArea.height + stringHeight + safeTop);
     }
 
     private void createRebalancesGradient() {
@@ -438,11 +438,22 @@ class PortfolioChartPanel extends JPanel {
         rebalancesGradient = new BufferedImage(200, h, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = rebalancesGradient.createGraphics();
         for (int i = 0; i < 200; i++) {
-            Color c = new Color((100 - i / 2) * 2, (i / 2) * 2, 0);
+            Color c = getGradientColor(((i / 2) * 2) / 200.0);
             g.setColor(c);
             g.drawLine(i, 0, i, h);
         }
         g.dispose();
+    }
+
+    private Color getGradientColor(double percent){
+        int red = percent < 0.5 ? 255 : (int)Math.round(255 - (percent - 0.5) * 5.1 * 100);
+        int green = percent > 0.5 ? 255 : (int)Math.round(percent * 5.1 * 100);
+
+        if (red < 0) {
+            red = 0;
+        }
+
+        return new Color(red, green, 0);
     }
 
     private void drawPortfolio(Graphics g, Portfolio pf) {
@@ -450,7 +461,7 @@ class PortfolioChartPanel extends JPanel {
         if (showRebalancesMode) {
             double reb = pf.yieldRebalances();
             double percent = (reb - minYieldRebalance) / dYieldRebalance;
-            Color cl = new Color(((int)(100 * (1 - percent))) * 2, ((int)(100 * percent)) * 2, 0);
+            Color cl = getGradientColor(percent);
             g.setColor(cl);
         }
 
@@ -520,7 +531,7 @@ class PortfolioChartPanel extends JPanel {
                 double reb2 = p2.yieldRebalances();
                 double percent2 = (reb2 - minYieldRebalance) / dYieldRebalance;
                 double percent = (percent1 + percent2) / 2;
-                Color cl = new Color(((int)(100 * (1 - percent))) * 2, ((int)(100 * percent)) * 2, 0);
+                Color cl = getGradientColor(percent);
                 g.setColor(cl);
 
                 int x1 = mapX(p1.risk());
@@ -602,13 +613,13 @@ class PortfolioChartPanel extends JPanel {
         String yCrossString = Calc.formatPercent1(yPos);
         boundsR = fm.getStringBounds(rCrossString, g);
         int rWidth = (int)boundsR.getWidth();
-        int rHeight = (int)boundsR.getHeight();
+        int rHeight = (int)boundsR.getHeight() + safeZone;
         boundsY = fm.getStringBounds(yCrossString, g);
         int yWidth = (int)boundsY.getWidth();
         int yHeight = (int)boundsY.getHeight();
 
         rectX = mouseX - 1 - safeZone;
-        rectY = drawingArea.y + drawingArea.height + stringHeight - safeTop;
+        rectY = drawingArea.y + drawingArea.height + 1;
         textX = mouseX - 1;
         textY = drawingArea.y + drawingArea.height + stringHeight + safeTop;
 

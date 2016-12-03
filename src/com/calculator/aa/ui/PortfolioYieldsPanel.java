@@ -197,7 +197,7 @@ class PortfolioYieldsPanel extends JPanel {
             }
         } else {
             int step = maxY < 10 ? 1 : (maxY < 100 ? 10 : (maxY < 1000 ? 100 : 1000));
-            for (double y = 0; y < maxY; y += step) {
+            for (double y = step; y < maxY; y += step) {
                 if (y < minY || y == 1) {
                     continue;
                 }
