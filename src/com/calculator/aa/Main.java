@@ -126,11 +126,11 @@ public class Main {
             savedOptions[3] = s;
         }
 
-        String file = prop.getProperty("file", "");
+        String file = prop.getProperty("files.last", "");
 
         if (!file.isEmpty()) {
             SwingUtilities.invokeLater(() -> {
-                String[] files = StringUtils.splitString(file, ";");
+                String[] files = StringUtils.splitString(file, "\t");
                 if (files.length > 0) {
                     program.mainWindow.parseCSVAndLoadData(new File(files[0]), savedOptions);
                 }

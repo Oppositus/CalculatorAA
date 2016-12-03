@@ -627,9 +627,9 @@ public class MainWindow {
                                     } catch (IOException e) {
                                         return "";
                                     }
-                                }).collect(Collectors.toList()), ";");
+                                }).collect(Collectors.toList()), "\t");
 
-                        prop.setProperty("file", files);
+                        prop.setProperty("files.last", files);
                         lastFileName = f[0].getCanonicalPath();
 
                     } catch (Exception e) {
@@ -746,13 +746,13 @@ public class MainWindow {
                     verboseParseCSVAndMergeData(f[0]);
 
                     Properties prop = Main.getProperties();
-                    String names = prop.getProperty("file", "");
+                    String names = prop.getProperty("files.last", "");
                     try {
                         String path = f[0].getCanonicalPath();
                         if (names.isEmpty()) {
-                            prop.setProperty("file", path);
+                            prop.setProperty("files.last", path);
                         } else if (!names.contains(path)) {
-                            prop.setProperty("file", names + ";" + path);
+                            prop.setProperty("files.last", names + "\t" + path);
                         }
                     } catch (Exception ignored) {
 
@@ -925,7 +925,7 @@ public class MainWindow {
             os.flush();
             os.close();
 
-            prop.setProperty("file", f.getCanonicalPath());
+            prop.setProperty("files.last", f.getCanonicalPath());
             lastFileName = f.getCanonicalPath();
 
         } catch (Exception e) {
