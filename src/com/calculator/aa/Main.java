@@ -139,11 +139,11 @@ public class Main {
             savedOptions[3] = s;
         }
 
-        String file = prop.getProperty("files.last", "");
+        SwingUtilities.invokeLater(() -> {
+            program = new Main(prop);
 
-        if (!file.isEmpty()) {
-            SwingUtilities.invokeLater(() -> {
-                program = new Main(prop);
+            String file = program.properties.getProperty("files.last", "");
+            if (!file.isEmpty()) {
                 SwingUtilities.invokeLater(() -> {
                     String[] files = file.split(";");
                     if (files.length > 0) {
@@ -151,7 +151,7 @@ public class Main {
                     }
                     Stream.of(Arrays.copyOfRange(files, 1, files.length)).map(File::new).forEach(program.mainWindow::silentParseCSVAndMergeData);
                 });
-            });
-        }
+            }
+        });
     }
 }
