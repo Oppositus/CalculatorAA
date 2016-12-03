@@ -35,6 +35,7 @@ public class MainWindow {
     private JButton buttonSave;
     private JButton buttonMerge;
     private JButton buttonRemoveColumn;
+    private JButton buttonSettings;
 
     private String[] savedOptions;
     private String lastFileName;
@@ -775,6 +776,7 @@ public class MainWindow {
                 }
             }
         });
+        buttonSettings.addActionListener(e -> SettingsDialog.showSettings());
     }
 
     private void askCSVOptions(boolean askDates, Runnable after) {

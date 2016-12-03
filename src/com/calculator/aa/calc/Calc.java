@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 public class Calc {
 
     private static Object lock = new Object();
-    static final double epsilon = 1.0 / 100000.0;
+    public static final double epsilon = 1.0 / 100000.0;
 
     private static double[] yields(double[] values) {
         int length = values.length;

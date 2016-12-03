@@ -8,11 +8,15 @@ public class Portfolio implements Comparable<Portfolio> {
     private final DoublePoint parameters;
     private final double[] weights;
     private final String[] instruments;
+    private double yieldWithRebalances;
+    private boolean rebalancesDone;
 
     Portfolio(DoublePoint p, double[] w, String[] i) {
         parameters = p;
         weights = w;
         instruments = i;
+        yieldWithRebalances = 0;
+        rebalancesDone = false;
     }
 
     @Override
@@ -112,5 +116,49 @@ public class Portfolio implements Comparable<Portfolio> {
 
     public DoublePoint performance() {
         return parameters;
+    }
+
+    public double yieldRebalances() {
+        return yieldWithRebalances;
+    }
+
+    public void calculateRebalances(double[][] data) {
+
+        if (rebalancesDone) {
+            return;
+        }
+
+        int rows = data.length;
+        int cols = weights.length;
+        double[][] dataWeighted = new double[rows][cols];
+
+        for (int row = 0; row < rows; row++) {
+            System.arraycopy(data[row], 0, dataWeighted[row], 0, cols);
+        }
+
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                dataWeighted[row][col] = data[row][col] * weights[col];
+            }
+        }
+
+        double[] prev = new double[cols];
+        double multiplier = 1.0;
+
+        System.arraycopy(dataWeighted[0], 0, prev, 0, cols);
+
+        for (int row = 1; row < rows; row++) {
+            double sum = 0;
+            for (int col = 0; col < cols; col++) {
+                if (weights[col] > 0) {
+                    sum += dataWeighted[row][col] / prev[col] * weights[col];
+                }
+            }
+            multiplier *= sum;
+            System.arraycopy(dataWeighted[row], 0, prev, 0, cols);
+        }
+
+        yieldWithRebalances = multiplier;
+        rebalancesDone = true;
     }
 }

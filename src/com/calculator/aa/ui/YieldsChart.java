@@ -254,11 +254,11 @@ class YieldsChart extends JDialog {
         dialog.checkBoxSigma2.setSelected(s2);
         dialog.checkBoxSigma3.setSelected(s3);
 
-        int forcast = 10;
+        int forescast = 10;
         try {
-            forcast = Integer.parseInt(properties.getProperty("forecast.p", "10"));
+            forescast = Integer.parseInt(properties.getProperty("forecast.p", "10"));
         } catch (NumberFormatException ignored) {}
-        dialog.spinnerPeriods.setValue(forcast);
+        dialog.spinnerPeriods.setValue(forescast);
 
         dialog.setTitle(Main.resourceBundle.getString("text.portfolio_yield"));
 

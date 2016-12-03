@@ -112,6 +112,7 @@ This feature allows watching portfolio evolution.
 If "From" value is less than the minimal date with full instruments history,
 the minimal date will be used.
 - "Frontier only" button switches drawing mode: all portfolios or efficient-frontier portfolios.
+- "Rebalances" button colorizes chart depending on portfolio performance with rebalances.
 - "Draw" button redraws the chart.
 - The nearest portfolio is highlighted then the mouse is moved.
 - Left mouse button click opens yields chart for the portfolio.

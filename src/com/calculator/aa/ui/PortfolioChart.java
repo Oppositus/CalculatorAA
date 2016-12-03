@@ -24,6 +24,7 @@ class PortfolioChart extends JDialog {
     private JButton buttonAccuracyMax;
     private JComboBox<String> comboBoxFrom;
     private JComboBox<String> comboBoxTo;
+    private JToggleButton buttonShowRebalances;
 
     private final String[] instruments;
     private final double[][] data;
@@ -60,6 +61,9 @@ class PortfolioChart extends JDialog {
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
         buttonCompute.addActionListener(e -> {
+
+            buttonShowRebalances.setSelected(false);
+
             int length = instruments.length - 1;
 
             DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
@@ -165,6 +169,7 @@ class PortfolioChart extends JDialog {
                 setCursor(Cursor.getDefaultCursor());
             }
         });
+        buttonShowRebalances.addActionListener(e -> ((PortfolioChartPanel) chartPanel).setRebalancesMode(buttonShowRebalances.isSelected()));
     }
 
     private int calculateDivision(int[] minimals, int[] maximals) {
@@ -347,6 +352,7 @@ class PortfolioChart extends JDialog {
         }
 
         ((PortfolioChartPanel) chartPanel).setPortfolios(accuracyPortfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
+        ((PortfolioChartPanel) chartPanel).setRebalancesMode(buttonShowRebalances.isSelected());
 
         return accuracyPortfolios;
     }

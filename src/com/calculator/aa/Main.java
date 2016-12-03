@@ -25,14 +25,9 @@ public class Main {
     public static ResourceBundle resourceBundle;
     public static Cursor voidCursor;
 
-    private Main() {
+    private Main(Properties props) {
 
-        properties = new Properties();
-        try {
-            if (Files.exists(new File(propertiesFile).toPath())) {
-                properties.load(new BufferedInputStream(new FileInputStream(propertiesFile)));
-            }
-        } catch (IOException ignored) {}
+        properties = props;
 
         mainFrame = new JFrame(resourceBundle.getString("text.program_name"));
         mainWindow = new MainWindow();
@@ -60,6 +55,24 @@ public class Main {
             }
         });
 
+        restoreFrameProperties();
+
+        mainFrame.setVisible(true);
+    }
+
+    public static Main getMain() {
+        return program;
+    }
+
+    public static JFrame getFrame() {
+        return program.mainFrame;
+    }
+
+    public static Properties getProperties() {
+        return program.properties;
+    }
+
+    public void restoreFrameProperties() {
         mainFrame.pack();
 
         int x = Integer.parseInt(properties.getProperty("frame.x", "-1"));
@@ -74,16 +87,6 @@ public class Main {
             Rectangle rec = new Rectangle(x, y, w, h);
             mainFrame.setBounds(rec);
         }
-
-        mainFrame.setVisible(true);
-    }
-
-    public static JFrame getFrame() {
-        return program.mainFrame;
-    }
-
-    public static Properties getProperties() {
-        return program.properties;
     }
 
     public static String[] getPeriods(int fromIndex, int toIndex) {
@@ -100,9 +103,20 @@ public class Main {
                 new Point(0, 0),
                 "null");
 
-        program = new Main();
+        Properties prop = new Properties();
+        try {
+            if (Files.exists(new File(propertiesFile).toPath())) {
+                prop.load(new BufferedInputStream(new FileInputStream(propertiesFile)));
+            }
+        } catch (IOException ignored) {}
 
-        Properties prop = getProperties();
+        String laf = prop.getProperty("ui.theme");
+        if (laf != null) {
+            try {
+                UIManager.setLookAndFeel(laf);
+            } catch (Exception ignored) {}
+        }
+
         String[] savedOptions = new String[] {";", "\"", ".", "1"};
 
         String s = prop.getProperty("import.delimiter");
@@ -129,11 +143,14 @@ public class Main {
 
         if (!file.isEmpty()) {
             SwingUtilities.invokeLater(() -> {
-                String[] files = file.split(";");
-                if (files.length > 0) {
-                    program.mainWindow.parseCSVAndLoadData(new File(files[0]), savedOptions);
-                }
-                Stream.of(Arrays.copyOfRange(files, 1, files.length)).map(File::new).forEach(program.mainWindow::silentParseCSVAndMergeData);
+                program = new Main(prop);
+                SwingUtilities.invokeLater(() -> {
+                    String[] files = file.split(";");
+                    if (files.length > 0) {
+                        program.mainWindow.parseCSVAndLoadData(new File(files[0]), savedOptions);
+                    }
+                    Stream.of(Arrays.copyOfRange(files, 1, files.length)).map(File::new).forEach(program.mainWindow::silentParseCSVAndMergeData);
+                });
             });
         }
     }
