@@ -111,11 +111,17 @@ public class Main {
         } catch (IOException ignored) {}
 
         String laf = prop.getProperty("ui.theme");
-        if (laf != null) {
-            try {
-                UIManager.setLookAndFeel(laf);
-            } catch (Exception ignored) {}
-        }
+        try {
+            if (laf != null) {
+                try {
+                    UIManager.setLookAndFeel(laf);
+                } catch (Exception ignored) {
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                }
+            } else {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            }
+        } catch (Exception ignored) {}
 
         String[] savedOptions = new String[] {";", "\"", ".", "1"};
 
