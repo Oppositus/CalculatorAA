@@ -211,7 +211,7 @@ class PortfolioChartPanel extends JPanel {
                 portfoliosCompare != null ? portfoliosCompare.get(portfoliosCompare.size() - 1).risk() : Double.MIN_VALUE);
 
         double dr;
-        if (pfs != null && pfs.size() == 1) {
+        if (portfolios != null && portfolios.size() == 1) {
             dr = 0.05;
         } else {
             dr = (maxRisk - minRisk) * 0.05;
@@ -241,7 +241,7 @@ class PortfolioChartPanel extends JPanel {
             }
 
             double dy;
-            if (pfs != null && pfs.size() == 1) {
+            if (portfolios != null && portfolios.size() == 1) {
                 dy = 0.05;
             } else {
                 dy = (maxYield - minYield) * 0.05;
