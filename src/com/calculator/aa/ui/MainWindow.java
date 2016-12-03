@@ -3,7 +3,6 @@ package com.calculator.aa.ui;
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.Zipper;
-import com.sun.deploy.util.StringUtils;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -620,14 +619,15 @@ public class MainWindow {
 
                         Properties prop = Main.getProperties();
 
-                        String files = StringUtils.join(
+                        String files = String.join(
+                                ";",
                                 Arrays.stream(f).map(fl -> {
                                     try {
                                         return fl.getCanonicalPath();
                                     } catch (IOException e) {
                                         return "";
                                     }
-                                }).collect(Collectors.toList()), "\t");
+                                }).collect(Collectors.toList()));
 
                         prop.setProperty("files.last", files);
                         lastFileName = f[0].getCanonicalPath();
@@ -752,7 +752,7 @@ public class MainWindow {
                         if (names.isEmpty()) {
                             prop.setProperty("files.last", path);
                         } else if (!names.contains(path)) {
-                            prop.setProperty("files.last", names + "\t" + path);
+                            prop.setProperty("files.last", names + ";" + path);
                         }
                     } catch (Exception ignored) {
 
@@ -897,9 +897,10 @@ public class MainWindow {
             BufferedWriter os = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8));
 
             os.write(
-                    StringUtils.join(
-                            Arrays.stream(model.instruments).map(i -> mark + i + mark).collect(Collectors.toList()),
-                            delim)
+                    String.join(
+                            delim,
+                            Arrays.stream(model.instruments).map(i -> mark + i + mark).collect(Collectors.toList())
+                    )
             );
             os.newLine();
 
@@ -911,13 +912,14 @@ public class MainWindow {
                 os.write(mark);
                 os.write(delim);
                 os.write(
-                        StringUtils.join(
-                            Arrays.stream(model.data[i])
-                                    .boxed()
-                                    .map(d -> d >= 0 ? String.valueOf(d) : "")
-                                    .map(s -> s.replace(".", decimal))
-                                    .collect(Collectors.toList()),
-                            delim)
+                        String.join(
+                                delim,
+                                Arrays.stream(model.data[i])
+                                        .boxed()
+                                        .map(d -> d >= 0 ? String.valueOf(d) : "")
+                                        .map(s -> s.replace(".", decimal))
+                                        .collect(Collectors.toList())
+                                )
                 );
                 os.newLine();
             }

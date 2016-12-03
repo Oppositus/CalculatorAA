@@ -1,7 +1,5 @@
 package com.calculator.aa.calc;
 
-import com.sun.deploy.util.StringUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -122,22 +120,22 @@ public class Zipper<K, V, L> {
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder("\t");
+        StringBuilder sb = new StringBuilder(" ");
 
-        sb.append(StringUtils.join(
-                labelList.stream().map(Object::toString).collect(Collectors.toList()),
-                "\t"
+        sb.append(String.join(
+                " ",
+                labelList.stream().map(Object::toString).collect(Collectors.toList())
         ));
         sb.append("\n");
 
         int size = keyList.size();
         for (int i = 0; i < size; i++) {
             sb.append(keyList.get(i).toString());
-            sb.append("\t");
+            sb.append(" ");
 
-            sb.append(StringUtils.join(
-                    valueList.get(i).stream().map(Object::toString).collect(Collectors.toList()),
-                    "\t"
+            sb.append(String.join(
+                    " ",
+                    valueList.get(i).stream().map(Object::toString).collect(Collectors.toList())
             ));
 
             if (i != size - 1) {

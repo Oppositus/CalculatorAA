@@ -1,7 +1,6 @@
 package com.calculator.aa;
 
 import com.calculator.aa.ui.MainWindow;
-import com.sun.deploy.util.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -130,7 +129,7 @@ public class Main {
 
         if (!file.isEmpty()) {
             SwingUtilities.invokeLater(() -> {
-                String[] files = StringUtils.splitString(file, "\t");
+                String[] files = file.split(";");
                 if (files.length > 0) {
                     program.mainWindow.parseCSVAndLoadData(new File(files[0]), savedOptions);
                 }
