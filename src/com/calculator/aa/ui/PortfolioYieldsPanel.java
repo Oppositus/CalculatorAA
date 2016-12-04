@@ -30,7 +30,7 @@ class PortfolioYieldsPanel extends JPanel {
     private double minY;
     private double maxY;
     private double dYield;
-    private int dPeriod;
+    private double dPeriod;
 
     private Rectangle drawingArea;
 
@@ -209,8 +209,13 @@ class PortfolioYieldsPanel extends JPanel {
 
         int lastXPos = drawingArea.x + stringPeriodWidth;
         int length = labels.length;
+        int lastPX = 0;
         for (int p = 1; p < length; p++) {
             int xx = mapX(p);
+            if (xx - lastPX < 25) {
+                continue;
+            }
+            lastPX = xx;
             g.drawLine(xx, drawingArea.y + drawingArea.height + safeTop, xx, safeZone);
             if (xx > lastXPos && xx + stringPeriodWidth < drawingArea.x + dPeriod * periods - stringPeriodWidth) {
                 lastXPos = xx + stringPeriodWidth;
@@ -232,7 +237,7 @@ class PortfolioYieldsPanel extends JPanel {
         g.drawString(maxYieldStr, drawingArea.x - stringWidth - safeTop, drawingArea.y + stringHeight);
 
         g.drawString(minPeriodStr, drawingArea.x, drawingArea.y + drawingArea.height + stringHeight + safeTop);
-        g.drawString(maxPeriodStr, drawingArea.x + dPeriod * periods - stringPeriodWidth, drawingArea.y + drawingArea.height + stringHeight + safeTop);
+        g.drawString(maxPeriodStr, drawingArea.x + (int)(dPeriod * periods) - stringPeriodWidth, drawingArea.y + drawingArea.height + stringHeight + safeTop);
 
         if (1.0 - minY > 0.05) {
             int pc100 = mapY(isLog ? Math.log(1.0) : 1.0);
@@ -475,13 +480,11 @@ class PortfolioYieldsPanel extends JPanel {
                 w - stringWidth - safeZone * 2,
                 h - stringHeight - safeZone * 2);
 
-        dPeriod = drawingArea.width / periods;
-
-        drawingArea.width = Math.min(dPeriod * periods, drawingArea.width);
+        dPeriod = (double)drawingArea.width / periods;
     }
 
     private int mapX(int period) {
-        return drawingArea.x + dPeriod * period;
+        return drawingArea.x + (int)(dPeriod * period);
     }
 
     private int mapY(double y) {
