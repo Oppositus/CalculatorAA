@@ -124,7 +124,7 @@ class PortfolioYieldsPanel extends JPanel {
         maxY = maxYield + dr;
         dYield = maxY - minY;
 
-        minYieldStr = Calc.formatDouble2(isLog ? Math.exp(minY) : minY);
+        minYieldStr = minY >= 0 ? Calc.formatDouble2(isLog ? Math.exp(minY) : minY) : "";
         maxYieldStr = Calc.formatDouble2(isLog ? Math.exp(maxY) : maxY);
         minPeriodStr = labels[0];
         maxPeriodStr = labels[labels.length - 1];
