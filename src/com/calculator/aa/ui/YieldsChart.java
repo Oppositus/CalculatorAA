@@ -100,6 +100,7 @@ class YieldsChart extends JDialog {
             lastModeButton = buttonDraw;
             buttonDraw.setSelected(true);
             buttonRebalance.setSelected(false);
+            portfolio.setRebalancedMode(buttonRebalance.isSelected());
             boolean isLog = buttonLogScale.isSelected();
             realYields = calculateRealYields(isLog);
             portfolioYields = calculateModelYields(isLog);
@@ -122,6 +123,7 @@ class YieldsChart extends JDialog {
             lastModeButton = buttonRebalance;
             buttonDraw.setSelected(false);
             buttonRebalance.setSelected(true);
+            portfolio.setRebalancedMode(buttonRebalance.isSelected());
             boolean isLog = buttonLogScale.isSelected();
             realYields = calculateRealYields(isLog);
             portfolioYields = calculateRebalances(isLog);

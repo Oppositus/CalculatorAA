@@ -19,7 +19,7 @@ class PortfolioChart extends JDialog {
     private JPanel chartPanel;
     private JTable tableLimitations;
     private JButton buttonCompute;
-    private JToggleButton buttonFrontierOnly;
+    private JCheckBox cbFrontierOnly;
     private JButton buttonAccuracy;
     private JButton buttonAccuracyMax;
     private JComboBox<String> comboBoxFrom;
@@ -138,7 +138,7 @@ class PortfolioChart extends JDialog {
             ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
         });
 
-        buttonFrontierOnly.addChangeListener(e -> ((PortfolioChartPanel) chartPanel).setFrontierOnlyMode(buttonFrontierOnly.isSelected()));
+        cbFrontierOnly.addChangeListener(e -> ((PortfolioChartPanel) chartPanel).setFrontierOnlyMode(cbFrontierOnly.isSelected()));
 
         buttonAccuracy.addActionListener(e -> {
             List<Portfolio> frontier = ((PortfolioChartPanel) chartPanel).getFrontierPortfolios();
