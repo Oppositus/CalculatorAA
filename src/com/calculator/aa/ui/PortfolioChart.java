@@ -391,10 +391,10 @@ class PortfolioChart extends JDialog {
         dialog.pack();
 
         Properties properties = Main.getProperties();
-        int x = Integer.parseInt(properties.getProperty("portfolio.x", "-1"));
-        int y = Integer.parseInt(properties.getProperty("portfolio.y", "-1"));
-        int w = Integer.parseInt(properties.getProperty("portfolio.w", "-1"));
-        int h = Integer.parseInt(properties.getProperty("portfolio.h", "-1"));
+        int x = Calc.safeParseInt(properties.getProperty("portfolio.x", "-1"), -1);
+        int y = Calc.safeParseInt(properties.getProperty("portfolio.y", "-1"), -1);
+        int w = Calc.safeParseInt(properties.getProperty("portfolio.w", "-1"), -1);
+        int h = Calc.safeParseInt(properties.getProperty("portfolio.h", "-1"), -1);
 
         if (x >= 0 && y >= 0 && w >= 0 && h >= 0) {
             Rectangle rec = new Rectangle(x, y, w, h);

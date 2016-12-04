@@ -447,7 +447,7 @@ public class MainWindow {
         private Date formatYYYY(Object s) {
             dateFormat = DateFormats.DATE_FORMAT_YYYY;
             Calendar c = Calendar.getInstance();
-            c.set(Integer.parseInt(s.toString()), 0, 1);
+            c.set(Calc.safeParseInt(s.toString(), -1), 0, 1);
 
             return c.getTime();
         }
@@ -468,8 +468,8 @@ public class MainWindow {
         private Date formatMM_YYYY(Object s) {
             Matcher m = ptMM_YYYY.matcher(s.toString());
             m.matches();
-            int mm = Integer.parseInt(m.group(1));
-            int yy = Integer.parseInt(m.group(2));
+            int mm = Calc.safeParseInt(m.group(1), -1);
+            int yy = Calc.safeParseInt(m.group(2), -1);
 
             dateFormat = DateFormats.DATE_FORMAT_MM_YYYY;
             Calendar c = Calendar.getInstance();
@@ -494,8 +494,8 @@ public class MainWindow {
         private Date formatYYYY_MM(Object s) {
             Matcher m = ptYYYY_MM.matcher(s.toString());
             m.matches();
-            int yy = Integer.parseInt(m.group(1));
-            int mm = Integer.parseInt(m.group(2));
+            int yy = Calc.safeParseInt(m.group(1), -1);
+            int mm = Calc.safeParseInt(m.group(2), -1);
 
             dateFormat = DateFormats.DATE_FORMAT_YYYY_MM;
             Calendar c = Calendar.getInstance();
@@ -521,9 +521,9 @@ public class MainWindow {
         private Date formatDD_MM_YYYY(Object s) {
             Matcher m = ptXX_XX_YYYY.matcher(s.toString());
             m.matches();
-            int dd = Integer.parseInt(m.group(1));
-            int mm = Integer.parseInt(m.group(2));
-            int yy = Integer.parseInt(m.group(3));
+            int dd = Calc.safeParseInt(m.group(1), -1);
+            int mm = Calc.safeParseInt(m.group(2), -1);
+            int yy = Calc.safeParseInt(m.group(3), -1);
 
             if (mm > 12) {
                 return null;
@@ -539,9 +539,9 @@ public class MainWindow {
         private Date formatMM_DD_YYYY(Object s) {
             Matcher m = ptXX_XX_YYYY.matcher(s.toString());
             m.matches();
-            int mm = Integer.parseInt(m.group(1));
-            int dd = Integer.parseInt(m.group(2));
-            int yy = Integer.parseInt(m.group(3));
+            int mm = Calc.safeParseInt(m.group(1), -1);
+            int dd = Calc.safeParseInt(m.group(2), -1);
+            int yy = Calc.safeParseInt(m.group(3), -1);
 
             if (mm > 12) {
                 return null;
@@ -571,9 +571,9 @@ public class MainWindow {
         private Date formatYYYY_MM_DD(Object s) {
             Matcher m = ptYYYY_MM_DD.matcher(s.toString());
             m.matches();
-            int yy = Integer.parseInt(m.group(1));
-            int mm = Integer.parseInt(m.group(2));
-            int dd = Integer.parseInt(m.group(3));
+            int yy = Calc.safeParseInt(m.group(1), -1);
+            int mm = Calc.safeParseInt(m.group(2), -1);
+            int dd = Calc.safeParseInt(m.group(3), -1);
 
             dateFormat = DateFormats.DATE_FORMAT_YYYY_MM_DD;
             Calendar c = Calendar.getInstance();
