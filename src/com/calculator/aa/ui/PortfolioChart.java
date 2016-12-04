@@ -25,6 +25,8 @@ class PortfolioChart extends JDialog {
     private JComboBox<String> comboBoxFrom;
     private JComboBox<String> comboBoxTo;
     private JToggleButton buttonShowRebalances;
+    private JSlider sliderMinPerformance;
+    private JLabel labelRebPercent;
 
     private final String[] instruments;
     private final double[][] data;
@@ -63,6 +65,8 @@ class PortfolioChart extends JDialog {
         buttonCompute.addActionListener(e -> {
 
             buttonShowRebalances.setSelected(false);
+            sliderMinPerformance.setEnabled(false);
+            labelRebPercent.setEnabled(false);
 
             int length = instruments.length - 1;
 
@@ -169,7 +173,17 @@ class PortfolioChart extends JDialog {
                 setCursor(Cursor.getDefaultCursor());
             }
         });
-        buttonShowRebalances.addActionListener(e -> ((PortfolioChartPanel) chartPanel).setRebalancesMode(buttonShowRebalances.isSelected()));
+        buttonShowRebalances.addActionListener(e -> {
+            boolean isSelected = buttonShowRebalances.isSelected();
+            sliderMinPerformance.setEnabled(isSelected);
+            labelRebPercent.setEnabled(isSelected);
+            ((PortfolioChartPanel) chartPanel).setRebalancesMode(isSelected);
+        });
+        sliderMinPerformance.addChangeListener(e -> {
+            int value = sliderMinPerformance.getValue();
+            labelRebPercent.setText(value + "%");
+            ((PortfolioChartPanel) chartPanel).setRebalancesMinimum(value);
+        });
     }
 
     private int calculateDivision(int[] minimals, int[] maximals) {

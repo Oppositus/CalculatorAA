@@ -68,3 +68,4 @@ ui.set_compare_portfolio=Использовать для сравнения (Ctr
 ui.portfolio_components_2=Состав портфеля (Shift+Клик)
 ui.settings=Настройки
 ui.theme=Тема
+ui.min_reb_percent=Мин. реб. %

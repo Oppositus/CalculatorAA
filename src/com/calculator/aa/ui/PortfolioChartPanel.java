@@ -71,6 +71,7 @@ class PortfolioChartPanel extends JPanel {
     private double minYieldRebalance;
     private double maxYieldRebalance;
     private double dYieldRebalance;
+    private double rebalancesMinimum;
 
     private Portfolio nearest = null;
 
@@ -324,6 +325,11 @@ class PortfolioChartPanel extends JPanel {
         }
     }
 
+    void setRebalancesMinimum(int minimum) {
+        rebalancesMinimum = minimum / 100.0;
+        repaint();
+    }
+
     List<Portfolio> getFrontierPortfolios() {
         return frontierPortfolios;
     }
@@ -461,6 +467,9 @@ class PortfolioChartPanel extends JPanel {
         if (showRebalancesMode) {
             double reb = pf.yieldRebalances();
             double percent = (reb - minYieldRebalance) / dYieldRebalance;
+            if (percent < rebalancesMinimum) {
+                return;
+            }
             Color cl = getGradientColor(percent);
             g.setColor(cl);
         }
@@ -489,6 +498,13 @@ class PortfolioChartPanel extends JPanel {
         List<Portfolio> pfs = frontierOnlyMode ? frontierPortfolios : portfolios;
 
         for (Portfolio pf : pfs) {
+            if (showRebalancesMode) {
+                double reb = pf.yieldRebalances();
+                double percent = (reb - minYieldRebalance) / dYieldRebalance;
+                if (percent < rebalancesMinimum) {
+                    continue;
+                }
+            }
             double dst = Calc.distance(p, pf.performance());
             if (dst < distance) {
                 distance = dst;
@@ -531,6 +547,11 @@ class PortfolioChartPanel extends JPanel {
                 double reb2 = p2.yieldRebalances();
                 double percent2 = (reb2 - minYieldRebalance) / dYieldRebalance;
                 double percent = (percent1 + percent2) / 2;
+
+                if (percent < rebalancesMinimum) {
+                    continue;
+                }
+
                 Color cl = getGradientColor(percent);
                 g.setColor(cl);
 
