@@ -153,7 +153,9 @@
 (возможно ему придется дать права на выполнение: `chmod +x calcaa.sh`)
 
 ## Поблагодарить автора
-Устно: [в ЖЖ + ответы на вопросы](http://oppositus.livejournal.com/408547.html)
+Устно:
+[в ЖЖ + ответы на вопросы](http://oppositus.livejournal.com/408547.html)
+[на Smatr-Lab'е](http://smart-lab.ru/blog/366844.php)
 
 Денежно:
 - [Яндекс.Деньги](https://money.yandex.ru/to/4100172000860)

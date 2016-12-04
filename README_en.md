@@ -150,6 +150,7 @@ to include maximum available history.
 ## Say thanks to author
 Discussion:
 [LiveJournal](http://oppositus.livejournal.com/408547.html)
+[Smart-Lab](http://smart-lab.ru/blog/366844.php)
 
 Donation:
 - [Yandex.Money](https://money.yandex.ru/to/4100172000860)
