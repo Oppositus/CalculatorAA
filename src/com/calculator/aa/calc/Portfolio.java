@@ -6,23 +6,31 @@ import java.util.Arrays;
 
 public class Portfolio implements Comparable<Portfolio> {
     private final DoublePoint parameters;
+    private final DoublePoint rebalancedParameters;
     private final double[] weights;
     private final String[] instruments;
-    private double yieldWithRebalances;
-    private boolean rebalancesDone;
+    private boolean rebalancedMode;
 
-    Portfolio(DoublePoint p, double[] w, String[] i) {
+    public Portfolio(Portfolio o) {
+        parameters = new DoublePoint(o.parameters);
+        rebalancedParameters = new DoublePoint(o.rebalancedParameters);
+        weights = Arrays.copyOf(o.weights, o.weights.length);
+        instruments = Arrays.copyOf(o.instruments, o.instruments.length);
+        rebalancedMode = o.rebalancedMode;
+    }
+
+    Portfolio(DoublePoint p, double[] w, String[] i, double[][] df) {
         parameters = p;
         weights = w;
         instruments = i;
-        yieldWithRebalances = 0;
-        rebalancesDone = false;
+        rebalancedMode = false;
+        rebalancedParameters = calculateRebalances(df);
     }
 
     @Override
     public int compareTo(Portfolio o) {
-        double myRisk = parameters.getX();
-        double otherRisk = o.parameters.getX();
+        double myRisk = rebalancedMode ? rebalancedParameters.getX() : parameters.getX();
+        double otherRisk = rebalancedMode ? o.rebalancedParameters.getX() : o.parameters.getX();
 
         if (myRisk < otherRisk) {
             return -1;
@@ -64,8 +72,8 @@ public class Portfolio implements Comparable<Portfolio> {
     }
 
     int compareToYield(Portfolio o) {
-        double myYield = parameters.getY();
-        double otherYield = o.parameters.getY();
+        double myYield = rebalancedMode ? rebalancedParameters.getY() : parameters.getY();
+        double otherYield = rebalancedMode ? o.rebalancedParameters.getY() : o.parameters.getY();
 
         if (myYield < otherYield) {
             return -1;
@@ -107,34 +115,22 @@ public class Portfolio implements Comparable<Portfolio> {
     }
 
     public double yield() {
-        return parameters.getY();
+        return rebalancedMode ? rebalancedParameters.getY() : parameters.getY();
     }
 
     public double risk() {
-        return parameters.getX();
+        return rebalancedMode ? rebalancedParameters.getX() : parameters.getX();
     }
 
     public DoublePoint performance() {
-        return parameters;
+        return rebalancedMode ? rebalancedParameters : parameters;
     }
 
-    public double yieldRebalances() {
-        return yieldWithRebalances;
-    }
-
-    public void calculateRebalances(double[][] data) {
-
-        if (rebalancesDone) {
-            return;
-        }
-
+    private DoublePoint calculateRebalances(double[][] data) {
         int rows = data.length;
         int cols = weights.length;
-        double[][] dataWeighted = new double[rows][cols];
 
-        for (int row = 0; row < rows; row++) {
-            System.arraycopy(data[row], 0, dataWeighted[row], 0, cols);
-        }
+        double[][] dataWeighted = new double[rows][cols];
 
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
@@ -142,10 +138,12 @@ public class Portfolio implements Comparable<Portfolio> {
             }
         }
 
+        double[] result = new double[rows];
         double[] prev = new double[cols];
         double multiplier = 1.0;
 
         System.arraycopy(dataWeighted[0], 0, prev, 0, cols);
+        result[0] = 1.0;
 
         for (int row = 1; row < rows; row++) {
             double sum = 0;
@@ -155,10 +153,20 @@ public class Portfolio implements Comparable<Portfolio> {
                 }
             }
             multiplier *= sum;
+            result[row] = multiplier;
             System.arraycopy(dataWeighted[row], 0, prev, 0, cols);
         }
 
-        yieldWithRebalances = multiplier;
-        rebalancesDone = true;
+        return new DoublePoint(
+                Calc.stdevYields(result),
+                Calc.averageRealYields(result));
+    }
+
+    public void setRebalancedMode(boolean mode) {
+        rebalancedMode = mode;
+    }
+
+    public boolean getRebalancedMode() {
+        return rebalancedMode;
     }
 }

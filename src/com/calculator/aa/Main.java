@@ -1,5 +1,6 @@
 package com.calculator.aa;
 
+import com.calculator.aa.calc.Calc;
 import com.calculator.aa.ui.MainWindow;
 
 import javax.swing.*;
@@ -75,11 +76,11 @@ public class Main {
     public void restoreFrameProperties() {
         mainFrame.pack();
 
-        int x = Integer.parseInt(properties.getProperty("frame.x", "-1"));
-        int y = Integer.parseInt(properties.getProperty("frame.y", "-1"));
-        int w = Integer.parseInt(properties.getProperty("frame.w", "-1"));
-        int h = Integer.parseInt(properties.getProperty("frame.h", "-1"));
-        int z = Integer.parseInt(properties.getProperty("frame.z", "0"));
+        int x = Calc.safeParseInt(properties.getProperty("frame.x", "-1"), -1);
+        int y = Calc.safeParseInt(properties.getProperty("frame.y", "-1"), -1);
+        int w = Calc.safeParseInt(properties.getProperty("frame.w", "-1"), -1);
+        int h = Calc.safeParseInt(properties.getProperty("frame.h", "-1"), -1);
+        int z = Calc.safeParseInt(properties.getProperty("frame.z", "0"), -1);
 
         if (z == 1) {
             mainFrame.setExtendedState(mainFrame.getExtendedState() | JFrame.MAXIMIZED_BOTH);

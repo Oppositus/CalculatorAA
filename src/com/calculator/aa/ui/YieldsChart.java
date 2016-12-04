@@ -236,10 +236,10 @@ class YieldsChart extends JDialog {
         dialog.pack();
 
         Properties properties = Main.getProperties();
-        int x = Integer.parseInt(properties.getProperty("yields.x", "-1"));
-        int y = Integer.parseInt(properties.getProperty("yields.y", "-1"));
-        int w = Integer.parseInt(properties.getProperty("yields.w", "-1"));
-        int h = Integer.parseInt(properties.getProperty("yields.h", "-1"));
+        int x = Calc.safeParseInt(properties.getProperty("yields.x", "-1"), -1);
+        int y = Calc.safeParseInt(properties.getProperty("yields.y", "-1"), -1);
+        int w = Calc.safeParseInt(properties.getProperty("yields.w", "-1"), -1);
+        int h = Calc.safeParseInt(properties.getProperty("yields.h", "-1"), -1);
 
         if (x >= 0 && y >= 0 && w >= 0 && h >= 0) {
             Rectangle rec = new Rectangle(x, y, w, h);
@@ -264,9 +264,12 @@ class YieldsChart extends JDialog {
 
         SwingUtilities.invokeLater(() -> {
             if (dialog.lastModeButton == null) {
-                dialog.lastModeButton = dialog.buttonDraw;
-                dialog.buttonDraw.setSelected(true);
-                dialog.buttonRebalance.setSelected(false);
+
+                boolean isRebalanced = dialog.portfolio.getRebalancedMode();
+
+                dialog.lastModeButton = isRebalanced ? dialog.buttonRebalance : dialog.buttonDraw;
+                dialog.buttonRebalance.setSelected(isRebalanced);
+                dialog.buttonDraw.setSelected(!isRebalanced);
             }
             for(ActionListener a: dialog.lastModeButton.getActionListeners()) {
                 a.actionPerformed(new ActionEvent(dialog, ActionEvent.ACTION_PERFORMED, null) {});

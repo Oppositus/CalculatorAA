@@ -241,25 +241,27 @@ public class Calc {
         return Math.sqrt(sum);
     }
 
-    private static Portfolio portfolio(double[][] correlations, double[] averageYields, double[] stdevYields, double[] weights, String[] instruments) {
+    private static Portfolio portfolio(double[][] correlations, double[] averageYields, double[] stdevYields,
+                                       double[] weights, String[] instruments, double[][] dataFiltered) {
         return new Portfolio(
                 new DoublePoint(
                         portfolioRisk(correlations, stdevYields, weights),
                         portfolioYield(averageYields, weights)),
                 weights,
-                instruments);
+                instruments,
+                dataFiltered);
     }
 
     public static List<Portfolio> iteratePortfolios(double[][] correlations, double[] averageYields,
                                                     double[] stdevYields, int[] minimals, int[] maximals,
-                                                    String[] instruments, int divStep) {
+                                                    String[] instruments, double[][] dataFiltered, int divStep) {
         List<Portfolio> result = new LinkedList<>();
         int length = averageYields.length;
 
         int[] weights = new int[length];
         System.arraycopy(minimals, 0, weights, 0, length);
 
-        iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, 100 / divStep, weights, instruments, 0, result);
+        iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, 100 / divStep, weights, instruments, dataFiltered, 0, result);
 
         result.sort(Portfolio::compareTo);
 
@@ -268,7 +270,8 @@ public class Calc {
 
     private static void iteratePortfolioHelper(double[][] correlations, double[] avYields, double[] sdYields,
                                                int[] minimals, int[] maximals, int step,
-                                               int[] weights, String[] instruments, int index, List<Portfolio> acc) {
+                                               int[] weights, String[] instruments, double[][] dataFiltered,
+                                               int index, List<Portfolio> acc) {
         while (weights[index] <= maximals[index]) {
 
             // clear tail
@@ -279,12 +282,12 @@ public class Calc {
             if (sum == 100) {
                 acc.add(
                         portfolio(correlations, avYields, sdYields,
-                                Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray(), instruments)
+                                Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray(), instruments, dataFiltered)
                 );
             }
 
             if (index < weights.length - 1 && sum < 100) {
-                iteratePortfolioHelper(correlations, avYields, sdYields, minimals, maximals, step, weights, instruments, index + 1, acc);
+                iteratePortfolioHelper(correlations, avYields, sdYields, minimals, maximals, step, weights, instruments, dataFiltered, index + 1, acc);
             }
 
             weights[index] += step;
@@ -448,6 +451,14 @@ public class Calc {
 
     public static String formatDouble2(double f) {
         return String.format("%.2f", f);
+    }
+
+    public static int safeParseInt(String s, int def) {
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException ignored) {
+            return def;
+        }
     }
 }
 

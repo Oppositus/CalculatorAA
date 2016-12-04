@@ -24,9 +24,7 @@ class PortfolioChart extends JDialog {
     private JButton buttonAccuracyMax;
     private JComboBox<String> comboBoxFrom;
     private JComboBox<String> comboBoxTo;
-    private JToggleButton buttonShowRebalances;
-    private JSlider sliderMinPerformance;
-    private JLabel labelRebPercent;
+    private JCheckBox cbShowRebalances;
 
     private final String[] instruments;
     private final double[][] data;
@@ -63,11 +61,6 @@ class PortfolioChart extends JDialog {
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
         buttonCompute.addActionListener(e -> {
-
-            buttonShowRebalances.setSelected(false);
-            sliderMinPerformance.setEnabled(false);
-            labelRebPercent.setEnabled(false);
-
             int length = instruments.length - 1;
 
             DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
@@ -124,11 +117,22 @@ class PortfolioChart extends JDialog {
 
             String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
             int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length));
-            List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers);
+            List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dataFiltered, dividers);
 
             List<Portfolio> portfoliosCompare = null;
             if (Arrays.stream(compares).sum() == 100) {
-                portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, 100);
+                portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, dataFiltered, 100);
+            }
+
+            boolean isSelected = cbShowRebalances.isSelected();
+            portfolios.forEach(p -> p.setRebalancedMode(isSelected));
+            if (portfoliosCompare != null) {
+                portfoliosCompare.forEach(p -> p.setRebalancedMode(isSelected));
+                portfoliosCompare.sort(Portfolio::compareTo);
+            }
+
+            if (isSelected) {
+                portfolios.sort(Portfolio::compareTo);
             }
 
             ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
@@ -173,16 +177,10 @@ class PortfolioChart extends JDialog {
                 setCursor(Cursor.getDefaultCursor());
             }
         });
-        buttonShowRebalances.addActionListener(e -> {
-            boolean isSelected = buttonShowRebalances.isSelected();
-            sliderMinPerformance.setEnabled(isSelected);
-            labelRebPercent.setEnabled(isSelected);
-            ((PortfolioChartPanel) chartPanel).setRebalancesMode(isSelected);
-        });
-        sliderMinPerformance.addChangeListener(e -> {
-            int value = sliderMinPerformance.getValue();
-            labelRebPercent.setText(value + "%");
-            ((PortfolioChartPanel) chartPanel).setRebalancesMinimum(value);
+        cbShowRebalances.addActionListener(e -> {
+            for(ActionListener a: buttonCompute.getActionListeners()) {
+                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
+            }
         });
     }
 
@@ -352,21 +350,25 @@ class PortfolioChart extends JDialog {
             }
 
             accuracyPortfolios.addAll(
-                    Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dividers)
+                    Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dataFiltered, dividers)
             );
 
             index += 1;
         }
 
-        accuracyPortfolios.sort(Portfolio::compareTo);
-
         List<Portfolio> portfoliosCompare = null;
         if (Arrays.stream(compares).sum() == 100) {
-            portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, 100);
+            portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, dataFiltered, 100);
         }
 
+        boolean isSelected = cbShowRebalances.isSelected();
+        accuracyPortfolios.forEach(p -> p.setRebalancedMode(isSelected));
+        if (portfoliosCompare != null) {
+            portfoliosCompare.forEach(p -> p.setRebalancedMode(isSelected));
+        }
+
+        accuracyPortfolios.sort(Portfolio::compareTo);
         ((PortfolioChartPanel) chartPanel).setPortfolios(accuracyPortfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
-        ((PortfolioChartPanel) chartPanel).setRebalancesMode(buttonShowRebalances.isSelected());
 
         return accuracyPortfolios;
     }
@@ -398,6 +400,12 @@ class PortfolioChart extends JDialog {
             Rectangle rec = new Rectangle(x, y, w, h);
             dialog.setBounds(rec);
         }
+
+        SwingUtilities.invokeLater(() -> {
+            for(ActionListener a: dialog.buttonCompute.getActionListeners()) {
+                a.actionPerformed(new ActionEvent(dialog, ActionEvent.ACTION_PERFORMED, null) {});
+            }
+        });
 
         dialog.setVisible(true);
     }

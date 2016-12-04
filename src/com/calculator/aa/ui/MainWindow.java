@@ -456,7 +456,7 @@ public class MainWindow {
             Matcher m = ptMM_YYYY.matcher(s.toString());
             if (m.matches()) {
                 try {
-                    int mm = Integer.parseInt(m.group(1));
+                    int mm = Calc.safeParseInt(m.group(1), -1);
                     return mm >= 1 && mm <= 12;
                 } catch (NumberFormatException e) {
                     return false;
@@ -482,7 +482,7 @@ public class MainWindow {
             Matcher m = ptYYYY_MM.matcher(s.toString());
             if (m.matches()) {
                 try {
-                    int mm = Integer.parseInt(m.group(2));
+                    int mm = Calc.safeParseInt(m.group(2), -1);
                     return mm >= 1 && mm <= 12;
                 } catch (NumberFormatException e) {
                     return false;
@@ -508,8 +508,8 @@ public class MainWindow {
             Matcher m = ptXX_XX_YYYY.matcher(s.toString());
             if (m.matches()) {
                 try {
-                    int p1 = Integer.parseInt(m.group(1));
-                    int p2 = Integer.parseInt(m.group(2));
+                    int p1 = Calc.safeParseInt(m.group(1), -1);
+                    int p2 = Calc.safeParseInt(m.group(2), -1);
                     return (p1 >= 1 && p1 <= 31 && p2 >= 1 && p2 <= 12) || (p1 >= 1 && p1 <= 12 && p2 >= 1 && p2 <= 31);
                 } catch (NumberFormatException e) {
                     return false;
@@ -558,8 +558,8 @@ public class MainWindow {
             Matcher m = ptYYYY_MM_DD.matcher(s.toString());
             if (m.matches()) {
                 try {
-                    int mm = Integer.parseInt(m.group(2));
-                    int dd = Integer.parseInt(m.group(3));
+                    int mm = Calc.safeParseInt(m.group(2), -1);
+                    int dd = Calc.safeParseInt(m.group(3), -1);
                     return mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31;
                 } catch (NumberFormatException e) {
                     return false;

@@ -14,10 +14,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +29,6 @@ class PortfolioChartPanel extends JPanel {
     private static final Color zoomColor = Color.GRAY;
     private static final int safeZone = 10;
     private static final int safeTop = 5;
-    private BufferedImage rebalancesGradient = null;
 
     private JPopupMenu popupMenu = null;
     private Action setComparePortfolio;
@@ -67,11 +64,6 @@ class PortfolioChartPanel extends JPanel {
     private int dragEndX = 0;
 
     private boolean frontierOnlyMode = false;
-    private boolean showRebalancesMode;
-    private double minYieldRebalance;
-    private double maxYieldRebalance;
-    private double dYieldRebalance;
-    private double rebalancesMinimum;
 
     private Portfolio nearest = null;
 
@@ -91,7 +83,8 @@ class PortfolioChartPanel extends JPanel {
                 } else if (mouseEvent.isControlDown()) {
                     setComparePortfolio.actionPerformed(new ActionEvent(nearest, ActionEvent.ACTION_PERFORMED, null));
                 } else {
-                    YieldsChart.showYields(periodsFiltered, dataFiltered, nearest);
+                    Portfolio pn = new Portfolio(nearest);
+                    YieldsChart.showYields(periodsFiltered, dataFiltered, pn);
                 }
             }
         }
@@ -208,10 +201,6 @@ class PortfolioChartPanel extends JPanel {
         }
 
         portfoliosCompare = pfsComp;
-        showRebalancesMode = false;
-        minYieldRebalance = Double.MAX_VALUE;
-        maxYieldRebalance = Double.MIN_VALUE;
-        dYieldRebalance = 1;
 
         double minRisk = Math.min(
                 portfolios.get(0).risk(),
@@ -278,56 +267,8 @@ class PortfolioChartPanel extends JPanel {
     void setFrontierOnlyMode(boolean mode) {
         if (frontierOnlyMode != mode) {
             frontierOnlyMode = mode;
-            boolean wasRebalanceMode = showRebalancesMode;
             setPortfolios(null, portfoliosCompare, null, null);
-            setRebalancesMode(wasRebalanceMode);
         }
-    }
-
-    void setRebalancesMode(boolean mode) {
-        if (showRebalancesMode != mode) {
-            showRebalancesMode = mode;
-
-            if (showRebalancesMode) {
-                List<Portfolio> totalList = new LinkedList<>();
-
-                if (portfolios != null) {
-                    totalList.addAll(portfolios);
-                }
-
-                if (frontierPortfolios != null) {
-                    totalList.addAll(frontierPortfolios);
-                }
-
-                if (portfoliosCompare != null) {
-                    totalList.addAll(portfoliosCompare);
-                }
-
-                for (Portfolio p : totalList) {
-                    p.calculateRebalances(dataFiltered);
-                    double y = p.yieldRebalances();
-
-                    if (y > maxYieldRebalance) {
-                        maxYieldRebalance = y;
-                    }
-                    if (y < minYieldRebalance) {
-                        minYieldRebalance = y;
-                    }
-                }
-
-                dYieldRebalance = maxYieldRebalance - minYieldRebalance;
-                if (dYieldRebalance < Calc.epsilon) {
-                    dYieldRebalance = 1;
-                }
-            }
-
-            repaint();
-        }
-    }
-
-    void setRebalancesMinimum(int minimum) {
-        rebalancesMinimum = minimum / 100.0;
-        repaint();
     }
 
     List<Portfolio> getFrontierPortfolios() {
@@ -366,10 +307,6 @@ class PortfolioChartPanel extends JPanel {
 
         g.setColor(axisColor);
         drawAxis(g);
-
-        if (showRebalancesMode) {
-            drawRebalancedYields(g);
-        }
 
         if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
             g.setColor(portfolioColor);
@@ -416,64 +353,7 @@ class PortfolioChartPanel extends JPanel {
         g.drawString(maxYieldStr, drawingArea.x - stringWidth - safeTop, drawingArea.y + stringHeight);
     }
 
-    private void drawRebalancedYields(Graphics g) {
-
-        if (rebalancesGradient == null) {
-            createRebalancesGradient();
-        }
-
-        String minRebY = Calc.formatDouble2(minYieldRebalance);
-        String maxRebY = Calc.formatDouble2(maxYieldRebalance);
-
-        FontMetrics fm = g.getFontMetrics();
-        Rectangle2D boundsMin = fm.getStringBounds(minRebY, g);
-        Rectangle2D boundsMax = fm.getStringBounds(maxRebY, g);
-
-        int addWidth = (int)Math.max(boundsMin.getWidth(), boundsMax.getWidth());
-        int rebWidth = addWidth * 2 + safeZone * 2 + 200;
-
-        int center = drawingArea.x + drawingArea.width / 2 - rebWidth / 2;
-
-        g.drawString(minRebY, center, drawingArea.y + drawingArea.height + stringHeight + safeTop);
-        g.drawImage(rebalancesGradient, center + addWidth + safeZone, drawingArea.y + drawingArea.height + safeTop, null);
-        g.drawString(maxRebY, center + addWidth + 200 + safeZone * 2, drawingArea.y + drawingArea.height + stringHeight + safeTop);
-    }
-
-    private void createRebalancesGradient() {
-        int h = stringHeight;
-        rebalancesGradient = new BufferedImage(200, h, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = rebalancesGradient.createGraphics();
-        for (int i = 0; i < 200; i++) {
-            Color c = getGradientColor(((i / 2) * 2) / 200.0);
-            g.setColor(c);
-            g.drawLine(i, 0, i, h);
-        }
-        g.dispose();
-    }
-
-    private Color getGradientColor(double percent){
-        int red = percent < 0.5 ? 255 : (int)Math.round(255 - (percent - 0.5) * 5.1 * 100);
-        int green = percent > 0.5 ? 255 : (int)Math.round(percent * 5.1 * 100);
-
-        if (red < 0) {
-            red = 0;
-        }
-
-        return new Color(red, green, 0);
-    }
-
     private void drawPortfolio(Graphics g, Portfolio pf) {
-
-        if (showRebalancesMode) {
-            double reb = pf.yieldRebalances();
-            double percent = (reb - minYieldRebalance) / dYieldRebalance;
-            if (percent < rebalancesMinimum) {
-                return;
-            }
-            Color cl = getGradientColor(percent);
-            g.setColor(cl);
-        }
-
         g.fillRect(mapX(pf.risk()) - 1, mapY(pf.yield()) - 1, 2, 2);
         g.drawRect(mapX(pf.risk()) - 1, mapY(pf.yield()) - 1, 2, 2);
     }
@@ -498,13 +378,6 @@ class PortfolioChartPanel extends JPanel {
         List<Portfolio> pfs = frontierOnlyMode ? frontierPortfolios : portfolios;
 
         for (Portfolio pf : pfs) {
-            if (showRebalancesMode) {
-                double reb = pf.yieldRebalances();
-                double percent = (reb - minYieldRebalance) / dYieldRebalance;
-                if (percent < rebalancesMinimum) {
-                    continue;
-                }
-            }
             double dst = Calc.distance(p, pf.performance());
             if (dst < distance) {
                 distance = dst;
@@ -534,47 +407,18 @@ class PortfolioChartPanel extends JPanel {
     }
 
     private void drawEfficientFrontier(Graphics g) {
-
         int length = frontierPortfolios.size();
+        int[] xxs = new int[length];
+        int[] yys = new int[length];
+        int i = 0;
 
-        if (showRebalancesMode) {
-            length -= 1;
-            for (int i = 0; i < length; i++) {
-                Portfolio p1 = frontierPortfolios.get(i);
-                Portfolio p2 = frontierPortfolios.get(i + 1);
-                double reb1 = p1.yieldRebalances();
-                double percent1 = (reb1 - minYieldRebalance) / dYieldRebalance;
-                double reb2 = p2.yieldRebalances();
-                double percent2 = (reb2 - minYieldRebalance) / dYieldRebalance;
-                double percent = (percent1 + percent2) / 2;
-
-                if (percent < rebalancesMinimum) {
-                    continue;
-                }
-
-                Color cl = getGradientColor(percent);
-                g.setColor(cl);
-
-                int x1 = mapX(p1.risk());
-                int y1 = mapY(p1.yield());
-                int x2 = mapX(p2.risk());
-                int y2 = mapY(p2.yield());
-
-                g.drawLine(x1, y1, x2, y2);
-            }
-        } else {
-            int[] xxs = new int[length];
-            int[] yys = new int[length];
-            int i = 0;
-
-            for (Portfolio p : frontierPortfolios) {
-                xxs[i] = mapX(p.risk());
-                yys[i] = mapY(p.yield());
-                i += 1;
-            }
-
-            g.drawPolyline(xxs, yys, length);
+        for (Portfolio p : frontierPortfolios) {
+            xxs[i] = mapX(p.risk());
+            yys[i] = mapY(p.yield());
+            i += 1;
         }
+
+        g.drawPolyline(xxs, yys, length);
     }
 
     private void drawCross(Graphics g, int w, int h) {
@@ -748,9 +592,7 @@ class PortfolioChartPanel extends JPanel {
             pfsComp = null;
         }
 
-        boolean wasRebalanceMode = showRebalancesMode;
         setPortfolios(pfs, pfsComp, dataFiltered, periodsFiltered);
-        setRebalancesMode(wasRebalanceMode);
     }
 
     private void startMouseCross(int x, int y) {

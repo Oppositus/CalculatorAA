@@ -9,6 +9,11 @@ public class DoublePoint {
         y = _y;
     }
 
+    public DoublePoint(DoublePoint o) {
+        x = o.x;
+        y = o.y;
+    }
+
     public double getX() {
         return x;
     }
