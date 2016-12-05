@@ -24,11 +24,15 @@ class PortfolioChartPanel extends JPanel {
     private static final Color axisColor = Color.BLACK;
     private static final Color portfolioColor = Color.BLUE;
     private static final Color portfolioCompareColor = Color.BLACK;
+    private static final Color frontierColor = Color.RED;
     private static final Color backColor = Color.WHITE;
     private static final Color selectedColor = Color.RED;
     private static final Color zoomColor = Color.GRAY;
     private static final int safeZone = 10;
     private static final int safeTop = 5;
+
+    private static final BasicStroke thick = new BasicStroke(2);
+    private static final BasicStroke thin = new BasicStroke(1);
 
     private JPopupMenu popupMenu = null;
     private Action setComparePortfolio;
@@ -308,15 +312,20 @@ class PortfolioChartPanel extends JPanel {
         g.setColor(axisColor);
         drawAxis(g);
 
-        if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
-            g.setColor(portfolioColor);
-            drawEfficientFrontier(g);
-        }
-
         if (frontierOnlyMode) {
+            if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
+                g.setColor(frontierColor);
+                drawEfficientFrontier(g);
+            }
+            g.setColor(portfolioColor);
             frontierPortfolios.forEach(pf -> drawPortfolio(g, pf));
         } else {
+            g.setColor(portfolioColor);
             portfolios.forEach(pf -> drawPortfolio(g, pf));
+            if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
+                g.setColor(frontierColor);
+                drawEfficientFrontier(g);
+            }
         }
 
         g.setColor(portfolioCompareColor);
@@ -354,7 +363,6 @@ class PortfolioChartPanel extends JPanel {
     }
 
     private void drawPortfolio(Graphics g, Portfolio pf) {
-        g.fillRect(mapX(pf.risk()) - 1, mapY(pf.yield()) - 1, 2, 2);
         g.drawRect(mapX(pf.risk()) - 1, mapY(pf.yield()) - 1, 2, 2);
     }
 
@@ -418,7 +426,9 @@ class PortfolioChartPanel extends JPanel {
             i += 1;
         }
 
+        ((Graphics2D) g).setStroke(thick);
         g.drawPolyline(xxs, yys, length);
+        ((Graphics2D) g).setStroke(thin);
     }
 
     private void drawCross(Graphics g, int w, int h) {
