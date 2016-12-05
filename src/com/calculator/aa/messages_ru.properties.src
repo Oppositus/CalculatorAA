@@ -28,7 +28,6 @@ text.date_format.xx_xx_yyyy=%02d.%02d.%04d
 text.date_format.yyyy_mm_dd=%04d.%02d.%02d
 text.label_real_performance=Реальная доходность портфеля
 text.label_calculated_performance=Расчетная доходность портфеля
-text.label_rebalances_performance=Доходность портфеля с ребалансировками
 text.settings=Настройки
 ui.delimiter=Разделитель
 ui.text_mark=Признак текста

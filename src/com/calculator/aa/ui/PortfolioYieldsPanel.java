@@ -48,7 +48,6 @@ class PortfolioYieldsPanel extends JPanel {
     private int mouseY = 0;
 
     private BufferedImage labelCalculations;
-    private BufferedImage labelRebalances;
 
     private double[] realYields;
     private double[] modelYields;
@@ -154,7 +153,7 @@ class PortfolioYieldsPanel extends JPanel {
             calculateStringMetrics(g);
         }
 
-        if (labelCalculations == null || labelRebalances == null) {
+        if (labelCalculations == null) {
             createLabels(g);
         }
 
@@ -392,8 +391,7 @@ class PortfolioYieldsPanel extends JPanel {
     }
 
     private void drawLabels(Graphics g) {
-        BufferedImage label = performanceMode == PortfolioPerformanceMode.MODE_CALCULATION ? labelCalculations : labelRebalances;
-        g.drawImage(label, drawingArea.x + safeZone, drawingArea.y + safeZone, null);
+        g.drawImage(labelCalculations, drawingArea.x + safeZone, drawingArea.y + safeZone, null);
     }
 
     private void calculateStringMetrics(Graphics g) {
@@ -409,21 +407,17 @@ class PortfolioYieldsPanel extends JPanel {
     private void createLabels(Graphics g) {
         String strReal = Main.resourceBundle.getString("text.label_real_performance");
         String strCalc = Main.resourceBundle.getString("text.label_calculated_performance");
-        String strReb = Main.resourceBundle.getString("text.label_rebalances_performance");
         FontMetrics fm = g.getFontMetrics();
 
         Rectangle2D boundsReal = fm.getStringBounds(strReal, g);
         Rectangle2D boundsCalc = fm.getStringBounds(strCalc, g);
-        Rectangle2D boundsReb = fm.getStringBounds(strReb, g);
 
         int lineWidth = 20;
         int labelCalculationsWidth = safeZone + lineWidth + safeTop + Math.max((int)boundsReal.getWidth(), (int)boundsCalc.getWidth()) + safeZone;
-        int labelRebalancesWidth = safeZone + lineWidth + safeTop + Math.max((int)boundsReal.getWidth(), (int)boundsReb.getWidth()) + safeZone;
         int labelHeight = (int)(boundsReal.getHeight() * 2);
         int labelHeightDiv2 = labelHeight / 2;
 
         labelCalculations = new BufferedImage(labelCalculationsWidth, labelHeight + safeTop, BufferedImage.TYPE_INT_ARGB);
-        labelRebalances = new BufferedImage(labelRebalancesWidth, labelHeight + safeTop, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D glc = labelCalculations.createGraphics();
 
@@ -442,24 +436,6 @@ class PortfolioYieldsPanel extends JPanel {
         glc.drawString(strReal, safeZone + lineWidth + safeTop, labelHeight);
 
         glc.dispose();
-
-        Graphics2D glr = labelRebalances.createGraphics();
-
-        glr.setColor(backColor);
-        glr.fillRect(0, 0, labelRebalancesWidth, labelHeight + safeTop);
-
-        glr.setColor(axisColor);
-        glr.drawRect(0, 0, labelRebalancesWidth - 1, labelHeight + safeTop - 1);
-
-        glr.setColor(modelColor);
-        glr.drawLine(safeZone, labelHeightDiv2 - safeTop, safeTop + lineWidth, labelHeightDiv2 - safeTop);
-        glr.drawString(strReb, safeZone + lineWidth + safeTop, labelHeightDiv2);
-
-        glr.setColor(realColor);
-        glr.drawLine(safeZone, labelHeight - safeTop, safeTop + lineWidth, labelHeight - safeTop);
-        glr.drawString(strReal, safeZone + lineWidth + safeTop, labelHeight);
-
-        glr.dispose();
     }
 
     private void calculateStringMetricsHelper(Graphics g, FontMetrics fm, String test) {
