@@ -41,13 +41,13 @@ class YieldsChart extends JDialog {
     private JButton buttonOK;
     private JPanel yieldsPanel;
     private JToggleButton buttonLogScale;
-    private JToggleButton buttonDraw;
+    private JButton buttonDraw;
     private JSpinner spinnerPeriods;
     private JButton buttonWeights;
     private JCheckBox checkBoxSigma1;
     private JCheckBox checkBoxSigma2;
     private JCheckBox checkBoxSigma3;
-    private JToggleButton buttonRebalance;
+    private JCheckBox checkBoxRebalance;
 
     private final String[] labels;
     private final double[][] data;
@@ -56,8 +56,6 @@ class YieldsChart extends JDialog {
     private double[] portfolioYields;
 
     private final int completePeriods;
-
-    private JToggleButton lastModeButton;
 
     private YieldsChart(String[] ls, double[][] sourceData, Portfolio p) {
         data = sourceData;
@@ -97,12 +95,10 @@ class YieldsChart extends JDialog {
         );
 
         buttonDraw.addActionListener(e -> {
-            lastModeButton = buttonDraw;
-            buttonDraw.setSelected(true);
-            buttonRebalance.setSelected(false);
-            portfolio.setRebalancedMode(buttonRebalance.isSelected());
+            boolean isSelected = checkBoxRebalance.isSelected();
+            portfolio.setRebalancedMode(isSelected);
             boolean isLog = buttonLogScale.isSelected();
-            realYields = calculateRealYields(isLog);
+            realYields = isSelected ? calculateRebalances(isLog) : calculateRealYields(isLog);
             portfolioYields = calculateModelYields(isLog);
             boolean[] sigmas = new boolean[] {
                     checkBoxSigma1.isSelected(),
@@ -112,29 +108,14 @@ class YieldsChart extends JDialog {
             ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog, PortfolioYieldsPanel.PortfolioPerformanceMode.MODE_CALCULATION);
         });
         buttonLogScale.addActionListener(e -> {
-            if (lastModeButton == null) {
-                lastModeButton = buttonDraw;
-            }
-            for(ActionListener a: lastModeButton.getActionListeners()) {
+            for(ActionListener a: buttonDraw.getActionListeners()) {
                 a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
             }
         });
-        buttonRebalance.addActionListener(e -> {
-            lastModeButton = buttonRebalance;
-            buttonDraw.setSelected(false);
-            buttonRebalance.setSelected(true);
-            portfolio.setRebalancedMode(buttonRebalance.isSelected());
-            boolean isLog = buttonLogScale.isSelected();
-            //realYields = calculateRealYields(isLog);
-            realYields = calculateRebalances(isLog);
-            //portfolioYields = calculateRebalances(isLog);
-            portfolioYields = calculateModelYields(isLog);
-            boolean[] sigmas = new boolean[] {
-                    checkBoxSigma1.isSelected(),
-                    checkBoxSigma2.isSelected(),
-                    checkBoxSigma3.isSelected()
-            };
-            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog, PortfolioYieldsPanel.PortfolioPerformanceMode.MODE_REBALANCES);
+        checkBoxRebalance.addActionListener(e -> {
+            for(ActionListener a: buttonDraw.getActionListeners()) {
+                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
+            }
         });
     }
 
@@ -267,15 +248,7 @@ class YieldsChart extends JDialog {
         dialog.setTitle(Main.resourceBundle.getString("text.portfolio_yield"));
 
         SwingUtilities.invokeLater(() -> {
-            if (dialog.lastModeButton == null) {
-
-                boolean isRebalanced = dialog.portfolio.getRebalancedMode();
-
-                dialog.lastModeButton = isRebalanced ? dialog.buttonRebalance : dialog.buttonDraw;
-                dialog.buttonRebalance.setSelected(isRebalanced);
-                dialog.buttonDraw.setSelected(!isRebalanced);
-            }
-            for(ActionListener a: dialog.lastModeButton.getActionListeners()) {
+            for(ActionListener a: dialog.buttonDraw.getActionListeners()) {
                 a.actionPerformed(new ActionEvent(dialog, ActionEvent.ACTION_PERFORMED, null) {});
             }
         });

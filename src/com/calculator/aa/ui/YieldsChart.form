@@ -37,7 +37,7 @@
                   <text resource-bundle="com/calculator/aa/messages" key="ui.close"/>
                 </properties>
               </component>
-              <component id="50496" class="javax.swing.JToggleButton" binding="buttonDraw">
+              <component id="70f0e" class="javax.swing.JButton" binding="buttonDraw">
                 <constraints>
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
@@ -45,11 +45,12 @@
                   <text resource-bundle="com/calculator/aa/messages" key="ui.prognosis"/>
                 </properties>
               </component>
-              <component id="8623e" class="javax.swing.JToggleButton" binding="buttonRebalance">
+              <component id="8d42e" class="javax.swing.JCheckBox" binding="checkBoxRebalance">
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="1" use-parent-layout="false"/>
                 </constraints>
                 <properties>
+                  <selected value="true"/>
                   <text resource-bundle="com/calculator/aa/messages" key="ui.rebalances"/>
                 </properties>
               </component>

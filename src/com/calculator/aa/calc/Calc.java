@@ -108,8 +108,11 @@ public class Calc {
         return sum / length;
     }
 
-    private static double sumProduct(double[] v1, double[] v2) {
+    private static double product(double[] v) {
+        return Arrays.stream(v).reduce(1.0, (d, acc) -> d * acc);
+    }
 
+    private static double sumProduct(double[] v1, double[] v2) {
         double sum = 0.0;
         int length = v1.length;
         for (int i = 0; i < length; i++) {
@@ -145,7 +148,7 @@ public class Calc {
         }
         double[] yields = yields(filtered);
 
-        return Math.pow(Arrays.stream(yields).reduce(1.0, (d, acc) -> d * acc), 1.0 / yields.length);
+        return Math.pow(product(yields), 1.0 / yields.length);
     }
 
     public static double averagePercentYields(double[] values) {
@@ -228,10 +231,6 @@ public class Calc {
         return covTable;
     }
 
-    private static double portfolioYield(double[] averageYields, double[] weights) {
-        return sumProduct(averageYields, weights);
-    }
-
     private static double portfolioRisk(double[][] correlations, double[] stdevYields, double[] weights) {
 
         int length = weights.length;
@@ -251,7 +250,7 @@ public class Calc {
         return new Portfolio(
                 new DoublePoint(
                         portfolioRisk(correlations, stdevYields, weights),
-                        portfolioYield(averageYields, weights)),
+                        sumProduct(averageYields, weights)),
                 weights,
                 instruments,
                 dataFiltered);
@@ -360,11 +359,7 @@ public class Calc {
     }
 
     public static int sumIntArray(int[] array) {
-        int sum = 0;
-        for (int i : array) {
-            sum += i;
-        }
-        return sum;
+        return Arrays.stream(array).sum();
     }
 
     public static double distance(DoublePoint p1, DoublePoint p2) {
