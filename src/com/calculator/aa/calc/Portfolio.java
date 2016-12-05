@@ -159,7 +159,7 @@ public class Portfolio implements Comparable<Portfolio> {
 
         return new DoublePoint(
                 Calc.stdevYields(result),
-                Calc.averageRealYields(result));
+                Calc.averagePercentYields(result));
     }
 
     public void setRebalancedMode(boolean mode) {

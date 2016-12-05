@@ -111,7 +111,7 @@ class PortfolioChart extends JDialog {
 
             for (int col = 0; col < length; col++) {
                 double[] column = Calc.column(dataFiltered, col);
-                avYields[col] = Calc.averageRealYields(column);
+                avYields[col] = Calc.averagePercentYields(column);
                 sdYields[col] = Calc.stdevYields(column);
             }
 
@@ -296,7 +296,7 @@ class PortfolioChart extends JDialog {
         double[] sdYields = new double[length];
         for (int col = 0; col < length; col++) {
             double[] column = Calc.column(dataFiltered, col);
-            avYields[col] = Calc.averageRealYields(column);
+            avYields[col] = Calc.averagePercentYields(column);
             sdYields[col] = Calc.stdevYields(column);
         }
         String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);

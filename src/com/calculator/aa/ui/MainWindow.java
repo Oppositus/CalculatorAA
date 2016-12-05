@@ -394,7 +394,7 @@ public class MainWindow {
         }
 
         private void updateAverage(int col) {
-            averages[col] = Calc.averageRealYields(getCol(col));
+            averages[col] = Calc.averagePercentYields(getCol(col));
         }
 
         private void updateStDev(int col) {

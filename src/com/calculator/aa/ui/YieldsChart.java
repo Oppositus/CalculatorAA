@@ -125,10 +125,15 @@ class YieldsChart extends JDialog {
             buttonRebalance.setSelected(true);
             portfolio.setRebalancedMode(buttonRebalance.isSelected());
             boolean isLog = buttonLogScale.isSelected();
-            realYields = calculateRealYields(isLog);
-            portfolioYields = calculateRebalances(isLog);
-            boolean[] sigmas = new boolean[3];
-            Arrays.fill(sigmas, false);
+            //realYields = calculateRealYields(isLog);
+            realYields = calculateRebalances(isLog);
+            //portfolioYields = calculateRebalances(isLog);
+            portfolioYields = calculateModelYields(isLog);
+            boolean[] sigmas = new boolean[] {
+                    checkBoxSigma1.isSelected(),
+                    checkBoxSigma2.isSelected(),
+                    checkBoxSigma3.isSelected()
+            };
             ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog, PortfolioYieldsPanel.PortfolioPerformanceMode.MODE_REBALANCES);
         });
     }
