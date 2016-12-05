@@ -128,7 +128,17 @@ public class Calc {
         return result;
     }
 
-    public static double averageYields(double[] values) {
+    private static double averageYields(double[] values) {
+        double[] filtered = Arrays.stream(values).filter(d -> d >= 0).toArray();
+        if (filtered.length < 2) {
+            return 0;
+        }
+        double[] yields = yields(filtered);
+
+        return Arrays.stream(yields).sum() / yields.length;
+    }
+
+    private static double geomAverageYields(double[] values) {
         double[] filtered = Arrays.stream(values).filter(d -> d >= 0).toArray();
         if (filtered.length < 2) {
             return 0;
@@ -139,7 +149,7 @@ public class Calc {
     }
 
     public static double averagePercentYields(double[] values) {
-        return averageYields(values) - 1;
+        return geomAverageYields(values) - 1;
     }
 
     public static double stdevYields(double[] values) {
@@ -150,7 +160,7 @@ public class Calc {
         double average = averageYields(values);
         double[] yields = yields(filtered);
         double sum = Arrays.stream(yields).map(d -> d - average).map(d -> d * d).sum();
-        return Math.sqrt(1.0 / (yields.length - 1) * sum);
+        return Math.sqrt(1.0 / yields.length * sum);
     }
 
     public static double[][] correlationTable(double[][] values) {
