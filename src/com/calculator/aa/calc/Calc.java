@@ -163,7 +163,7 @@ public class Calc {
         double average = averageYields(values);
         double[] yields = yields(filtered);
         double sum = Arrays.stream(yields).map(d -> d - average).map(d -> d * d).sum();
-        return Math.sqrt(1.0 / yields.length * sum);
+        return Math.sqrt(1.0 / (yields.length - 1.0) * sum);
     }
 
     public static double[][] correlationTable(double[][] values) {
