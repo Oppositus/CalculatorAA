@@ -1,7 +1,5 @@
 package com.calculator.base.downloader;
 
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Calendar;
 import java.util.Date;
@@ -9,7 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class Instrument {
+class Instrument {
 
     public enum Type {
         ETF,
@@ -17,7 +15,7 @@ public class Instrument {
         INDEX
     }
 
-    public final static Date BEGINNING;
+    final static Date BEGINNING;
     static {
         Calendar _cal = Calendar.getInstance();
         _cal.set(1900, 0, 1);
@@ -31,7 +29,7 @@ public class Instrument {
     private final Date toDate;
     private final List<InstrumentHistory> history;
 
-    public Instrument(String t, String n, Type y, Date f, Date o) {
+    Instrument(String t, String n, Type y, Date f, Date o) {
         ticker = t;
         fullName = n;
         type = y;
@@ -40,11 +38,11 @@ public class Instrument {
         history = new LinkedList<>();
     }
 
-    public String getTicker() {
+    String getTicker() {
         return ticker;
     }
 
-    public void download(DataDownloader processor, Consumer<Boolean> after) {
+    void download(DataDownloader processor, Consumer<Boolean> after) {
         System.out.print("Downloading ");
         System.out.print(ticker);
         System.out.print(" (");
@@ -59,9 +57,7 @@ public class Instrument {
                         reader.read()
                                 .body()
                                 .lines()
-                                .forEach(line -> {
-                                    history.add(processor.parseLine(line));
-                                });
+                                .forEach(line -> history.add(processor.parseLine(line)));
 
                         history.sort(InstrumentHistory::compareTo);
                         System.out.println("Downloaded " + reader.toList().size() + " lines");
@@ -77,7 +73,7 @@ public class Instrument {
         });
     }
 
-    public static void writeHead(PrintWriter os) {
+    static void writeHead(PrintWriter os) {
         os.print("\"Ticker\"");
         os.print(";");
         os.print("\"Full name\"");
@@ -89,7 +85,7 @@ public class Instrument {
         os.println("\"To date\"");
     }
 
-    public void writeMeta(PrintWriter os) {
+    void writeMeta(PrintWriter os) {
         os.print("\"");
         os.print(ticker);
         os.print("\";\"");
@@ -103,13 +99,13 @@ public class Instrument {
         os.println("\"");
     }
 
-    public void write(PrintWriter os) {
+    void write(PrintWriter os) {
         history.forEach(instr -> instr.write(os));
     }
 
     private String printDate(Date d) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(d);
-        return String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+        return String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1);
     }
 }

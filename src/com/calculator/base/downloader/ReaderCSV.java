@@ -12,7 +12,7 @@ class ReaderCSV {
     private final String mark;
     private final String delim;
     private final String source;
-    private List<List<String>> result;
+    private final List<List<String>> result;
 
     ReaderCSV(String m, String d, String s) {
         mark = m;

@@ -57,11 +57,11 @@ public class InstrumentHistory implements Comparable<InstrumentHistory> {
         return volume;
     }
 
-    public static void writeMeta(PrintWriter os) {
+    static void writeMeta(PrintWriter os) {
         os.println("\"Date\";\"Open\";\"High\";\"Low\";\"Close\";\"Volume\";\"Close adj.\"");
     }
 
-    public void write(PrintWriter os) {
+    void write(PrintWriter os) {
         os.print(printDate(date));
         os.print(";");
         os.print(printDouble(open));
@@ -80,7 +80,7 @@ public class InstrumentHistory implements Comparable<InstrumentHistory> {
     private String printDate(Date d) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(d);
-        return String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+        return String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1);
     }
 
     private String printDouble(double d) {

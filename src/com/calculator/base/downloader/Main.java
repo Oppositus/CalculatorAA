@@ -1,39 +1,27 @@
 package com.calculator.base.downloader;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
 
 public class Main {
     private static final Properties properties = new Properties();
 
     private final List<Instrument> instruments;
-    private PrintWriter mainWriter;
 
     private Main() throws IOException {
         instruments = new LinkedList<>();
-
-        createMainFile();
 
         readInstruments();
 
         processInstruments();
 
+        PrintWriter mainWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream("data/db_instruments.csv"), StandardCharsets.UTF_8), true);
         Instrument.writeHead(mainWriter);
         instruments.forEach(instr -> instr.writeMeta(mainWriter));
-
-        closeMainFile();
-    }
-
-    private void createMainFile() throws IOException {
-        mainWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream("data/db_instruments.csv"), StandardCharsets.UTF_8), true);
-    }
-
-    private void closeMainFile() {
         mainWriter.close();
     }
 

@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 public class YahooDownloader implements DataDownloader {
 
-    private static String YahooURL = "http://chart.finance.yahoo.com/table.csv?s={instrument}&a={month_from}&b={day_from}&c={year_from}&d={month_to}&e={day_to}&f={year_to}&g={period}&ignore=.csv";
+    private static final String YahooURL = "http://chart.finance.yahoo.com/table.csv?s={instrument}&a={month_from}&b={day_from}&c={year_from}&d={month_to}&e={day_to}&f={year_to}&g={period}&ignore=.csv";
 
     @Override
     public void init(Consumer<Boolean> after) {
