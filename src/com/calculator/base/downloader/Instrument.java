@@ -33,8 +33,8 @@ class Instrument {
         ticker = t;
         fullName = n;
         type = y;
-        fromDate = f;
-        toDate = o;
+        fromDate = new Date(f.getTime());
+        toDate = new Date(o.getTime());
         history = new LinkedList<>();
     }
 
