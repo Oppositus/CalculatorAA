@@ -35,7 +35,8 @@ public class Main {
                 .read(properties.getProperty(property))
                 .body()
                 .lines()
-                .forEach(line ->
+                .forEach(line -> {
+                    if (!instruments.stream().anyMatch(i -> i.getTicker().equals(line.get(0)))) {
                         instruments.add(
                                 new Instrument(
                                         line.get(0),
@@ -43,7 +44,10 @@ public class Main {
                                         Instrument.Type.ETF,
                                         Instrument.BEGINNING,
                                         Calendar.getInstance().getTime()
-                                )));
+                                )
+                        );
+                    }
+                });
 
         System.out.println("Got " + instruments.size() + ".");
     }
