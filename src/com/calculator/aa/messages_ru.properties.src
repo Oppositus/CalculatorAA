@@ -99,3 +99,7 @@ ui.convert_annual=Преобразовать месячные данные в г
 ui.convert_month=Годовое значение из
 ui.next=Далее >>
 ui.ctrl_shift=Используйте клавиши Shift и Control, чтобы выбрать несколько значений
+ui.found=Найдено
+ui.selected=Выбрано
+ui.add_to=>>
+ui.remove_from=<<

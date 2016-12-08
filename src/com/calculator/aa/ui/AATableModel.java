@@ -332,6 +332,10 @@ public class AATableModel extends AbstractTableModel {
         return new AATableModel(whLength, htLength, rawData, labels.toArray(new String[0]), columns.toArray(new String[0]), "1".equals(dates));
     }
 
+    public boolean isRowValid(int row) {
+        return Arrays.stream(data[row]).allMatch(d -> d > 0);
+    }
+
     private double[] getCol(int col) {
         int length = height - 2;
         double[] values = new double[length];

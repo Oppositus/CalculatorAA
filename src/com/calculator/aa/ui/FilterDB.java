@@ -25,6 +25,9 @@ public class FilterDB extends JDialog {
     private JSpinner spinnerMinHistory;
     private JList<String> listResults;
     private JTextField nameTextField;
+    private JList listSelected;
+    private JButton buttonRemoveSelected;
+    private JButton buttonAddSelected;
 
     private final InstrumentsMeta meta;
     private AATableModel result;

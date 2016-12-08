@@ -41,6 +41,7 @@ public class MainWindow {
     private class AATableCellRenderer extends DefaultTableCellRenderer {
         private final Color back = new Color(212, 212, 212);
         private final Color badBack = new Color(255, 224, 224);
+        private final Color grayBack = new Color(240, 240, 240);
         private final int rows;
 
         AATableCellRenderer(int r) {
@@ -56,11 +57,17 @@ public class MainWindow {
                 font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD));
                 cell.setBackground(back);
             } else {
+                boolean isValidRow = ((AATableModel)table.getModel()).isRowValid(row);
                 if (col > 0) {
                     double data = ((AATableModel)table.getModel()).getData()[row][col - 1];
-                    cell.setBackground(data >= 0 ? Color.WHITE : badBack);
+                    if (data >= 0) {
+                        cell.setBackground(isValidRow ? Color.WHITE : grayBack);
+                    } else {
+                        cell.setBackground(badBack);
+                    }
+
                 } else {
-                    cell.setBackground(Color.WHITE);
+                    cell.setBackground(isValidRow ? Color.WHITE : grayBack);
                 }
                 font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_REGULAR));
             }
