@@ -124,7 +124,7 @@ public class AATableModel extends AbstractTableModel {
     }
 
     // Create new table w*h and copy output from output
-    AATableModel(int w, int h, double[][] d, String[] l, String[] i, boolean useDates) {
+    public AATableModel(int w, int h, double[][] d, String[] l, String[] i, boolean useDates) {
         this(w, h);
 
         for (int wh = 0; wh < width; wh++) {

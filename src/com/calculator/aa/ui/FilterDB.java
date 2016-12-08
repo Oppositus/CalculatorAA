@@ -1,11 +1,16 @@
 package com.calculator.aa.ui;
 
 import com.calculator.aa.Main;
+import com.calculator.aa.calc.Calc;
 import com.calculator.aa.db.InstrumentsMeta;
 
 import javax.swing.*;
-import java.awt.event.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,9 +26,10 @@ public class FilterDB extends JDialog {
     private JList<String> listResults;
     private JTextField nameTextField;
 
-    private InstrumentsMeta meta;
+    private final InstrumentsMeta meta;
     private AATableModel result;
     private boolean isAborted;
+    private List<String> filteredTickets;
 
     private FilterDB() {
         setContentPane(contentPane);
@@ -75,7 +81,9 @@ public class FilterDB extends JDialog {
             } else {
                 filteredTypes = meta.unfiltered();
             }
-            List<List<String>> filteredTypesList = filteredTypes.collect(Collectors.toList());
+            List<List<String>> filteredTypesList = filteredTypes != null ?
+                    filteredTypes.collect(Collectors.toList()) :
+                    new LinkedList<>();
 
             Stream<List<String>> filteredProviders = null;
             if (!containsAllFilter(selectedProviders)) {
@@ -89,9 +97,11 @@ public class FilterDB extends JDialog {
             } else {
                 filteredProviders = meta.unfiltered();
             }
-            List<List<String>> filteredProvidersList = filteredProviders.collect(Collectors.toList());
+            List<List<String>> filteredProvidersList = filteredProviders != null ?
+                    filteredProviders.collect(Collectors.toList()) :
+                    new LinkedList<>();
 
-            Stream<List<String>> filteredDates = null;
+            Stream<List<String>> filteredDates;
             int minMonths = (int)spinnerMinHistory.getModel().getValue();
             if (minMonths > 0) {
                 Calendar cal = Calendar.getInstance();
@@ -102,7 +112,7 @@ public class FilterDB extends JDialog {
             }
             List<List<String>> filteredDatesList = filteredDates.collect(Collectors.toList());
 
-            Stream<List<String>> filteredNames = null;
+            Stream<List<String>> filteredNames;
             String textNames = nameTextField.getText();
             if (!textNames.isEmpty()) {
                 filteredNames = meta.filterByText(textNames);
@@ -118,7 +128,11 @@ public class FilterDB extends JDialog {
 
             Map<String, String> resultNames = meta.getNames(allFiltered);
             DefaultListModel<String> resultModel = new DefaultListModel<>();
-            resultNames.forEach((k, v) -> resultModel.addElement(k + " (" + v + ")"));
+            filteredTickets = new LinkedList<>();
+            resultNames.forEach((k, v) -> {
+                filteredTickets.add(k);
+                resultModel.addElement(k + " (" + v + ")");
+            });
             listResults.setModel(resultModel);
         });
     }
@@ -138,12 +152,24 @@ public class FilterDB extends JDialog {
     }
 
     private void onOK() {
-        List<String> res = listResults.getSelectedValuesList();
-        if (res.size() > 0) {
-            result = ConvertOptions.showOptions(res.toArray(new String[0]));
+        int[] res = listResults.getSelectedIndices();
+        if (res.length > 0) {
+            List<String> tickers = Arrays.stream(res)
+                    .boxed()
+                    .map(i -> filteredTickets.get(i))
+                    .collect(Collectors.toList());
+            result = ConvertOptions.showOptions(tickers.toArray(new String[0]), meta);
         }
         isAborted = false;
         if (result != null) {
+
+            Properties properties = Main.getProperties();
+            Rectangle bounds = getBounds();
+            properties.setProperty("filter.x", String.valueOf((int)bounds.getX()));
+            properties.setProperty("filter.y", String.valueOf((int)bounds.getY()));
+            properties.setProperty("filter.w", String.valueOf((int)bounds.getWidth()));
+            properties.setProperty("filter.h", String.valueOf((int)bounds.getHeight()));
+
             dispose();
         }
     }
@@ -177,6 +203,17 @@ public class FilterDB extends JDialog {
         dialog.setLocationRelativeTo(Main.getFrame());
 
         dialog.pack();
+
+        Properties properties = Main.getProperties();
+        int x = Calc.safeParseInt(properties.getProperty("filter.x", "-1"), -1);
+        int y = Calc.safeParseInt(properties.getProperty("filter.y", "-1"), -1);
+        int w = Calc.safeParseInt(properties.getProperty("filter.w", "-1"), -1);
+        int h = Calc.safeParseInt(properties.getProperty("filter.h", "-1"), -1);
+
+        if (x >= 0 && y >= 0 && w >= 0 && h >= 0) {
+            Rectangle rec = new Rectangle(x, y, w, h);
+            dialog.setBounds(rec);
+        }
 
         while (dialog.result == null) {
             dialog.setVisible(true);

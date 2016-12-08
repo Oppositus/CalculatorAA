@@ -13,11 +13,6 @@ import java.awt.image.BufferedImage;
 
 class PortfolioYieldsPanel extends JPanel {
 
-    enum PortfolioPerformanceMode {
-        MODE_CALCULATION,
-        MODE_REBALANCES
-    }
-
     private static final Color backColor = Color.WHITE;
     private static final Color axisColor = Color.BLACK;
     private static final Color axisColor2 = Color.LIGHT_GRAY;
@@ -56,7 +51,6 @@ class PortfolioYieldsPanel extends JPanel {
     private boolean[] sigmas;
     private String[] labels;
     private boolean isLog;
-    private PortfolioPerformanceMode performanceMode;
 
     private class mouseEnterExitListener implements MouseListener {
 
@@ -105,7 +99,7 @@ class PortfolioYieldsPanel extends JPanel {
         setCursor(Main.voidCursor);
     }
 
-    void setData(String[] ls, double[] ry, double[] my, double r, boolean[] ss, boolean lg, PortfolioPerformanceMode md) {
+    void setData(String[] ls, double[] ry, double[] my, double r, boolean[] ss, boolean lg) {
         isLog = lg;
         labels = ls;
         realYields = ry;
@@ -113,7 +107,6 @@ class PortfolioYieldsPanel extends JPanel {
         periods = realYields.length + (modelYields.length - realYields.length);
         risk = r;
         sigmas = ss;
-        performanceMode = md;
 
         double minYield = Calc.minimum(realYields, modelYields);
         double maxYield = Calc.maximum(realYields, modelYields);

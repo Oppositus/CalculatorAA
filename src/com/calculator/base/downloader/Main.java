@@ -36,7 +36,7 @@ public class Main {
                 .body()
                 .lines()
                 .forEach(line -> {
-                    if (!instruments.stream().anyMatch(i -> i.getTicker().equals(line.get(0)))) {
+                    if (instruments.stream().noneMatch(i -> i.getTicker().equals(line.get(0)))) {
                         instruments.add(
                                 new Instrument(
                                         line.get(0),

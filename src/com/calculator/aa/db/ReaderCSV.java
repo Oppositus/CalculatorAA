@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class ReaderCSV {
+public class ReaderCSV {
 
-    public static String dbMark = "\"";
-    public static String dbDelim = ";";
-    public static String dbDecimal = ".";
-    public static String dbDateSeparator = "-";
+    public static final String dbMark = "\"";
+    public static final String dbDelim = ";";
+    public static final String dbDecimal = ".";
+    public static final String dbDateSeparator = "-";
 
     private final String mark;
     private final String delim;

@@ -6,19 +6,15 @@ import com.calculator.aa.calc.Zipper;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.font.TextAttribute;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -276,7 +272,12 @@ public class MainWindow {
             }
         });
         buttonSettings.addActionListener(e -> SettingsDialog.showSettings());
-        buttonDataBase.addActionListener(actionEvent -> FilterDB.showFilter());
+        buttonDataBase.addActionListener(actionEvent -> {
+            AATableModel newModel = FilterDB.showFilter();
+            if (newModel != null) {
+                setNewModel(newModel);
+            }
+        });
     }
 
     private void askCSVOptions(boolean askDates, Runnable after) {

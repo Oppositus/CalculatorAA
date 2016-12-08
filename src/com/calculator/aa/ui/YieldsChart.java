@@ -80,7 +80,7 @@ class YieldsChart extends JDialog {
                     checkBoxSigma2.isSelected(),
                     checkBoxSigma3.isSelected()
             };
-            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog, PortfolioYieldsPanel.PortfolioPerformanceMode.MODE_CALCULATION);
+            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog);
         });
         buttonLogScale.addActionListener(e -> {
             for(ActionListener a: buttonDraw.getActionListeners()) {
