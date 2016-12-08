@@ -22,7 +22,8 @@ public class FilterDB extends JDialog {
     private JTextField nameTextField;
 
     private InstrumentsMeta meta;
-    private String[] result;
+    private AATableModel result;
+    private boolean isAborted;
 
     private FilterDB() {
         setContentPane(contentPane);
@@ -138,22 +139,18 @@ public class FilterDB extends JDialog {
 
     private void onOK() {
         List<String> res = listResults.getSelectedValuesList();
-        int length = res.size();
-        if (length > 0) {
-            result = new String[length];
-            int index = 0;
-            for (String s : res) {
-                result[index++] = s;
-            }
-        } else {
-            result = null;
+        if (res.size() > 0) {
+            result = ConvertOptions.showOptions(res.toArray(new String[0]));
         }
-
-        dispose();
+        isAborted = false;
+        if (result != null) {
+            dispose();
+        }
     }
 
     private void onCancel() {
         result = null;
+        isAborted = true;
         dispose();
     }
 
@@ -174,15 +171,19 @@ public class FilterDB extends JDialog {
         return false;
     }
 
-    static String[] showFilter() {
-
+    static AATableModel showFilter() {
         FilterDB dialog = new FilterDB();
         dialog.setTitle(Main.resourceBundle.getString("text.filter_db"));
         dialog.setLocationRelativeTo(Main.getFrame());
 
         dialog.pack();
 
-        dialog.setVisible(true);
+        while (dialog.result == null) {
+            dialog.setVisible(true);
+            if (dialog.isAborted) {
+                return null;
+            }
+        }
 
         return dialog.result;
     }
