@@ -30,7 +30,7 @@ Example of correct CSV file:
     "2015";149,434;150,996;655,431;156,432
     "2016";138,672;146,816;758,51;158,006
 
-You can download an example files from the [builds/datas folder](builds/datas)
+You can download an example files from the [builds/examples folder](builds/examples)
 
 If 1st column contains dates then the calculator will determine its format and
 sort rows in ascending order. This is the list of supported formats:
