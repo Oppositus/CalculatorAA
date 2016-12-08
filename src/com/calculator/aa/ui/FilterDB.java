@@ -19,6 +19,7 @@ public class FilterDB extends JDialog {
     private JList<String> listInstrumentProviders;
     private JSpinner spinnerMinHistory;
     private JList<String> listResults;
+    private JTextField nameTextField;
 
     private InstrumentsMeta meta;
     private String[] result;
@@ -65,6 +66,7 @@ public class FilterDB extends JDialog {
             listInstrumentTypes.setSelectedIndex(0);
             listInstrumentProviders.setSelectedIndex(0);
             spinnerMinHistory.setValue(0);
+            nameTextField.setText("");
             listResults.setModel(new DefaultListModel<>());
         });
         buttonFilter.addActionListener(actionEvent -> {
@@ -110,13 +112,23 @@ public class FilterDB extends JDialog {
             }
             List<List<String>> filteredDatesList = filteredDates.collect(Collectors.toList());
 
+            Stream<List<String>> filteredNames = null;
+            String textNames = nameTextField.getText();
+            if (!textNames.isEmpty()) {
+                filteredNames = meta.filterByText(textNames);
+            } else {
+                filteredNames = meta.unfiltered();
+            }
+            List<List<String>> filteredNamesList = filteredNames.collect(Collectors.toList());
+
             Stream<List<String>> allFiltered = filteredTypesList.stream()
                     .filter(filteredProvidersList::contains)
-                    .filter(filteredDatesList::contains);
+                    .filter(filteredDatesList::contains)
+                    .filter(filteredNamesList::contains);
 
             Map<String, String> result = meta.getNames(allFiltered);
             DefaultListModel<String> resultModel = new DefaultListModel<>();
-            result.forEach((k, v) -> resultModel.addElement(k + "\t" + v));
+            result.forEach((k, v) -> resultModel.addElement(k + " (" + v + ")"));
             listResults.setModel(resultModel);
         });
     }

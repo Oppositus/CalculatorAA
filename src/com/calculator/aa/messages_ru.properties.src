@@ -75,3 +75,4 @@ ui.no_filter=Очистить фильтр
 ui.provider=Поставщик данных
 ui.min_history=Минимальная длина истории (месцы)
 ui.instrument_db=База инструментов
+ui.ticker=Название

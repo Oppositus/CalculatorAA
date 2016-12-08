@@ -80,9 +80,12 @@ public class InstrumentsMeta {
         int indexOfTicker = header.indexOf(fieldTicker);
         int indexOfName = header.indexOf(fieldFullName);
         boolean allowTextSearch = text.length() >= 3;
+        Locale loc = Locale.getDefault();
+        String textUp = text.toUpperCase(loc);
 
         return instruments.stream().filter(i ->
-                i.get(indexOfTicker).contains(text) || (allowTextSearch && i.get(indexOfName).contains(text))
+                i.get(indexOfTicker).toUpperCase(loc).contains(textUp) ||
+                        (allowTextSearch && i.get(indexOfName).toUpperCase(loc).contains(textUp))
         );
     }
 
