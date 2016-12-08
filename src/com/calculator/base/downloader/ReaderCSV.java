@@ -1,41 +1,51 @@
 package com.calculator.base.downloader;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class ReaderCSV {
 
     private final String mark;
     private final String delim;
+    private final String source;
+    private final List<List<String>> result;
 
-    private List<List<String>> result;
-
-    ReaderCSV(String m, String d) {
+    ReaderCSV(String m, String d, String s) {
         mark = m;
         delim = d;
-
+        source = s;
         result = new LinkedList<>();
     }
 
+    private ReaderCSV(ReaderCSV o, List<List<String>> res) {
+        mark = o.mark;
+        delim = o.delim;
+        source = o.source;
+        result = res;
+    }
+
+    ReaderCSV read() {
+        read(new BufferedReader(new StringReader(source)));
+        return this;
+    }
+
     ReaderCSV read(String fileName) {
-        BufferedReader is;
-
         try {
-            is = new BufferedReader(new InputStreamReader(new FileInputStream(fileName), StandardCharsets.UTF_8));
-            result.addAll(is.lines().map(this::processText).collect(Collectors.toList()));
+            read(new BufferedReader(new InputStreamReader(new FileInputStream(fileName), StandardCharsets.UTF_8)));
+            return this;
         } catch (FileNotFoundException e) {
-
             System.err.println("Can't read file.");
             e.printStackTrace();
+            return this;
         }
+    }
 
-        return this;
+    private void read(BufferedReader is) {
+        result.addAll(is.lines().map(this::processText).collect(Collectors.toList()));
     }
 
     private List<String> processText(String text) {
@@ -82,12 +92,19 @@ class ReaderCSV {
         return result;
     }
 
-    ReaderCSV skip(int count) {
-        result = result.subList(count, result.size());
-        return this;
+    ReaderCSV head() {
+        return new ReaderCSV(this, result.subList(0, 1));
+    }
+
+    ReaderCSV body() {
+        return new ReaderCSV(this, result.subList(1, result.size()));
     }
 
     List<List<String>> toList() {
         return result;
+    }
+
+    Stream<List<String>> lines() {
+        return result.stream();
     }
 }
