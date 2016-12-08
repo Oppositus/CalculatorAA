@@ -8,4 +8,6 @@ interface DataDownloader {
     void init(Consumer<Boolean> after);
     void download(Instrument instrument, BiConsumer<Boolean, String> after);
     InstrumentHistory parseLine(List<String> line);
+    String getName();
+    String getWebUrl();
 }

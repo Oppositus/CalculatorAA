@@ -19,7 +19,7 @@ public class Main {
 
         processInstruments();
 
-        PrintWriter mainWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream("data/db_instruments.csv"), StandardCharsets.UTF_8), true);
+        PrintWriter mainWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream("output/meta/db_instruments.csv"), StandardCharsets.UTF_8), true);
         Instrument.writeHead(mainWriter);
         instruments.forEach(instr -> instr.writeMeta(mainWriter));
         mainWriter.close();
@@ -64,7 +64,7 @@ public class Main {
                 try {
                     PrintWriter iWriter = new PrintWriter(
                             new OutputStreamWriter(
-                                    new FileOutputStream(String.format("data/%s_etf.csv", instr.getTicker().toLowerCase())),
+                                    new FileOutputStream(String.format("output/data/%s_etf.csv", instr.getTicker().toLowerCase())),
                                     StandardCharsets.UTF_8),
                             true);
 

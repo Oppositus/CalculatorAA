@@ -11,7 +11,9 @@ import java.util.function.Consumer;
 
 public class YahooDownloader implements DataDownloader {
 
-    private static final String YahooURL = "http://chart.finance.yahoo.com/table.csv?s={instrument}&a={month_from}&b={day_from}&c={year_from}&d={month_to}&e={day_to}&f={year_to}&g={period}&ignore=.csv";
+    private static final String DownloadURL = "http://chart.finance.yahoo.com/table.csv?s={instrument}&a={month_from}&b={day_from}&c={year_from}&d={month_to}&e={day_to}&f={year_to}&g={period}&ignore=.csv";
+    private static final String Name = "Yahoo Finance";
+    private static final String WebURL = "https://finance.yahoo.com/";
 
     @Override
     public void init(Consumer<Boolean> after) {
@@ -22,7 +24,7 @@ public class YahooDownloader implements DataDownloader {
     public void download(Instrument instrument, BiConsumer<Boolean, String> after) {
 
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        String url = YahooURL.replace("{instrument}", instrument.getTicker())
+        String url = DownloadURL.replace("{instrument}", instrument.getTicker())
                 .replace("{month_from}", "0")
                 .replace("{day_from}", "1")
                 .replace("{year_from}", "1900")
@@ -77,6 +79,7 @@ public class YahooDownloader implements DataDownloader {
         }
     }
 
+    @Override
     public InstrumentHistory parseLine(List<String> line) {
         return new InstrumentHistory(
                 parseDate(line.get(0)),
@@ -87,6 +90,16 @@ public class YahooDownloader implements DataDownloader {
                 parseDouble(line.get(6)),
                 parseDouble(line.get(5))
         );
+    }
+
+    @Override
+    public String getName() {
+        return Name;
+    }
+
+    @Override
+    public String getWebUrl() {
+        return WebURL;
     }
 
     private Date parseDate(String str) {

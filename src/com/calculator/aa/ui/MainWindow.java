@@ -135,7 +135,7 @@ public class MainWindow {
             }
         }
 
-        // Create new table w*h and copy data from previous model
+        // Create new table w*h and copy output from previous model
         private AATableModel(int w, int h, AATableModel prev, int ignoredRow, int ignoredColumn) {
             this(w, h);
 
@@ -195,7 +195,7 @@ public class MainWindow {
             }
         }
 
-        // Create new table w*h and copy data from data
+        // Create new table w*h and copy output from output
         private AATableModel(int w, int h, double[][] d, String[] l, String[] i, boolean useDates) {
             this(w, h);
 

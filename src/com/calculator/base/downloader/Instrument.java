@@ -29,6 +29,9 @@ class Instrument {
     private final Date toDate;
     private final List<InstrumentHistory> history;
 
+    private String providerName;
+    private String providerUrl;
+
     Instrument(String t, String n, Type y, Date f, Date o) {
         ticker = t;
         fullName = n;
@@ -36,38 +39,47 @@ class Instrument {
         fromDate = new Date(f.getTime());
         toDate = new Date(o.getTime());
         history = new LinkedList<>();
+
+        providerName = "";
+        providerUrl = "";
     }
 
     String getTicker() {
         return ticker;
     }
 
-    void download(DataDownloader processor, Consumer<Boolean> after) {
+    void download(DataDownloader provider, Consumer<Boolean> after) {
         System.out.print("Downloading ");
         System.out.print(ticker);
         System.out.print(" (");
         System.out.print(fullName);
         System.out.print(")... ");
 
-        processor.init(initDone -> {
+        providerName = provider.getName();
+        providerUrl = provider.getWebUrl();
+
+        provider.init(initDone -> {
             if (initDone) {
-                processor.download(this, (downloadDone, s) -> {
+                provider.download(this, (downloadDone, s) -> {
                     if (downloadDone) {
                         ReaderCSV reader = new ReaderCSV("\"", ",", s);
                         reader.read()
                                 .body()
                                 .lines()
-                                .forEach(line -> history.add(processor.parseLine(line)));
+                                .forEach(line -> history.add(provider.parseLine(line)));
 
                         history.sort(InstrumentHistory::compareTo);
                         System.out.println("Downloaded " + reader.toList().size() + " lines");
 
                         fromDate.setTime(history.get(0).getDate().getTime());
                         toDate.setTime(history.get(history.size() - 1).getDate().getTime());
+                    } else {
+                        System.out.println("Download error");
                     }
                     after.accept(downloadDone);
                 });
             } else {
+                System.out.println("Init error");
                 after.accept(false);
             }
         });
@@ -82,7 +94,13 @@ class Instrument {
         os.print(";");
         os.print("\"From date\"");
         os.print(";");
-        os.println("\"To date\"");
+        os.print("\"To date\"");
+        os.print(";");
+        os.print("\"Provider name\"");
+        os.print(";");
+        os.print("\"Provider website\"");
+
+        os.println();
     }
 
     void writeMeta(PrintWriter os) {
@@ -96,7 +114,13 @@ class Instrument {
         os.print(printDate(fromDate));
         os.print("\";\"");
         os.print(printDate(toDate));
-        os.println("\"");
+        os.print("\";\"");
+        os.print(providerName);
+        os.print("\";\"");
+        os.print(providerUrl);
+        os.print("\"");
+
+        os.println();
     }
 
     void write(PrintWriter os) {
