@@ -72,7 +72,7 @@ public class InstrumentsMeta {
         return instruments.stream().filter(i -> {
             String[] dt = i.get(indexOfFrom).split(ReaderCSV.dbDateSeparator);
             cal.set(Integer.parseInt(dt[0]), Integer.parseInt(dt[1]) - 1, 1);
-            return cal.getTime().compareTo(minDate) >= 0;
+            return minDate.compareTo(cal.getTime()) >= 0;
         });
     }
 
@@ -86,9 +86,20 @@ public class InstrumentsMeta {
         );
     }
 
+    public Stream<List<String>> filterByType(String type) {
+        return filterByStringField(type, header.indexOf(fieldType));
+    }
+
     public Stream<List<String>> filterByProvider(String name) {
-        int indexOfProvider = header.indexOf(fieldProviderName);
-        return instruments.stream().filter(i -> i.get(indexOfProvider).equals(name));
+        return filterByStringField(name, header.indexOf(fieldProviderName));
+    }
+
+    private Stream<List<String>> filterByStringField(String text, int field) {
+        return instruments.stream().filter(i -> i.get(field).equals(text));
+    }
+
+    public Stream<List<String>> unfiltered() {
+        return instruments.stream();
     }
 
     public Map<String, String> getNames(Stream<List<String>> filtered) {

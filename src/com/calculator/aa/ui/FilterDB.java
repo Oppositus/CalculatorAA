@@ -5,7 +5,9 @@ import com.calculator.aa.db.InstrumentsMeta;
 
 import javax.swing.*;
 import java.awt.event.*;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FilterDB extends JDialog {
     private JPanel contentPane;
@@ -59,6 +61,64 @@ public class FilterDB extends JDialog {
         meta = new InstrumentsMeta("db/meta/db_instruments.csv");
 
         prepareLists();
+        buttonClearFilter.addActionListener(actionEvent -> {
+            listInstrumentTypes.setSelectedIndex(0);
+            listInstrumentProviders.setSelectedIndex(0);
+            spinnerMinHistory.setValue(0);
+            listResults.setModel(new DefaultListModel<>());
+        });
+        buttonFilter.addActionListener(actionEvent -> {
+            int[] selectedTypes = listInstrumentTypes.getSelectedIndices();
+            int[] selectedProviders = listInstrumentProviders.getSelectedIndices();
+
+            Stream<List<String>> filteredTypes = null;
+            if (!containsAllFilter(selectedTypes)) {
+                for (int i: selectedTypes) {
+                    if (filteredTypes == null) {
+                        filteredTypes = meta.filterByType(listInstrumentTypes.getModel().getElementAt(i));
+                    } else {
+                        filteredTypes = Stream.concat(filteredTypes, meta.filterByType(listInstrumentTypes.getModel().getElementAt(i)));
+                    }
+                }
+            } else {
+                filteredTypes = meta.unfiltered();
+            }
+            List<List<String>> filteredTypesList = filteredTypes.collect(Collectors.toList());
+
+            Stream<List<String>> filteredProviders = null;
+            if (!containsAllFilter(selectedProviders)) {
+                for (int i: selectedProviders) {
+                    if (filteredProviders == null) {
+                        filteredProviders = meta.filterByProvider(listInstrumentProviders.getModel().getElementAt(i));
+                    } else {
+                        filteredProviders = Stream.concat(filteredProviders, meta.filterByProvider(listInstrumentProviders.getModel().getElementAt(i)));
+                    }
+                }
+            } else {
+                filteredProviders = meta.unfiltered();
+            }
+            List<List<String>> filteredProvidersList = filteredProviders.collect(Collectors.toList());
+
+            Stream<List<String>> filteredDates = null;
+            int minMonths = (int)spinnerMinHistory.getModel().getValue();
+            if (minMonths > 0) {
+                Calendar cal = Calendar.getInstance();
+                cal.add(Calendar.MONTH, -minMonths);
+                filteredDates = meta.filterByDate(cal.getTime());
+            } else {
+                filteredDates = meta.unfiltered();
+            }
+            List<List<String>> filteredDatesList = filteredDates.collect(Collectors.toList());
+
+            Stream<List<String>> allFiltered = filteredTypesList.stream()
+                    .filter(filteredProvidersList::contains)
+                    .filter(filteredDatesList::contains);
+
+            Map<String, String> result = meta.getNames(allFiltered);
+            DefaultListModel<String> resultModel = new DefaultListModel<>();
+            result.forEach((k, v) -> resultModel.addElement(k + "\t" + v));
+            listResults.setModel(resultModel);
+        });
     }
 
     private void prepareLists() {
@@ -71,7 +131,7 @@ public class FilterDB extends JDialog {
         DefaultListModel<String> providers = new DefaultListModel<>();
         providers.addElement(Main.resourceBundle.getString("text.all"));
         meta.getProviders().keySet().forEach(providers::addElement);
-        listInstrumentProviders.setModel(types);
+        listInstrumentProviders.setModel(providers);
         listInstrumentProviders.setSelectedIndex(0);
     }
 
@@ -102,6 +162,15 @@ public class FilterDB extends JDialog {
         listResults = new JList<>();
 
         spinnerMinHistory = new JSpinner(new SpinnerNumberModel(0, 0, 10000, 1));
+    }
+
+    private boolean containsAllFilter(int[] array) {
+        for (int i: array) {
+            if (i == 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static String[] showFilter() {
