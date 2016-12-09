@@ -3,6 +3,7 @@ package com.calculator.aa.ui;
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.Zipper;
+import com.calculator.aa.db.InstrumentsMeta;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -143,14 +144,14 @@ public class MainWindow {
 
             AATableModel model = (AATableModel)mainTable.getModel();
             double[][] corrTable = Calc.correlationTable(model.getData());
-            String[] cols = Arrays.copyOfRange(model.getInstruments(), 1, model.getInstruments().length);
+            String[] cols = model.getInstrumentsOnly();
 
             ShowTable.show(Main.resourceBundle.getString("text.correlations_table"), corrTable, cols, cols);
         });
         buttonCovariances.addActionListener(actionEvent -> {
             AATableModel model = (AATableModel)mainTable.getModel();
             double[][] covTable = Calc.covarianceTable(model.getData());
-            String[] cols = Arrays.copyOfRange(model.getInstruments(), 1, model.getInstruments().length);
+            String[] cols = model.getInstrumentsOnly();
 
             ShowTable.show(Main.resourceBundle.getString("text.covariances_table"), covTable, cols, cols);
         });
@@ -277,10 +278,12 @@ public class MainWindow {
         });
         buttonSettings.addActionListener(e -> SettingsDialog.showSettings());
         buttonDataBase.addActionListener(actionEvent -> {
-            String[] instr = ((AATableModel)mainTable.getModel()).getInstruments();
-            AATableModel newModel = FilterDB.showFilter(Arrays.copyOfRange(instr, 1, instr.length));
+            String[] instr = ((AATableModel)mainTable.getModel()).getInstrumentsOnly();
+            AATableModel newModel = FilterDB.showFilter(instr);
             if (newModel != null) {
                 setNewModel(newModel);
+                String[] newInstr = newModel.getInstrumentsOnly();
+                Main.properties.setProperty("files.last", "base:" + String.join(";", newInstr));
             }
         });
     }
@@ -481,6 +484,11 @@ public class MainWindow {
         }
 
         return result.toArray(new String[0]);
+    }
+
+    public void getTickersAndLoadData(String[] tickers, String[] options) {
+        savedOptions = options;
+        setNewModel(ConvertOptions.notShowOptions(tickers, new InstrumentsMeta("db/meta/db_instruments.csv")));
     }
 
     private void createUIComponents() {

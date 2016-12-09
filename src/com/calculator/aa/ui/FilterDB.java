@@ -78,7 +78,7 @@ public class FilterDB extends JDialog {
             int[] selectedProviders = listInstrumentProviders.getSelectedIndices();
 
             Stream<List<String>> filteredTypes = null;
-            if (!containsAllFilter(selectedTypes)) {
+            if (allIsNotSelected(selectedTypes)) {
                 for (int i: selectedTypes) {
                     if (filteredTypes == null) {
                         filteredTypes = meta.filterByType(listInstrumentTypes.getModel().getElementAt(i));
@@ -94,7 +94,7 @@ public class FilterDB extends JDialog {
                     new LinkedList<>();
 
             Stream<List<String>> filteredProviders = null;
-            if (!containsAllFilter(selectedProviders)) {
+            if (allIsNotSelected(selectedProviders)) {
                 for (int i: selectedProviders) {
                     if (filteredProviders == null) {
                         filteredProviders = meta.filterByProvider(listInstrumentProviders.getModel().getElementAt(i));
@@ -252,13 +252,13 @@ public class FilterDB extends JDialog {
         spinnerMinHistory = new JSpinner(new SpinnerNumberModel(0, 0, 10000, 1));
     }
 
-    private boolean containsAllFilter(int[] array) {
+    private boolean allIsNotSelected(int[] array) {
         for (int i: array) {
             if (i == 0) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     static AATableModel showFilter(String[] instr) {

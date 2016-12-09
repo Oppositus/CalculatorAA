@@ -223,6 +223,10 @@ public class AATableModel extends AbstractTableModel {
         return instruments;
     }
 
+    public String[] getInstrumentsOnly() {
+        return Arrays.copyOfRange(instruments, 1, instruments.length);
+    }
+
     public Object[] getPeriods() {
         return periods;
     }

@@ -60,7 +60,6 @@ public class ConvertOptions extends JDialog {
 
         comboBoxValue.setSelectedIndex(Calc.safeParseInt(Main.properties.getProperty("convert.value", "0"), 0));
         comboBoxMonth.setSelectedIndex(Calc.safeParseInt(Main.properties.getProperty("convert.month", "0"), 0));
-
         boolean isSelected = "1".equals(Main.properties.getProperty("convert.annual", "0"));
         checkBoxAnnual.setSelected(isSelected);
         if (isSelected) {
@@ -70,57 +69,7 @@ public class ConvertOptions extends JDialog {
     }
 
     private void onOK() {
-
-        InstrumentsMeta.ValueType vt;
-        InstrumentsMeta.PeriodType pt;
-        int month = comboBoxMonth.getSelectedIndex();
-
-        int valIndex = comboBoxValue.getSelectedIndex();
-        switch (valIndex) {
-            case 0:
-                vt = InstrumentsMeta.ValueType.CLOSE_ADJ;
-                break;
-            case 1:
-                vt = InstrumentsMeta.ValueType.CLOSE;
-                break;
-            case 2:
-                vt = InstrumentsMeta.ValueType.OPEN;
-                break;
-            case 3:
-                vt = InstrumentsMeta.ValueType.HIGH;
-                break;
-            case 4:
-                vt = InstrumentsMeta.ValueType.LOW;
-                break;
-            default:
-                vt = null;
-        }
-
-        pt = checkBoxAnnual.isSelected() ? InstrumentsMeta.PeriodType.YEAR : InstrumentsMeta.PeriodType.MONTH;
-
-        List<Zipper<String, Double, String>> zippers = Arrays.stream(tickers)
-                .map(t -> {
-                    InstrumentsMeta.InstrumentType type = meta.getTypeFromTicker(t);
-                    return new Instrument(t, type);
-                })
-                .filter(Instrument::isValid)
-                .map(i -> {
-                    i.applyFilter(vt, pt, month);
-                    return i.getModel().toZipper();
-                })
-                .collect(Collectors.toList());
-
-        if (zippers.size() == 0) {
-            result = null;
-        } else {
-            Zipper<String, Double, String> zipper = zippers.get(0);
-            int length = zippers.size();
-            for (int i = 1; i < length; i++) {
-                zipper = zipper.zip(zippers.get(i), -1.0);
-            }
-
-            result = AATableModel.fromZipper(zipper, new String[]{ReaderCSV.dbDelim, ReaderCSV.dbMark, ReaderCSV.dbDecimal, "1"});
-        }
+        result = processTickers(tickers, meta, comboBoxValue.getSelectedIndex(), comboBoxMonth.getSelectedIndex(), checkBoxAnnual.isSelected());
         dispose();
     }
 
@@ -147,6 +96,57 @@ public class ConvertOptions extends JDialog {
 
     }
 
+    private static AATableModel processTickers(String[] tickers, InstrumentsMeta meta, int valIndex, int month, boolean annualize) {
+        InstrumentsMeta.ValueType vt;
+        InstrumentsMeta.PeriodType pt;
+
+        switch (valIndex) {
+            case 0:
+                vt = InstrumentsMeta.ValueType.CLOSE_ADJ;
+                break;
+            case 1:
+                vt = InstrumentsMeta.ValueType.CLOSE;
+                break;
+            case 2:
+                vt = InstrumentsMeta.ValueType.OPEN;
+                break;
+            case 3:
+                vt = InstrumentsMeta.ValueType.HIGH;
+                break;
+            case 4:
+                vt = InstrumentsMeta.ValueType.LOW;
+                break;
+            default:
+                vt = null;
+        }
+
+        pt = annualize ? InstrumentsMeta.PeriodType.YEAR : InstrumentsMeta.PeriodType.MONTH;
+
+        List<Zipper<String, Double, String>> zippers = Arrays.stream(tickers)
+                .map(t -> {
+                    InstrumentsMeta.InstrumentType type = meta.getTypeFromTicker(t);
+                    return new Instrument(t, type);
+                })
+                .filter(Instrument::isValid)
+                .map(i -> {
+                    i.applyFilter(vt, pt, month);
+                    return i.getModel().toZipper();
+                })
+                .collect(Collectors.toList());
+
+        if (zippers.size() == 0) {
+            return null;
+        } else {
+            Zipper<String, Double, String> zipper = zippers.get(0);
+            int length = zippers.size();
+            for (int i = 1; i < length; i++) {
+                zipper = zipper.zip(zippers.get(i), -1.0);
+            }
+
+            return AATableModel.fromZipper(zipper, new String[]{ReaderCSV.dbDelim, ReaderCSV.dbMark, ReaderCSV.dbDecimal, "1"});
+        }
+    }
+
     static AATableModel showOptions(String[] tickers, InstrumentsMeta meta) {
 
         ConvertOptions dialog = new ConvertOptions(tickers, meta);
@@ -162,5 +162,13 @@ public class ConvertOptions extends JDialog {
         Main.properties.setProperty("convert.month", String.valueOf(dialog.comboBoxMonth.getSelectedIndex()));
 
         return dialog.result;
+    }
+
+    static AATableModel notShowOptions(String[] tickers, InstrumentsMeta meta) {
+        int val = Calc.safeParseInt(Main.properties.getProperty("convert.value", "0"), 0);
+        int month = Calc.safeParseInt(Main.properties.getProperty("convert.month", "0"), 0);
+        boolean annual = "1".equals(Main.properties.getProperty("convert.annual", "0"));
+
+        return processTickers(tickers, meta, val, month, annual);
     }
 }

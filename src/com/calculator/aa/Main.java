@@ -144,13 +144,24 @@ public class Main {
 
             String file = properties.getProperty("files.last", "");
             if (!file.isEmpty()) {
-                SwingUtilities.invokeLater(() -> {
-                    String[] files = file.split(";");
-                    if (files.length > 0) {
-                        program.mainWindow.parseCSVAndLoadData(new File(files[0]), savedOptions);
-                    }
-                    Stream.of(Arrays.copyOfRange(files, 1, files.length)).map(File::new).forEach(program.mainWindow::silentParseCSVAndMergeData);
-                });
+
+                if (file.startsWith("base:")) {
+                    SwingUtilities.invokeLater(() -> {
+                        String[] files = file.replace("base:", "").split(";");
+                        if (files.length > 0) {
+                            program.mainWindow.getTickersAndLoadData(files, savedOptions);
+                        }
+                    });
+                } else {
+                    SwingUtilities.invokeLater(() -> {
+                        String[] files = file.split(";");
+                        if (files.length > 0) {
+                            program.mainWindow.parseCSVAndLoadData(new File(files[0]), savedOptions);
+                        }
+                        Stream.of(Arrays.copyOfRange(files, 1, files.length)).map(File::new).forEach(program.mainWindow::silentParseCSVAndMergeData);
+                    });
+                }
+
             }
         });
     }
