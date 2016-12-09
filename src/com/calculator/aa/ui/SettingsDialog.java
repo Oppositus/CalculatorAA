@@ -7,7 +7,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Arrays;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class SettingsDialog extends JDialog {
@@ -66,8 +65,7 @@ public class SettingsDialog extends JDialog {
                     SwingUtilities.updateComponentTreeUI(this);
                     pack();
 
-                    Properties props = Main.getProperties();
-                    props.setProperty("ui.theme", laf.getClassName());
+                    Main.properties.setProperty("ui.theme", laf.getClassName());
 
                 } catch (Exception ignored) {
                 }

@@ -1,6 +1,7 @@
 package com.calculator.aa.ui;
 
 import com.calculator.aa.Main;
+import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.Zipper;
 import com.calculator.aa.db.Instrument;
 import com.calculator.aa.db.InstrumentsMeta;
@@ -56,6 +57,16 @@ public class ConvertOptions extends JDialog {
 
         tickers = ts;
         meta = m;
+
+        comboBoxValue.setSelectedIndex(Calc.safeParseInt(Main.properties.getProperty("convert.value", "0"), 0));
+        comboBoxMonth.setSelectedIndex(Calc.safeParseInt(Main.properties.getProperty("convert.month", "0"), 0));
+
+        boolean isSelected = "1".equals(Main.properties.getProperty("convert.annual", "0"));
+        checkBoxAnnual.setSelected(isSelected);
+        if (isSelected) {
+            labelMonth.setEnabled(isSelected);
+            comboBoxMonth.setEnabled(isSelected);
+        }
     }
 
     private void onOK() {
@@ -145,6 +156,10 @@ public class ConvertOptions extends JDialog {
         dialog.pack();
 
         dialog.setVisible(true);
+
+        Main.properties.setProperty("convert.value", String.valueOf(dialog.comboBoxValue.getSelectedIndex()));
+        Main.properties.setProperty("convert.annual", dialog.checkBoxAnnual.isSelected() ? "1" : "0");
+        Main.properties.setProperty("convert.month", String.valueOf(dialog.comboBoxMonth.getSelectedIndex()));
 
         return dialog.result;
     }

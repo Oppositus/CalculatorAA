@@ -11,7 +11,6 @@ import java.awt.event.*;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
 class PortfolioChart extends JDialog {
     private JPanel contentPane;
@@ -253,12 +252,11 @@ class PortfolioChart extends JDialog {
     }
 
     private void onOK() {
-        Properties properties = Main.getProperties();
         Rectangle bounds = getBounds();
-        properties.setProperty("portfolio.x", String.valueOf((int)bounds.getX()));
-        properties.setProperty("portfolio.y", String.valueOf((int)bounds.getY()));
-        properties.setProperty("portfolio.w", String.valueOf((int)bounds.getWidth()));
-        properties.setProperty("portfolio.h", String.valueOf((int)bounds.getHeight()));
+        Main.properties.setProperty("portfolio.x", String.valueOf((int)bounds.getX()));
+        Main.properties.setProperty("portfolio.y", String.valueOf((int)bounds.getY()));
+        Main.properties.setProperty("portfolio.w", String.valueOf((int)bounds.getWidth()));
+        Main.properties.setProperty("portfolio.h", String.valueOf((int)bounds.getHeight()));
 
         dispose();
     }
@@ -390,11 +388,10 @@ class PortfolioChart extends JDialog {
 
         dialog.pack();
 
-        Properties properties = Main.getProperties();
-        int x = Calc.safeParseInt(properties.getProperty("portfolio.x", "-1"), -1);
-        int y = Calc.safeParseInt(properties.getProperty("portfolio.y", "-1"), -1);
-        int w = Calc.safeParseInt(properties.getProperty("portfolio.w", "-1"), -1);
-        int h = Calc.safeParseInt(properties.getProperty("portfolio.h", "-1"), -1);
+        int x = Calc.safeParseInt(Main.properties.getProperty("portfolio.x", "-1"), -1);
+        int y = Calc.safeParseInt(Main.properties.getProperty("portfolio.y", "-1"), -1);
+        int w = Calc.safeParseInt(Main.properties.getProperty("portfolio.w", "-1"), -1);
+        int h = Calc.safeParseInt(Main.properties.getProperty("portfolio.h", "-1"), -1);
 
         if (x >= 0 && y >= 0 && w >= 0 && h >= 0) {
             Rectangle rec = new Rectangle(x, y, w, h);

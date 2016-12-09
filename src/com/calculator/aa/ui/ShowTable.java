@@ -10,7 +10,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.Properties;
 
 class ShowTable extends JDialog {
     private JPanel contentPane;
@@ -52,10 +51,9 @@ class ShowTable extends JDialog {
             int rowsLength = srcRowLabels.length + 1;
             int colsLength = srcColLabels.length + 1;
 
-            Properties prop = Main.getProperties();
-            String delim = prop.getProperty("import.delimiter", ";");
-            String mark = prop.getProperty("import.mark", "\"");
-            String decimal = prop.getProperty("import.decimal", ".");
+            String delim = Main.properties.getProperty("import.delimiter", ";");
+            String mark = Main.properties.getProperty("import.mark", "\"");
+            String decimal = Main.properties.getProperty("import.decimal", ".");
 
             StringBuilder sb = new StringBuilder();
 

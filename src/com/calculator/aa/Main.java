@@ -20,16 +20,13 @@ public class Main {
     private static Main program;
     private final JFrame mainFrame;
     private final MainWindow mainWindow;
-    private final Properties properties;
     private static final String propertiesFile = "calcaa.properties";
 
+    public static Properties properties;
     public static ResourceBundle resourceBundle;
     public static Cursor voidCursor;
 
-    private Main(Properties props) {
-
-        properties = props;
-
+    private Main() {
         mainFrame = new JFrame(resourceBundle.getString("text.program_name"));
         mainWindow = new MainWindow();
         mainFrame.setContentPane(mainWindow.GetMainPanel());
@@ -69,10 +66,6 @@ public class Main {
         return program.mainFrame;
     }
 
-    public static Properties getProperties() {
-        return program.properties;
-    }
-
     public void restoreFrameProperties() {
         mainFrame.pack();
 
@@ -104,14 +97,14 @@ public class Main {
                 new Point(0, 0),
                 "null");
 
-        Properties prop = new Properties();
+        properties = new Properties();
         try {
             if (Files.exists(new File(propertiesFile).toPath())) {
-                prop.load(new BufferedInputStream(new FileInputStream(propertiesFile)));
+                properties.load(new BufferedInputStream(new FileInputStream(propertiesFile)));
             }
         } catch (IOException ignored) {}
 
-        String laf = prop.getProperty("ui.theme");
+        String laf = properties.getProperty("ui.theme");
         try {
             if (laf != null) {
                 try {
@@ -126,30 +119,30 @@ public class Main {
 
         String[] savedOptions = new String[] {";", "\"", ".", "1"};
 
-        String s = prop.getProperty("import.delimiter");
+        String s = properties.getProperty("import.delimiter");
         if (s != null) {
             savedOptions[0] = s;
         }
 
-        s = prop.getProperty("import.mark");
+        s = properties.getProperty("import.mark");
         if (s != null) {
             savedOptions[1] = s;
         }
 
-        s = prop.getProperty("import.decimal");
+        s = properties.getProperty("import.decimal");
         if (s != null) {
             savedOptions[2] = s;
         }
 
-        s = prop.getProperty("import.date");
+        s = properties.getProperty("import.date");
         if (s != null) {
             savedOptions[3] = s;
         }
 
         SwingUtilities.invokeLater(() -> {
-            program = new Main(prop);
+            program = new Main();
 
-            String file = program.properties.getProperty("files.last", "");
+            String file = properties.getProperty("files.last", "");
             if (!file.isEmpty()) {
                 SwingUtilities.invokeLater(() -> {
                     String[] files = file.split(";");

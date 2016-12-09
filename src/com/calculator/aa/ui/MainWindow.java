@@ -120,8 +120,6 @@ public class MainWindow {
 
                         Stream.of(Arrays.copyOfRange(f, 1, f.length)).forEach(this::verboseParseCSVAndMergeData);
 
-                        Properties prop = Main.getProperties();
-
                         String files = String.join(
                                 ";",
                                 Arrays.stream(f).map(fl -> {
@@ -132,7 +130,7 @@ public class MainWindow {
                                     }
                                 }).collect(Collectors.toList()));
 
-                        prop.setProperty("files.last", files);
+                        Main.properties.setProperty("files.last", files);
                         lastFileName = f[0].getCanonicalPath();
 
                     } catch (Exception e) {
@@ -248,14 +246,13 @@ public class MainWindow {
                 askCSVOptions(true, () -> {
                     verboseParseCSVAndMergeData(f[0]);
 
-                    Properties prop = Main.getProperties();
-                    String names = prop.getProperty("files.last", "");
+                    String names = Main.properties.getProperty("files.last", "");
                     try {
                         String path = f[0].getCanonicalPath();
                         if (names.isEmpty()) {
-                            prop.setProperty("files.last", path);
+                            Main.properties.setProperty("files.last", path);
                         } else if (!names.contains(path)) {
-                            prop.setProperty("files.last", names + ";" + path);
+                            Main.properties.setProperty("files.last", names + ";" + path);
                         }
                     } catch (Exception ignored) {
 
@@ -280,7 +277,8 @@ public class MainWindow {
         });
         buttonSettings.addActionListener(e -> SettingsDialog.showSettings());
         buttonDataBase.addActionListener(actionEvent -> {
-            AATableModel newModel = FilterDB.showFilter();
+            String[] instr = ((AATableModel)mainTable.getModel()).getInstruments();
+            AATableModel newModel = FilterDB.showFilter(Arrays.copyOfRange(instr, 1, instr.length));
             if (newModel != null) {
                 setNewModel(newModel);
             }
@@ -341,11 +339,10 @@ public class MainWindow {
         String decimal = savedOptions[2];
         String dates = savedOptions[3];
 
-        Properties prop = Main.getProperties();
-        prop.setProperty("import.delimiter", delim);
-        prop.setProperty("import.mark", mark);
-        prop.setProperty("import.decimal", decimal);
-        prop.setProperty("import.date", dates);
+        Main.properties.setProperty("import.delimiter", delim);
+        Main.properties.setProperty("import.mark", mark);
+        Main.properties.setProperty("import.decimal", decimal);
+        Main.properties.setProperty("import.date", dates);
 
         BufferedReader is = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
 
@@ -396,11 +393,10 @@ public class MainWindow {
             String decimal = savedOptions[2];
             String dates = savedOptions[3];
 
-            Properties prop = Main.getProperties();
-            prop.setProperty("import.delimiter", delim);
-            prop.setProperty("import.mark", mark);
-            prop.setProperty("import.decimal", decimal);
-            prop.setProperty("import.date", dates);
+            Main.properties.setProperty("import.delimiter", delim);
+            Main.properties.setProperty("import.mark", mark);
+            Main.properties.setProperty("import.decimal", decimal);
+            Main.properties.setProperty("import.date", dates);
 
             AATableModel model = (AATableModel)mainTable.getModel();
 
@@ -437,7 +433,7 @@ public class MainWindow {
             os.flush();
             os.close();
 
-            prop.setProperty("files.last", f.getCanonicalPath());
+            Main.properties.setProperty("files.last", f.getCanonicalPath());
             lastFileName = f.getCanonicalPath();
 
         } catch (Exception e) {

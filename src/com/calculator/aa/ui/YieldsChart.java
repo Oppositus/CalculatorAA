@@ -8,7 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Arrays;
-import java.util.Properties;
 
 class YieldsChart extends JDialog {
 
@@ -95,16 +94,15 @@ class YieldsChart extends JDialog {
     }
 
     private void onOK() {
-        Properties properties = Main.getProperties();
         Rectangle bounds = getBounds();
-        properties.setProperty("yields.x", String.valueOf((int)bounds.getX()));
-        properties.setProperty("yields.y", String.valueOf((int)bounds.getY()));
-        properties.setProperty("yields.w", String.valueOf((int)bounds.getWidth()));
-        properties.setProperty("yields.h", String.valueOf((int)bounds.getHeight()));
-        properties.setProperty("sigma.1", checkBoxSigma1.isSelected() ? "1" : "0");
-        properties.setProperty("sigma.2", checkBoxSigma2.isSelected() ? "1" : "0");
-        properties.setProperty("sigma.3", checkBoxSigma3.isSelected() ? "1" : "0");
-        properties.setProperty("forecast.p", spinnerPeriods.getValue().toString());
+        Main.properties.setProperty("yields.x", String.valueOf((int)bounds.getX()));
+        Main.properties.setProperty("yields.y", String.valueOf((int)bounds.getY()));
+        Main.properties.setProperty("yields.w", String.valueOf((int)bounds.getWidth()));
+        Main.properties.setProperty("yields.h", String.valueOf((int)bounds.getHeight()));
+        Main.properties.setProperty("sigma.1", checkBoxSigma1.isSelected() ? "1" : "0");
+        Main.properties.setProperty("sigma.2", checkBoxSigma2.isSelected() ? "1" : "0");
+        Main.properties.setProperty("sigma.3", checkBoxSigma3.isSelected() ? "1" : "0");
+        Main.properties.setProperty("forecast.p", spinnerPeriods.getValue().toString());
         dispose();
     }
 
@@ -198,26 +196,25 @@ class YieldsChart extends JDialog {
         YieldsChart dialog = new YieldsChart(labels, filtered, portfolio);
         dialog.pack();
 
-        Properties properties = Main.getProperties();
-        int x = Calc.safeParseInt(properties.getProperty("yields.x", "-1"), -1);
-        int y = Calc.safeParseInt(properties.getProperty("yields.y", "-1"), -1);
-        int w = Calc.safeParseInt(properties.getProperty("yields.w", "-1"), -1);
-        int h = Calc.safeParseInt(properties.getProperty("yields.h", "-1"), -1);
+        int x = Calc.safeParseInt(Main.properties.getProperty("yields.x", "-1"), -1);
+        int y = Calc.safeParseInt(Main.properties.getProperty("yields.y", "-1"), -1);
+        int w = Calc.safeParseInt(Main.properties.getProperty("yields.w", "-1"), -1);
+        int h = Calc.safeParseInt(Main.properties.getProperty("yields.h", "-1"), -1);
 
         if (x >= 0 && y >= 0 && w >= 0 && h >= 0) {
             Rectangle rec = new Rectangle(x, y, w, h);
             dialog.setBounds(rec);
         }
 
-        boolean s1 = "1".equals(properties.getProperty("sigma.1", "0"));
-        boolean s2 = "1".equals(properties.getProperty("sigma.2", "0"));
-        boolean s3 = "1".equals(properties.getProperty("sigma.3", "0"));
+        boolean s1 = "1".equals(Main.properties.getProperty("sigma.1", "0"));
+        boolean s2 = "1".equals(Main.properties.getProperty("sigma.2", "0"));
+        boolean s3 = "1".equals(Main.properties.getProperty("sigma.3", "0"));
 
         dialog.checkBoxSigma1.setSelected(s1);
         dialog.checkBoxSigma2.setSelected(s2);
         dialog.checkBoxSigma3.setSelected(s3);
 
-        int forecast = Calc.safeParseInt(properties.getProperty("forecast.p", "10"), 10);
+        int forecast = Calc.safeParseInt(Main.properties.getProperty("forecast.p", "10"), 10);
         dialog.spinnerPeriods.setValue(forecast);
 
         dialog.setTitle(Main.resourceBundle.getString("text.portfolio_yield"));

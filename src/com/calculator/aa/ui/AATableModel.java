@@ -313,7 +313,7 @@ public class AATableModel extends AbstractTableModel {
     }
 
     static AATableModel fromZipper(Zipper<String, Double, String> z, String[] options) {
-        String dates = options != null ? options[3] : Main.getProperties().getProperty("import.date", "1");
+        String dates = options != null ? options[3] : Main.properties.getProperty("import.date", "1");
 
         List<String> labels = z.keys();
         List<List<Double>> datas = z.values();
