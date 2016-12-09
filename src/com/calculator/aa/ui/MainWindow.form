@@ -22,7 +22,9 @@
           <component id="ddf22" class="javax.swing.JButton" binding="buttonDataBase">
             <constraints/>
             <properties>
-              <text resource-bundle="com/calculator/aa/messages" key="ui.instrument_db"/>
+              <icon value="com/calculator/aa/ui/images/instr_base.png"/>
+              <text value=""/>
+              <toolTipText resource-bundle="com/calculator/aa/messages" key="ui.instrument_db"/>
             </properties>
           </component>
           <component id="1c7c" class="javax.swing.JToolBar$Separator">
