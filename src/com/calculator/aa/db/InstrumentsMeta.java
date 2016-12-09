@@ -140,6 +140,19 @@ public class InstrumentsMeta {
         return filtered.collect(Collectors.toMap(i -> i.get(indexOfTicker), i -> i.get(indexOfName)));
     }
 
+    public Map<String, String> getNames(List<String> tickets) {
+        int indexOfTicker = header.indexOf(fieldTicker);
+        int indexOfName = header.indexOf(fieldFullName);
+        List<String> ticketsUpper = tickets.stream().map(String::toUpperCase).collect(Collectors.toList());
+
+        return instruments.stream()
+                .filter(i -> {
+                    String tk = i.get(indexOfTicker).toUpperCase();
+                    return ticketsUpper.contains(tk);
+                })
+                .collect(Collectors.toMap(i -> i.get(indexOfTicker), i -> i.get(indexOfName)));
+    }
+
     public InstrumentType getTypeFromTicker(String ticker) {
         int indexOfTicker = header.indexOf(fieldTicker);
         int indexOfType = header.indexOf(fieldType);

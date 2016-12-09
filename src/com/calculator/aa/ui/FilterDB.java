@@ -6,9 +6,7 @@ import com.calculator.aa.db.InstrumentsMeta;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,7 +23,7 @@ public class FilterDB extends JDialog {
     private JSpinner spinnerMinHistory;
     private JList<String> listResults;
     private JTextField nameTextField;
-    private JList listSelected;
+    private JList<String> listSelected;
     private JButton buttonRemoveSelected;
     private JButton buttonAddSelected;
 
@@ -33,11 +31,18 @@ public class FilterDB extends JDialog {
     private AATableModel result;
     private boolean isAborted;
     private List<String> filteredTickets;
+    private List<String> selectedTickets;
 
     private FilterDB() {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonFilter);
+
+        result = null;
+        meta = new InstrumentsMeta("db/meta/db_instruments.csv");
+        selectedTickets = new ArrayList<>();
+
+        prepareLists();
 
         buttonOK.addActionListener(e -> onOK());
 
@@ -57,10 +62,6 @@ public class FilterDB extends JDialog {
 
         spinnerMinHistory.addMouseWheelListener(new SpinnerWheelListener(spinnerMinHistory));
 
-        result = null;
-        meta = new InstrumentsMeta("db/meta/db_instruments.csv");
-
-        prepareLists();
         buttonClearFilter.addActionListener(actionEvent -> {
             listInstrumentTypes.setSelectedIndex(0);
             listInstrumentProviders.setSelectedIndex(0);
@@ -129,7 +130,7 @@ public class FilterDB extends JDialog {
                     .filter(filteredDatesList::contains)
                     .filter(filteredNamesList::contains);
 
-            Map<String, String> resultNames = meta.getNames(allFiltered);
+            SortedMap<String, String> resultNames = new TreeMap<>(meta.getNames(allFiltered));
             DefaultListModel<String> resultModel = new DefaultListModel<>();
             filteredTickets = new LinkedList<>();
             resultNames.forEach((k, v) -> {
@@ -137,6 +138,53 @@ public class FilterDB extends JDialog {
                 resultModel.addElement(k + " (" + v + ")");
             });
             listResults.setModel(resultModel);
+        });
+
+        buttonAddSelected.addActionListener(actionEvent -> {
+            int[] selectedIndexes = listResults.getSelectedIndices();
+            if (selectedIndexes == null || selectedIndexes.length == 0) {
+                return;
+            }
+
+            List<String> results = Arrays.stream(selectedIndexes)
+                    .boxed()
+                    .map(filteredTickets::get)
+                    .collect(Collectors.toList());
+
+            DefaultListModel<String> newModel = new DefaultListModel<>();
+            List<String> newSelected = Stream.concat(
+                    results.stream().filter(r -> !selectedTickets.contains(r)),
+                    selectedTickets.stream()
+            ).collect(Collectors.toList());
+
+            SortedMap<String, String> newNames = new TreeMap<>(meta.getNames(newSelected));
+            selectedTickets = new ArrayList<>(newNames.size());
+            newNames.forEach((k, v) -> {
+                selectedTickets.add(k);
+                newModel.addElement(k + " (" + v + ")");
+            });
+            listSelected.setModel(newModel);
+        });
+        buttonRemoveSelected.addActionListener(actionEvent -> {
+            int[] selectedIndexes = listSelected.getSelectedIndices();
+            if (selectedIndexes == null || selectedIndexes.length == 0) {
+                return;
+            }
+            List<String> selected = Arrays.stream(selectedIndexes)
+                    .boxed()
+                    .map(selectedTickets::get)
+                    .collect(Collectors.toList());
+
+            List<String> restTickets = selectedTickets.stream().filter(t -> !selected.contains(t)).collect(Collectors.toList());
+            DefaultListModel<String> newModel = new DefaultListModel<>();
+            SortedMap<String, String> newNames = new TreeMap<>(meta.getNames(restTickets));
+            selectedTickets = new ArrayList<>(newNames.size());
+            newNames.forEach((k, v) -> {
+                selectedTickets.add(k);
+                newModel.addElement(k + " (" + v + ")");
+            });
+            listSelected.setModel(newModel);
+
         });
     }
 
@@ -155,13 +203,8 @@ public class FilterDB extends JDialog {
     }
 
     private void onOK() {
-        int[] res = listResults.getSelectedIndices();
-        if (res.length > 0) {
-            List<String> tickers = Arrays.stream(res)
-                    .boxed()
-                    .map(i -> filteredTickets.get(i))
-                    .collect(Collectors.toList());
-            result = ConvertOptions.showOptions(tickers.toArray(new String[0]), meta);
+        if (selectedTickets.size() > 0) {
+            result = ConvertOptions.showOptions(selectedTickets.toArray(new String[0]), meta);
         }
         isAborted = false;
         if (result != null) {
@@ -180,6 +223,12 @@ public class FilterDB extends JDialog {
     private void onCancel() {
         result = null;
         isAborted = true;
+        Properties properties = Main.getProperties();
+        Rectangle bounds = getBounds();
+        properties.setProperty("filter.x", String.valueOf((int)bounds.getX()));
+        properties.setProperty("filter.y", String.valueOf((int)bounds.getY()));
+        properties.setProperty("filter.w", String.valueOf((int)bounds.getWidth()));
+        properties.setProperty("filter.h", String.valueOf((int)bounds.getHeight()));
         dispose();
     }
 
@@ -187,6 +236,7 @@ public class FilterDB extends JDialog {
         listInstrumentTypes = new JList<>();
         listInstrumentProviders = new JList<>();
         listResults = new JList<>();
+        listSelected = new JList<>();
 
         spinnerMinHistory = new JSpinner(new SpinnerNumberModel(0, 0, 10000, 1));
     }
