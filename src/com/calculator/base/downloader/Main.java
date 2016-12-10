@@ -11,26 +11,28 @@ public class Main {
     private static final Properties properties = new Properties();
 
     private final List<Instrument> instruments;
+    private final SQLiteSupport sqlLite;
 
     private Main() throws IOException {
         instruments = new LinkedList<>();
+        sqlLite = new SQLiteSupport();
+        sqlLite.createTables();
 
         readInstruments();
-
         processInstruments();
 
-        PrintWriter mainWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream("output/meta/db_instruments.csv"), StandardCharsets.UTF_8), true);
-        Instrument.writeHead(mainWriter);
-        instruments.forEach(instr -> instr.writeMeta(mainWriter));
-        mainWriter.close();
+        sqlLite.dispose();
     }
 
     private void readInstruments() {
         System.out.print("Read ETFs... ");
-        readInstrument("input.instruments.etf");
+        readInstrument("input.instruments.etf", Instrument.Type.ETF);
+
+        System.out.print("Read Funds... ");
+        readInstrument("input.instruments.funds", Instrument.Type.FUND);
     }
 
-    private void readInstrument(String property) {
+    private void readInstrument(String property, Instrument.Type type) {
         new ReaderCSV("\"", ",", null)
                 .read(properties.getProperty(property))
                 .body()
@@ -41,7 +43,7 @@ public class Main {
                                 new Instrument(
                                         line.get(0),
                                         line.get(1),
-                                        Instrument.Type.ETF,
+                                        type,
                                         Instrument.BEGINNING,
                                         Calendar.getInstance().getTime()
                                 )
@@ -53,27 +55,17 @@ public class Main {
     }
 
     private void processInstruments() {
-        System.out.print("Start download process...");
+        System.out.println("Start download process...");
         instruments.forEach(this::processInstrument);
-        System.out.print("Download complete...");
+        System.out.println("Download complete...");
     }
 
     private void processInstrument(Instrument instr) {
         instr.download(new YahooDownloader(), allOk -> {
             if (allOk) {
-                try {
-                    PrintWriter iWriter = new PrintWriter(
-                            new OutputStreamWriter(
-                                    new FileOutputStream(String.format("output/data/%s_etf.csv", instr.getTicker().toLowerCase())),
-                                    StandardCharsets.UTF_8),
-                            true);
-
-                    InstrumentHistory.writeMeta(iWriter);
-                    instr.write(iWriter);
-                    iWriter.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+                sqlLite.saveInstrument(instr);
+            } else {
+                System.out.println("Skip instrument: " + instr.getTicker());
             }
         });
     }
@@ -85,8 +77,7 @@ public class Main {
 
             System.err.println("Can't read properties. Use default!");
             e.printStackTrace();
-
-            properties.setProperty("input.instruments.etf", "sources/nasdaq_etf_full.csv");
+            System.exit(0);
         }
 
         new Main();

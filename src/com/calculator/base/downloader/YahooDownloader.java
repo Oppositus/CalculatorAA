@@ -70,12 +70,12 @@ public class YahooDownloader implements DataDownloader {
                 after.accept(true, result);
 
             } else {
-                after.accept(false, null);
+                after.accept(false, "HTTP status: " + connection.getResponseCode());
             }
 
         } catch (IOException e) {
             e.printStackTrace();
-            after.accept(false, null);
+            after.accept(false, e.getMessage());
         }
     }
 

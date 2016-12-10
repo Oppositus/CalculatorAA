@@ -28,7 +28,6 @@ class Instrument {
     private final Date fromDate;
     private final Date toDate;
     private final List<InstrumentHistory> history;
-
     private String providerName;
     private String providerUrl;
 
@@ -74,7 +73,7 @@ class Instrument {
                         fromDate.setTime(history.get(0).getDate().getTime());
                         toDate.setTime(history.get(history.size() - 1).getDate().getTime());
                     } else {
-                        System.out.println("Download error");
+                        System.out.println("Download error: " + s);
                     }
                     after.accept(downloadDone);
                 });
@@ -85,51 +84,68 @@ class Instrument {
         });
     }
 
-    static void writeHead(PrintWriter os) {
-        os.print("\"Ticker\"");
-        os.print(";");
-        os.print("\"Full name\"");
-        os.print(";");
-        os.print("\"Type\"");
-        os.print(";");
-        os.print("\"From date\"");
-        os.print(";");
-        os.print("\"To date\"");
-        os.print(";");
-        os.print("\"Provider name\"");
-        os.print(";");
-        os.print("\"Provider website\"");
+    String valuesToInsert() {
 
-        os.println();
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("'");
+        sb.append(escapeSQLite(ticker));
+        sb.append("', ");
+
+        sb.append("'");
+        sb.append(escapeSQLite(fullName));
+        sb.append("', ");
+
+        sb.append("'");
+        sb.append(type.toString());
+        sb.append("', ");
+
+        sb.append("'");
+        sb.append(printDate(fromDate));
+        sb.append("', ");
+
+        sb.append("'");
+        sb.append(printDate(toDate));
+        sb.append("', ");
+
+        sb.append("'");
+        sb.append(escapeSQLite(providerName));
+        sb.append("', ");
+
+        sb.append("'");
+        sb.append(escapeSQLite(providerUrl));
+        sb.append("'");
+
+        return sb.toString();
     }
 
-    void writeMeta(PrintWriter os) {
-        os.print("\"");
-        os.print(ticker);
-        os.print("\";\"");
-        os.print(fullName);
-        os.print("\";\"");
-        os.print(type.toString());
-        os.print("\";\"");
-        os.print(printDate(fromDate));
-        os.print("\";\"");
-        os.print(printDate(toDate));
-        os.print("\";\"");
-        os.print(providerName);
-        os.print("\";\"");
-        os.print(providerUrl);
-        os.print("\"");
+    String historyToInsert() {
 
-        os.println();
-    }
+        StringBuilder sb = new StringBuilder();
+        history.forEach(h -> {
+            sb.append("('");
+            sb.append(escapeSQLite(ticker));
+            sb.append("', ");
+            sb.append(h.valuesToInsert());
+            sb.append("), ");
+        });
 
-    void write(PrintWriter os) {
-        history.forEach(instr -> instr.write(os));
+        sb.deleteCharAt(sb.length() - 1);
+        sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
     }
 
     private String printDate(Date d) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(d);
         return String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1);
+    }
+
+    private String escapeSQLite(String s) {
+        StringBuilder sb = new StringBuilder();
+        for (char c: s.toCharArray()) {
+            sb.append(c == '\'' ? "''" : c);
+        }
+        return sb.toString();
     }
 }

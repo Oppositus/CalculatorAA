@@ -57,24 +57,25 @@ public class InstrumentHistory implements Comparable<InstrumentHistory> {
         return volume;
     }
 
-    static void writeMeta(PrintWriter os) {
-        os.println("\"Date\";\"Open\";\"High\";\"Low\";\"Close\";\"Volume\";\"Close adj.\"");
-    }
+    String valuesToInsert() {
+        StringBuilder sb = new StringBuilder();
 
-    void write(PrintWriter os) {
-        os.print(printDate(date));
-        os.print(";");
-        os.print(printDouble(open));
-        os.print(";");
-        os.print(printDouble(high));
-        os.print(";");
-        os.print(printDouble(low));
-        os.print(";");
-        os.print(printDouble(close));
-        os.print(";");
-        os.print(printDouble(volume));
-        os.print(";");
-        os.println(printDouble(closeAdj));
+        sb.append('\'');
+        sb.append(printDate(date));
+        sb.append("', ");
+        sb.append(printDouble(open));
+        sb.append(", ");
+        sb.append(printDouble(high));
+        sb.append(", ");
+        sb.append(printDouble(low));
+        sb.append(", ");
+        sb.append(printDouble(close));
+        sb.append(", ");
+        sb.append(printDouble(closeAdj));
+        sb.append(", ");
+        sb.append(printDouble(volume));
+
+        return sb.toString();
     }
 
     private String printDate(Date d) {
@@ -84,6 +85,6 @@ public class InstrumentHistory implements Comparable<InstrumentHistory> {
     }
 
     private String printDouble(double d) {
-        return String.format("%.6f", d);
+        return String.valueOf(d);
     }
 }
