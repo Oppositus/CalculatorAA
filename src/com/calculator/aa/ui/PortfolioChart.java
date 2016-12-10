@@ -200,12 +200,12 @@ class PortfolioChart extends JDialog {
 
         int lastNotZero = -1;
 
+        if (nonEmpty >= 10) {
+            return 5;
+        }
+
         for (int i = 0; i < length; i++) {
             sum[0] = 0;
-
-            if (i == length - 2 && nonEmpty > 10) {
-                return 100 / variants[lastNotZero];
-            }
 
             if (i == length - 1 && nonEmpty > 5) {
                 return 100 / variants[lastNotZero];

@@ -91,11 +91,7 @@ public class MainWindow {
         buttonAddRow.addActionListener(actionEvent -> {
             AATableModel oldModel = (AATableModel)mainTable.getModel();
             AATableModel newModel = new AATableModel(oldModel.getWidth() - 1, oldModel.getHeight() - 1, oldModel, -1, -1);
-            mainTable.setModel(newModel);
-
-            for (int i = 0, width = newModel.getWidth(); i < width; i++) {
-                mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.getHeight()));
-            }
+            setNewModel(newModel);
         });
         buttonDeleteRow.addActionListener(actionEvent -> {
             AATableModel oldModel = (AATableModel)mainTable.getModel();
@@ -104,11 +100,7 @@ public class MainWindow {
                         oldModel.getHeight() - 3,
                         oldModel,
                         mainTable.getSelectedRow(), -1);
-                mainTable.setModel(newModel);
-
-                for (int i = 0, width = newModel.getWidth(); i < width; i++) {
-                    mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.getHeight()));
-                }
+                setNewModel(newModel);
             }
         });
         buttonOpen.addActionListener(actionEvent -> {
@@ -195,11 +187,7 @@ public class MainWindow {
                 return;
             }
 
-            mainTable.setModel(model);
-
-            for (int i = 0, width = model.getWidth(); i < width; i++) {
-                mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(model.getHeight()));
-            }
+            setNewModel(model);
         });
 
         buttonSave.addActionListener(e -> {
@@ -269,11 +257,7 @@ public class MainWindow {
                         oldModel,
                         -1, mainTable.getSelectedColumn());
 
-                mainTable.setModel(newModel);
-
-                for (int i = 0, width = newModel.getWidth(); i < width; i++) {
-                    mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.getHeight()));
-                }
+                setNewModel(newModel);
             }
         });
         buttonSettings.addActionListener(e -> SettingsDialog.showSettings());
@@ -382,10 +366,12 @@ public class MainWindow {
     }
 
     private void setNewModel(AATableModel newModel) {
-        mainTable.setModel(newModel);
+        int width = newModel.getWidth();
+        int height = newModel.getHeight();
 
-        for (int i = 0, width = newModel.getWidth(); i < width; i++) {
-            mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(newModel.getHeight()));
+        mainTable.setModel(newModel);
+        for (int i = 0; i < width; i++) {
+            mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(height));
         }
     }
 
