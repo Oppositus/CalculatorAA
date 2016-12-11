@@ -5,10 +5,7 @@ import com.calculator.aa.calc.Calc;
 
 import javax.swing.*;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.Date;
 
 public class SQLiteSupport {
@@ -185,7 +182,7 @@ public class SQLiteSupport {
         return providers;
     }
 
-    static String printUnquotedDate(Date dt) {
+    public static String printUnquotedDate(Date dt) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(dt);
         return String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));

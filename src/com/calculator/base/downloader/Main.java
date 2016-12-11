@@ -1,8 +1,8 @@
 package com.calculator.base.downloader;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class Main {
     private static final Properties properties = new Properties();

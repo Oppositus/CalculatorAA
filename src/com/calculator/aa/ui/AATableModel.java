@@ -3,11 +3,13 @@ package com.calculator.aa.ui;
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.Zipper;
+import com.calculator.aa.db.SQLiteSupport;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class AATableModel extends AbstractTableModel {
 
@@ -231,10 +233,14 @@ public class AATableModel extends AbstractTableModel {
         return periods;
     }
 
-    public void setDateFormat(MainWindow.DateFormats format) {
+    void setDateFormat(MainWindow.DateFormats format) {
         if (dateFormat != MainWindow.DateFormats.DATE_FORMAT_NONE) {
             dateFormat = format;
         }
+    }
+
+    MainWindow.DateFormats getDateFormat() {
+        return dateFormat;
     }
 
     String formatPeriod(int p) {
@@ -303,11 +309,11 @@ public class AATableModel extends AbstractTableModel {
         return result;
     }
 
-    Zipper<String, Double, String> toZipper() {
+    Zipper toZipper() {
 
         int cols = data[0].length;
 
-        List<String> keys = Arrays.asList(periodsSource);
+        List<Object> keys = Arrays.asList(dateFormat == MainWindow.DateFormats.DATE_FORMAT_NONE ? periodsSource : periods);
         List<List<Double>> values = new LinkedList<>();
         List<String> labels = Arrays.asList(Arrays.copyOfRange(instruments, 1, instruments.length));
 
@@ -319,13 +325,12 @@ public class AATableModel extends AbstractTableModel {
             values.add(r);
         }
 
-        return new Zipper<>(keys, values, labels);
+        return new Zipper(keys, values, labels);
     }
 
-    static AATableModel fromZipper(Zipper<String, Double, String> z, String[] options) {
+    static AATableModel fromZipper(Zipper z, String[] options) {
         String dates = options != null ? options[3] : Main.properties.getProperty("import.date", "1");
 
-        List<String> labels = z.keys();
         List<List<Double>> datas = z.values();
         List<String> columns = z.labels();
 
@@ -339,10 +344,14 @@ public class AATableModel extends AbstractTableModel {
             }
         }
 
+        List<String> labels = z.keys().stream()
+                .map(k -> (String)(k instanceof String ? k : SQLiteSupport.printUnquotedDate((Date)k)))
+                .collect(Collectors.toList());
+
         return new AATableModel(whLength, htLength, rawData, labels.toArray(new String[0]), columns.toArray(new String[0]), "1".equals(dates));
     }
 
-    public boolean isRowValid(int row) {
+    boolean isRowValid(int row) {
         return Arrays.stream(data[row]).allMatch(d -> d > 0);
     }
 
@@ -371,31 +380,39 @@ public class AATableModel extends AbstractTableModel {
     private boolean tryFormatDates() {
         if (Arrays.stream(periodsSource).allMatch(this::acceptYYYY)) {
             periods = Arrays.stream(periodsSource).map(this::formatYYYY).toArray();
+            dateFormat = MainWindow.DateFormats.DATE_FORMAT_YYYY;
             return true;
         } else if (Arrays.stream(periodsSource).allMatch(this::acceptMM_YYYY)) {
             periods = Arrays.stream(periodsSource).map(this::formatMM_YYYY).toArray();
+            dateFormat = MainWindow.DateFormats.DATE_FORMAT_MM_YYYY;
             return true;
         } else if (Arrays.stream(periodsSource).allMatch(this::acceptYYYY_MM)) {
             periods = Arrays.stream(periodsSource).map(this::formatYYYY_MM).toArray();
+            dateFormat = MainWindow.DateFormats.DATE_FORMAT_YYYY_MM;
             return true;
         } else if (Arrays.stream(periodsSource).allMatch(this::acceptXX_XX_YYYY)) {
             Locale l = Locale.getDefault();
 
             if ("US".equals(l.getCountry().toUpperCase())) {
                 periods = Arrays.stream(periodsSource).map(this::formatMM_DD_YYYY).toArray();
+                dateFormat = MainWindow.DateFormats.DATE_FORMAT_MM_DD_YYYY;
                 if (Arrays.stream(periods).anyMatch(Objects::isNull)) {
                     periods = Arrays.stream(periodsSource).map(this::formatDD_MM_YYYY).toArray();
+                    dateFormat = MainWindow.DateFormats.DATE_FORMAT_DD_MM_YYYY;
                 }
             } else {
                 periods = Arrays.stream(periodsSource).map(this::formatDD_MM_YYYY).toArray();
+                dateFormat = MainWindow.DateFormats.DATE_FORMAT_DD_MM_YYYY;
                 if (Arrays.stream(periods).anyMatch(Objects::isNull)) {
                     periods = Arrays.stream(periodsSource).map(this::formatMM_DD_YYYY).toArray();
+                    dateFormat = MainWindow.DateFormats.DATE_FORMAT_MM_DD_YYYY;
                 }
             }
 
             return true;
         } else if (Arrays.stream(periodsSource).allMatch(this::acceptYYYY_MM_DD)) {
             periods = Arrays.stream(periodsSource).map(this::formatYYYY_MM_DD).toArray();
+            dateFormat = MainWindow.DateFormats.DATE_FORMAT_YYYY_MM_DD;
             return true;
         }
 
@@ -407,7 +424,6 @@ public class AATableModel extends AbstractTableModel {
     }
 
     private Date formatYYYY(Object s) {
-        dateFormat = MainWindow.DateFormats.DATE_FORMAT_YYYY;
         Calendar c = Calendar.getInstance();
         c.set(Calc.safeParseInt(s.toString(), -1), 0, 1);
 
@@ -433,7 +449,6 @@ public class AATableModel extends AbstractTableModel {
         int mm = Calc.safeParseInt(m.group(1), -1);
         int yy = Calc.safeParseInt(m.group(2), -1);
 
-        dateFormat = MainWindow.DateFormats.DATE_FORMAT_MM_YYYY;
         Calendar c = Calendar.getInstance();
         c.set(yy, mm - 1, 1);
 
@@ -459,7 +474,6 @@ public class AATableModel extends AbstractTableModel {
         int yy = Calc.safeParseInt(m.group(1), -1);
         int mm = Calc.safeParseInt(m.group(2), -1);
 
-        dateFormat = MainWindow.DateFormats.DATE_FORMAT_YYYY_MM;
         Calendar c = Calendar.getInstance();
         c.set(yy, mm - 1, 1);
 
@@ -491,7 +505,6 @@ public class AATableModel extends AbstractTableModel {
             return null;
         }
 
-        dateFormat = MainWindow.DateFormats.DATE_FORMAT_DD_MM_YYYY;
         Calendar c = Calendar.getInstance();
         c.set(yy, mm - 1, dd);
 
@@ -509,7 +522,6 @@ public class AATableModel extends AbstractTableModel {
             return null;
         }
 
-        dateFormat = MainWindow.DateFormats.DATE_FORMAT_MM_DD_YYYY;
         Calendar c = Calendar.getInstance();
         c.set(yy, mm - 1, dd);
 
@@ -537,7 +549,6 @@ public class AATableModel extends AbstractTableModel {
         int mm = Calc.safeParseInt(m.group(2), -1);
         int dd = Calc.safeParseInt(m.group(3), -1);
 
-        dateFormat = MainWindow.DateFormats.DATE_FORMAT_YYYY_MM_DD;
         Calendar c = Calendar.getInstance();
         c.set(yy, mm - 1, dd);
 

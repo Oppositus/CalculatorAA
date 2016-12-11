@@ -1,15 +1,17 @@
 package com.calculator.aa.calc;
 
+import com.calculator.aa.ui.AAModelComparator;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Zipper<K, V, L> {
-    private final List<K> keyList;
-    private final List<List<V>> valueList;
-    private final List<L> labelList;
+public class Zipper {
+    private final List<Object> keyList;
+    private final List<List<Double>> valueList;
+    private final List<String> labelList;
 
-    public Zipper(List<K> keys, List<V> values, L label) {
+    public Zipper(List<Object> keys, List<Double> values, String label) {
         if (keys.size() != values.size()) {
             throw new IllegalArgumentException("Keys and values have different length");
         }
@@ -21,7 +23,7 @@ public class Zipper<K, V, L> {
         keyList = new ArrayList<>(keys);
         valueList = new ArrayList<>();
         values.forEach(v -> {
-            List<V> l = new ArrayList<>();
+            List<Double> l = new ArrayList<>();
             l.add(v);
             valueList.add(l);
         });
@@ -29,7 +31,7 @@ public class Zipper<K, V, L> {
         labelList.add(label);
     }
 
-    public Zipper(List<K> keys, List<List<V>> values, List<L> labels) {
+    public Zipper(List<Object> keys, List<List<Double>> values, List<String> labels) {
         if (keys.size() != values.size()) {
             throw new IllegalArgumentException("Keys and values have different length");
         }
@@ -43,52 +45,52 @@ public class Zipper<K, V, L> {
         labelList = new ArrayList<>(labels);
     }
 
-    private Zipper(Zipper<K, V, L> that) {
+    private Zipper(Zipper that) {
         this(that.keyList, that.valueList, that.labelList);
     }
 
-    public List<K> keys() {
+    public List<Object> keys() {
         return keyList;
     }
 
-    public List<List<V>> values() {
+    public List<List<Double>> values() {
         return valueList;
     }
 
-    public List<L> labels() {
+    public List<String> labels() {
         return labelList;
     }
 
-    public Zipper<K, V, L> zip(Zipper<K, V, L> other, V dflt) throws NullPointerException, IllegalArgumentException {
+    public Zipper zip(Zipper other, AAModelComparator comparator, double dflt) throws NullPointerException, IllegalArgumentException {
         if (other == null) {
             throw new NullPointerException("Zipping with null");
         }
         int size = keyList.size();
 
         if (size < other.keyList.size()) {
-            return other.zip(this, dflt);
+            return other.zip(this, comparator, dflt);
         }
 
-        List<K> keyZippedList = new ArrayList<>();
-        List<List<V>> valueZippedList = new ArrayList<>();
-        List<L> labelsZippedList = new ArrayList<>(labelList);
+        List<Object> keyZippedList = new ArrayList<>();
+        List<List<Double>> valueZippedList = new ArrayList<>();
+        List<String> labelsZippedList = new ArrayList<>(labelList);
         labelsZippedList.addAll(other.labelList);
 
         int labelSize = labelsZippedList.size();
 
         int index = -1;
         for (int i = 0; i < size; i++) {
-            K key = keyList.get(i);
-            if (index < 0 && key.equals(other.keyList.get(0))) {
+            Object key = keyList.get(i);
+            if (index < 0 && comparator.equals(key, other.keyList.get(0))) {
                 index = 0;
             }
 
             keyZippedList.add(key);
 
-            List<V> value = new ArrayList<>(valueList.get(i));
+            List<Double> value = new ArrayList<>(valueList.get(i));
 
             if (index >= 0) {
-                if (!key.equals(other.keyList.get(index))) {
+                if (!comparator.equals(key, other.keyList.get(index))) {
                     throw new IllegalArgumentException("Zipper.zip: different keys: " + key.toString() + " - " + other.keyList.get(index).toString());
                 }
                 value.addAll(other.valueList.get(index));
@@ -108,13 +110,13 @@ public class Zipper<K, V, L> {
             throw new IllegalArgumentException("Zipper.zip: unused keys");
         }
 
-        return new Zipper<>(keyZippedList, valueZippedList, labelsZippedList);
+        return new Zipper(keyZippedList, valueZippedList, labelsZippedList);
     }
 
-    public Zipper<K, V, L> zipAll(List<Zipper<K, V, L>> others, V dflt) {
-        Zipper<K, V, L> result = new Zipper<>(this);
-        for (Zipper<K, V, L> z : others) {
-            result = result.zip(z, dflt);
+    public Zipper zipAll(List<Zipper> others, AAModelComparator comparator, double dflt) {
+        Zipper result = new Zipper(this);
+        for (Zipper z : others) {
+            result = result.zip(z, comparator, dflt);
         }
         return result;
     }
@@ -130,7 +132,7 @@ public class Zipper<K, V, L> {
 
         int size = keyList.size();
         for (int i = 0; i < size; i++) {
-            sb.append(keyList.get(i).toString());
+            sb.append(keyList.get(i));
             sb.append(" ");
 
             sb.append(String.join(

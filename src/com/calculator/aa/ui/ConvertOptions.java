@@ -114,7 +114,7 @@ public class ConvertOptions extends JDialog {
     private static AATableModel processInstruments(List<Instrument> instrs, int valIndex, int month, boolean annualize) {
         Instrument.ValueType vt = typeFromInt(valIndex);
 
-        List<Zipper<String, Double, String>> zippers = instrs.stream()
+        List<Zipper> zippers = instrs.stream()
                 .map(i -> {
                     Main.sqLite.setInstrumentHistory(i, vt);
                     if (annualize) {
@@ -122,18 +122,22 @@ public class ConvertOptions extends JDialog {
                     }
                     return i;
                 })
-                .map(Instrument::getModel)
+                .map(i -> {
+                    AATableModel model = i.getModel();
+                    model.setDateFormat(MainWindow.DateFormats.DATE_FORMAT_YYYY_MM_DD);
+                    return model;
+                })
                 .map(AATableModel::toZipper)
                 .collect(Collectors.toList());
 
         if (zippers.size() == 0) {
             return null;
         } else {
-            Zipper<String, Double, String> zipper = zippers.get(0);
+            Zipper zipper = zippers.get(0);
             int length = zippers.size();
             for (int i = 1; i < length; i++) {
                 try {
-                    zipper = zipper.zip(zippers.get(i), -1.0);
+                    zipper = zipper.zip(zippers.get(i), new AAModelComparator(MainWindow.DateFormats.DATE_FORMAT_YYYY_MM), -1.0);
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
                     break;

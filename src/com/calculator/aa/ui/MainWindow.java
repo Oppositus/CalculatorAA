@@ -292,9 +292,9 @@ public class MainWindow {
             AATableModel oldModel = (AATableModel)mainTable.getModel();
             AATableModel newModel = parseCSVAndLoadData(f);
 
-            Zipper<String, Double, String> oldZ = oldModel.toZipper();
-            Zipper<String, Double, String> newZ = newModel.toZipper();
-            Zipper<String, Double, String> result = oldZ.zip(newZ, -1.0);
+            Zipper oldZ = oldModel.toZipper();
+            Zipper newZ = newModel.toZipper();
+            Zipper result = oldZ.zip(newZ, new AAModelComparator(oldModel.getDateFormat()), -1.0);
 
             AATableModel zippedModel = AATableModel.fromZipper(result, savedOptions);
             setNewModel(zippedModel);

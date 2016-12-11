@@ -1,6 +1,5 @@
 package com.calculator.base.downloader;
 
-import java.io.PrintWriter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
