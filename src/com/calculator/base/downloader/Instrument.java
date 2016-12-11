@@ -88,33 +88,25 @@ class Instrument {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("'");
         sb.append(escapeSQLite(ticker));
-        sb.append("', ");
+        sb.append(", ");
 
-        sb.append("'");
         sb.append(escapeSQLite(fullName));
-        sb.append("', ");
+        sb.append(", ");
 
-        sb.append("'");
-        sb.append(type.toString());
-        sb.append("', ");
+        sb.append(escapeSQLite(type.toString()));
+        sb.append(", ");
 
-        sb.append("'");
         sb.append(printDate(fromDate));
-        sb.append("', ");
+        sb.append(", ");
 
-        sb.append("'");
         sb.append(printDate(toDate));
-        sb.append("', ");
+        sb.append(", ");
 
-        sb.append("'");
         sb.append(escapeSQLite(providerName));
-        sb.append("', ");
+        sb.append(", ");
 
-        sb.append("'");
         sb.append(escapeSQLite(providerUrl));
-        sb.append("'");
 
         return sb.toString();
     }
@@ -123,9 +115,9 @@ class Instrument {
 
         StringBuilder sb = new StringBuilder();
         history.forEach(h -> {
-            sb.append("('");
+            sb.append("(NULL, ");
             sb.append(escapeSQLite(ticker));
-            sb.append("', ");
+            sb.append(", ");
             sb.append(h.valuesToInsert());
             sb.append("), ");
         });
@@ -138,14 +130,15 @@ class Instrument {
     private String printDate(Date d) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(d);
-        return String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1);
+        return String.format("'%04d-%02d-%02d'", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
     }
 
     private String escapeSQLite(String s) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("'");
         for (char c: s.toCharArray()) {
             sb.append(c == '\'' ? "''" : c);
         }
+        sb.append("'");
         return sb.toString();
     }
 }
