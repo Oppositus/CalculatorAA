@@ -22,7 +22,7 @@ public class SQLiteSupport {
             conn.setAutoCommit(false);
         } catch (Exception e) {
             conn = null;
-            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
