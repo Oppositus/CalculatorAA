@@ -4,11 +4,11 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/lib" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/lib" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/calculator/base" />
     </content>
     <orderEntry type="inheritedJdk" />
+    <orderEntry type="library" name="sqlite-jdbc-3.15.1" level="project" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="sqlite-jdbc-3.15.1" level="project" />
   </component>
 </module>
