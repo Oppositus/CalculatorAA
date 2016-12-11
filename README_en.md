@@ -50,9 +50,12 @@ it's behavior depends on current locale:
         American variant: first is month, second is day
         Other variants: first is day, second is month
 
+- "Instruments base" button opens dialog there you can find an instrument. Available filters are:
+instrument type, data provider, instrument history length and name.
 - "Open" button allows you to open a CSV file with data. Multiple files can be selected.
 In the case of multiple files are selected they will be merged.
 - "Merge" button adds data from another CSV file to the current table.
+- "Save" button saves current table to CSV file.
 
 Merging is done by comparing text labels for data rows. Data is aligned by bottom
 and labels must match from bottom to top. The example of the valid files for merging:
