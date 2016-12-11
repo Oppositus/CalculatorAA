@@ -140,7 +140,9 @@ public class ConvertOptions extends JDialog {
                 }
             }
 
-            return AATableModel.fromZipper(zipper, new String[]{ReaderCSV.dbDelim, ReaderCSV.dbMark, ReaderCSV.dbDecimal, "1"});
+            AATableModel model = AATableModel.fromZipper(zipper, new String[]{ReaderCSV.dbDelim, ReaderCSV.dbMark, ReaderCSV.dbDecimal, "1"});
+            model.setDateFormat(MainWindow.DateFormats.DATE_FORMAT_YYYY_MM);
+            return model;
         }
     }
 

@@ -231,6 +231,12 @@ public class AATableModel extends AbstractTableModel {
         return periods;
     }
 
+    public void setDateFormat(MainWindow.DateFormats format) {
+        if (dateFormat != MainWindow.DateFormats.DATE_FORMAT_NONE) {
+            dateFormat = format;
+        }
+    }
+
     String formatPeriod(int p) {
         Object period = periods[p];
 
