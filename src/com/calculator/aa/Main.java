@@ -1,6 +1,7 @@
 package com.calculator.aa;
 
 import com.calculator.aa.calc.Calc;
+import com.calculator.aa.db.SQLiteSupport;
 import com.calculator.aa.ui.MainWindow;
 
 import javax.swing.*;
@@ -25,6 +26,7 @@ public class Main {
     public static Properties properties;
     public static ResourceBundle resourceBundle;
     public static Cursor voidCursor;
+    public static SQLiteSupport sqLite;
 
     private Main() {
         mainFrame = new JFrame(resourceBundle.getString("text.program_name"));
@@ -49,6 +51,9 @@ public class Main {
                     properties.store(new BufferedOutputStream(new FileOutputStream(propertiesFile)), "CalculatorAA");
 
                 } catch(Exception ignored) {}
+
+                sqLite.dispose();
+
                 System.exit(0);
             }
         });
@@ -138,6 +143,8 @@ public class Main {
         if (s != null) {
             savedOptions[3] = s;
         }
+
+        sqLite = new SQLiteSupport();
 
         SwingUtilities.invokeLater(() -> {
             program = new Main();

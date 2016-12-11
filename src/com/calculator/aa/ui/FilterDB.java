@@ -2,7 +2,8 @@ package com.calculator.aa.ui;
 
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
-import com.calculator.aa.db.InstrumentsMeta;
+import com.calculator.aa.db.Instrument;
+import com.calculator.aa.db.SQLiteSupport;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,17 +24,16 @@ public class FilterDB extends JDialog {
     private JList<String> listInstrumentTypes;
     private JList<String> listInstrumentProviders;
     private JSpinner spinnerMinHistory;
-    private JList<String> listResults;
+    private JList<Instrument> listResults;
     private JTextField nameTextField;
-    private JList<String> listSelected;
+    private JList<Instrument> listSelected;
     private JButton buttonRemoveSelected;
     private JButton buttonAddSelected;
 
-    private final InstrumentsMeta meta;
     private AATableModel result;
     private boolean isAborted;
-    private List<String> filteredTickets;
-    private List<String> selectedTickets;
+    private List<Instrument> filteredTickets;
+    private List<Instrument> selectedTickets;
 
     private FilterDB(String[] instr) {
         setContentPane(contentPane);
@@ -41,10 +41,12 @@ public class FilterDB extends JDialog {
         getRootPane().setDefaultButton(buttonFilter);
 
         result = null;
-        meta = new InstrumentsMeta("db/meta/db_instruments.csv");
         selectedTickets = new ArrayList<>();
 
-        meta.getNames(Arrays.asList(instr)).keySet().forEach(selectedTickets::add);
+        Stream.of(instr)
+                .map(Main.sqLite::findInstrument)
+                .filter(Objects::nonNull)
+                .forEach(selectedTickets::add);
 
         prepareLists();
 
@@ -73,74 +75,21 @@ public class FilterDB extends JDialog {
             nameTextField.setText("");
             listResults.setModel(new DefaultListModel<>());
         });
+
         buttonFilter.addActionListener(actionEvent -> {
-            int[] selectedTypes = listInstrumentTypes.getSelectedIndices();
-            int[] selectedProviders = listInstrumentProviders.getSelectedIndices();
+            int selectedType = listInstrumentTypes.getSelectedIndex();
+            int selectedProvider = listInstrumentProviders.getSelectedIndex();
+            int minMonth = (int)spinnerMinHistory.getValue();
+            String textFilter = nameTextField.getText();
 
-            Stream<List<String>> filteredTypes = null;
-            if (allIsNotSelected(selectedTypes)) {
-                for (int i: selectedTypes) {
-                    if (filteredTypes == null) {
-                        filteredTypes = meta.filterByType(listInstrumentTypes.getModel().getElementAt(i));
-                    } else {
-                        filteredTypes = Stream.concat(filteredTypes, meta.filterByType(listInstrumentTypes.getModel().getElementAt(i)));
-                    }
-                }
-            } else {
-                filteredTypes = meta.unfiltered();
-            }
-            List<List<String>> filteredTypesList = filteredTypes != null ?
-                    filteredTypes.collect(Collectors.toList()) :
-                    new LinkedList<>();
-
-            Stream<List<String>> filteredProviders = null;
-            if (allIsNotSelected(selectedProviders)) {
-                for (int i: selectedProviders) {
-                    if (filteredProviders == null) {
-                        filteredProviders = meta.filterByProvider(listInstrumentProviders.getModel().getElementAt(i));
-                    } else {
-                        filteredProviders = Stream.concat(filteredProviders, meta.filterByProvider(listInstrumentProviders.getModel().getElementAt(i)));
-                    }
-                }
-            } else {
-                filteredProviders = meta.unfiltered();
-            }
-            List<List<String>> filteredProvidersList = filteredProviders != null ?
-                    filteredProviders.collect(Collectors.toList()) :
-                    new LinkedList<>();
-
-            Stream<List<String>> filteredDates;
-            int minMonths = (int)spinnerMinHistory.getModel().getValue();
-            if (minMonths > 0) {
-                Calendar cal = Calendar.getInstance();
-                cal.add(Calendar.MONTH, -minMonths);
-                filteredDates = meta.filterByDate(cal.getTime());
-            } else {
-                filteredDates = meta.unfiltered();
-            }
-            List<List<String>> filteredDatesList = filteredDates.collect(Collectors.toList());
-
-            Stream<List<String>> filteredNames;
-            String textNames = nameTextField.getText();
-            if (!textNames.isEmpty()) {
-                filteredNames = meta.filterByText(textNames);
-            } else {
-                filteredNames = meta.unfiltered();
-            }
-            List<List<String>> filteredNamesList = filteredNames.collect(Collectors.toList());
-
-            Stream<List<String>> allFiltered = filteredTypesList.stream()
-                    .filter(filteredProvidersList::contains)
-                    .filter(filteredDatesList::contains)
-                    .filter(filteredNamesList::contains);
-
-            SortedMap<String, String> resultNames = new TreeMap<>(meta.getNames(allFiltered));
-            DefaultListModel<String> resultModel = new DefaultListModel<>();
-            filteredTickets = new LinkedList<>();
-            resultNames.forEach((k, v) -> {
-                filteredTickets.add(k);
-                resultModel.addElement(this.formatName(k, v));
-            });
+            DefaultListModel<Instrument> resultModel = new DefaultListModel<>();
+            filteredTickets = Main.sqLite.filterInstruments(
+                    selectedType == 0 ? null : SQLiteSupport.getInstrumentType(listInstrumentTypes.getSelectedValue()),
+                    selectedProvider == 0 ? null : listInstrumentProviders.getSelectedValue(),
+                    minMonth,
+                    textFilter
+            );
+            filteredTickets.forEach(resultModel::addElement);
             listResults.setModel(resultModel);
         });
 
@@ -150,42 +99,45 @@ public class FilterDB extends JDialog {
                 return;
             }
 
-            List<String> results = Arrays.stream(selectedIndexes)
+            List<Instrument> results = Arrays.stream(selectedIndexes)
                     .boxed()
                     .map(filteredTickets::get)
                     .collect(Collectors.toList());
 
-            DefaultListModel<String> newModel = new DefaultListModel<>();
-            List<String> newSelected = Stream.concat(
+            List<Instrument> newSelected = Stream.concat(
                     results.stream().filter(r -> !selectedTickets.contains(r)),
                     selectedTickets.stream()
             ).collect(Collectors.toList());
 
-            SortedMap<String, String> newNames = new TreeMap<>(meta.getNames(newSelected));
-            selectedTickets = new ArrayList<>(newNames.size());
-            newNames.forEach((k, v) -> {
-                selectedTickets.add(k);
-                newModel.addElement(this.formatName(k, v));
+            DefaultListModel<Instrument> newModel = new DefaultListModel<>();
+            selectedTickets = new ArrayList<>(newSelected.size());
+            newSelected.forEach(i -> {
+                selectedTickets.add(i);
+                newModel.addElement(i);
             });
             listSelected.setModel(newModel);
         });
+
         buttonRemoveSelected.addActionListener(actionEvent -> {
             int[] selectedIndexes = listSelected.getSelectedIndices();
             if (selectedIndexes == null || selectedIndexes.length == 0) {
                 return;
             }
-            List<String> selected = Arrays.stream(selectedIndexes)
+
+            List<Instrument> selected = Arrays.stream(selectedIndexes)
                     .boxed()
                     .map(selectedTickets::get)
                     .collect(Collectors.toList());
 
-            List<String> restTickets = selectedTickets.stream().filter(t -> !selected.contains(t)).collect(Collectors.toList());
-            DefaultListModel<String> newModel = new DefaultListModel<>();
-            SortedMap<String, String> newNames = new TreeMap<>(meta.getNames(restTickets));
-            selectedTickets = new ArrayList<>(newNames.size());
-            newNames.forEach((k, v) -> {
-                selectedTickets.add(k);
-                newModel.addElement(this.formatName(k, v));
+            List<Instrument> restTickets = selectedTickets.stream()
+                    .filter(t -> !selected.contains(t))
+                    .collect(Collectors.toList());
+
+            DefaultListModel<Instrument> newModel = new DefaultListModel<>();
+            selectedTickets = new ArrayList<>(restTickets.size());
+            restTickets.forEach(i -> {
+                selectedTickets.add(i);
+                newModel.addElement(i);
             });
             listSelected.setModel(newModel);
 
@@ -195,29 +147,24 @@ public class FilterDB extends JDialog {
     private void prepareLists() {
         DefaultListModel<String> types = new DefaultListModel<>();
         types.addElement(Main.resourceBundle.getString("text.all"));
-        meta.getTypes().forEach(types::addElement);
+        Main.sqLite.getTypes().forEach(types::addElement);
         listInstrumentTypes.setModel(types);
         listInstrumentTypes.setSelectedIndex(0);
 
         DefaultListModel<String> providers = new DefaultListModel<>();
         providers.addElement(Main.resourceBundle.getString("text.all"));
-        meta.getProviders().keySet().forEach(providers::addElement);
+        Main.sqLite.getProviders().forEach(providers::addElement);
         listInstrumentProviders.setModel(providers);
         listInstrumentProviders.setSelectedIndex(0);
 
-        DefaultListModel<String> selected = new DefaultListModel<>();
-        SortedMap<String, String> selectedNames = new TreeMap<>(meta.getNames(selectedTickets));
-        selectedNames.forEach((k, v) -> selected.addElement(this.formatName(k, v)));
+        DefaultListModel<Instrument> selected = new DefaultListModel<>();
+        selectedTickets.forEach(selected::addElement);
         listSelected.setModel(selected);
-    }
-
-    private String formatName(String ticker, String descr) {
-        return ticker + " (" + descr + ")";
     }
 
     private void onOK() {
         if (selectedTickets.size() > 0) {
-            result = ConvertOptions.showOptions(selectedTickets.toArray(new String[0]), meta);
+            result = ConvertOptions.showOptions(selectedTickets);
         }
         isAborted = false;
         if (result != null) {
@@ -250,15 +197,6 @@ public class FilterDB extends JDialog {
         listSelected = new JList<>();
 
         spinnerMinHistory = new JSpinner(new SpinnerNumberModel(0, 0, 10000, 1));
-    }
-
-    private boolean allIsNotSelected(int[] array) {
-        for (int i: array) {
-            if (i == 0) {
-                return false;
-            }
-        }
-        return true;
     }
 
     static AATableModel showFilter(String[] instr) {

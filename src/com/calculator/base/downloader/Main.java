@@ -28,8 +28,8 @@ public class Main {
         System.out.print("Read ETFs... ");
         readInstrument("input.instruments.etf", Instrument.Type.ETF);
 
-        System.out.print("Read Funds... ");
-        readInstrument("input.instruments.funds", Instrument.Type.FUND);
+        /*System.out.print("Read Funds... ");
+        readInstrument("input.instruments.funds", Instrument.Type.FUND);*/
     }
 
     private void readInstrument(String property, Instrument.Type type) {

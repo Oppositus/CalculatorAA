@@ -3,7 +3,6 @@ package com.calculator.aa.ui;
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.Zipper;
-import com.calculator.aa.db.InstrumentsMeta;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -474,7 +473,7 @@ public class MainWindow {
 
     public void getTickersAndLoadData(String[] tickers, String[] options) {
         savedOptions = options;
-        setNewModel(ConvertOptions.notShowOptions(tickers, new InstrumentsMeta("db/meta/db_instruments.csv")));
+        setNewModel(ConvertOptions.notShowOptions(tickers));
     }
 
     private void createUIComponents() {

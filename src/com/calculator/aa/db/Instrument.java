@@ -2,78 +2,100 @@ package com.calculator.aa.db;
 
 import com.calculator.aa.ui.AATableModel;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class Instrument {
+    public enum InstrumentType {
+        ETF,
+        FUND,
+        INDEX
+    }
+
+    public enum ValueType {
+        OPEN,
+        HIGH,
+        LOW,
+        CLOSE,
+        CLOSEADJ
+    }
+
     private final String ticker;
-    private List<String> head;
-    private List<List<String>> body;
+    private final String name;
+    private final InstrumentType type;
+    private final Date fromDate;
+    private final Date toDate;
+    private final String provider;
+    private final String site;
 
-    private String[] periods;
-    private double[] values;
+    private List<Date> dates;
+    private List<Double> values;
 
-    public Instrument(String tk, InstrumentsMeta.InstrumentType type) {
+    public Instrument(String tk, String nm, InstrumentType it, Date fr, Date to, String pr, String st) {
         ticker = tk;
+        name = nm;
+        type = it;
+        fromDate = fr;
+        toDate = to;
+        provider = pr;
+        site = st;
 
-        String name = ticker.toLowerCase() + "_" + type.toString().toLowerCase() + ".csv";
-        ReaderCSV reader = new ReaderCSV(ReaderCSV.dbMark, ReaderCSV.dbDelim);
-        reader.readFromFile("db/data/" + name);
+        dates = new LinkedList<>();
+        values = new LinkedList<>();
+    }
 
-        try {
-            head = reader.head().toList().get(0);
-            body = reader.body().toList();
-        } catch (Exception ignored) {
-            head = null;
-            body = null;
+    @Override
+    public String toString() {
+        return ticker + " (" + name + ")";
+    }
+
+    public String getTicker() {
+        return ticker;
+    }
+
+    void fillHistory(List<Date> dts, List<Double> vls) {
+        if (dts.size() != vls.size()) {
+            throw new IllegalArgumentException("dates.size() != values.size()");
         }
+
+        dates.addAll(dts);
+        values.addAll(vls);
     }
 
-    public boolean isValid() {
-        return head != null && body != null;
-    }
+    public void makeAnnual(int month) {
+        List<Date> dts = new ArrayList<>(dates);
+        List<Double> vls = new ArrayList<>(values);
 
-    public void applyFilter(InstrumentsMeta.ValueType vt, InstrumentsMeta.PeriodType pt, int month) {
-        periods = body.stream()
-                .map(el -> el.get(0))
-                .collect(Collectors.toList())
-                .toArray(new String[0]);
+        dates.clear();
+        values.clear();
 
-        int index = head.indexOf(InstrumentsMeta.ValueName.get(vt));
-        values = body.stream()
-                .mapToDouble(el -> Double.valueOf(el.get(index).replace(",", ".")))
-                .toArray();
-
-        if (pt == InstrumentsMeta.PeriodType.YEAR) {
-            annualize(month);
-        }
-    }
-
-    private void annualize(int month) {
-        List<String> dts = new LinkedList<>();
-        List<Double> vls = new LinkedList<>();
-
-        int length = periods.length;
-        for (int i = 0; i < length; i++) {
-            int period = Integer.valueOf(periods[i].split("-")[1]) - 1;
-            if (period == month) {
-                dts.add(periods[i]);
-                vls.add(values[i]);
+        Calendar cal = Calendar.getInstance();
+        int index = 0;
+        for (Date dt : dts) {
+            cal.setTime(dt);
+            if (cal.get(Calendar.MONTH) == month) {
+                dates.add(dt);
+                values.add(vls.get(index));
             }
+            index += 1;
         }
-
-        periods = dts.toArray(new String[0]);
-        values = vls.stream().mapToDouble(d -> d).toArray();
     }
 
     public AATableModel getModel() {
-        int length = values.length;
+        int length = values.size();
         double[][] vals = new double[length][1];
+        String[] periods = new String[length];
         for (int i = 0; i < length; i++) {
-            vals[i][0] = values[i];
+            vals[i][0] = values.get(i);
+            periods[i] = SQLiteSupport.printUnquotedDate(dates.get(i));
         }
-        return new AATableModel(1, values.length, vals, periods, new String[]{ticker}, true);
-    }
 
+        return new AATableModel(
+                1,
+                length,
+                vals,
+                periods,
+                new String[]{ ticker },
+                true
+        );
+    }
 }

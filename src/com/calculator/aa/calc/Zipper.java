@@ -59,7 +59,7 @@ public class Zipper<K, V, L> {
         return labelList;
     }
 
-    public Zipper<K, V, L> zip(Zipper<K, V, L> other, V dflt) {
+    public Zipper<K, V, L> zip(Zipper<K, V, L> other, V dflt) throws NullPointerException, IllegalArgumentException {
         if (other == null) {
             throw new NullPointerException("Zipping with null");
         }

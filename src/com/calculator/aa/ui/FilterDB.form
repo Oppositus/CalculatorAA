@@ -130,7 +130,9 @@
             <children>
               <component id="e2ae2" class="javax.swing.JList" binding="listInstrumentTypes" custom-create="true">
                 <constraints/>
-                <properties/>
+                <properties>
+                  <selectionMode value="0"/>
+                </properties>
               </component>
             </children>
           </scrollpane>
@@ -145,7 +147,9 @@
             <children>
               <component id="c861a" class="javax.swing.JList" binding="listInstrumentProviders" custom-create="true">
                 <constraints/>
-                <properties/>
+                <properties>
+                  <selectionMode value="0"/>
+                </properties>
               </component>
             </children>
           </scrollpane>
