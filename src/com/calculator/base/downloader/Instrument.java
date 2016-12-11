@@ -31,7 +31,9 @@ class Instrument {
     private String providerName;
     private String providerUrl;
 
-    Instrument(String t, String n, Type y, Date f, Date o) {
+    private final String downloaderName;
+
+    Instrument(String t, String n, Type y, Date f, Date o, String dn) {
         ticker = t;
         fullName = n;
         type = y;
@@ -41,18 +43,27 @@ class Instrument {
 
         providerName = "";
         providerUrl = "";
+
+        downloaderName = dn;
     }
 
     String getTicker() {
         return ticker;
     }
 
-    void download(DataDownloader provider, Consumer<Boolean> after) {
+    void download(Consumer<Boolean> after) {
         System.out.print("Downloading ");
         System.out.print(ticker);
         System.out.print(" (");
         System.out.print(fullName);
         System.out.print(")... ");
+
+        DataDownloader provider = Main.getDownloader(downloaderName);
+
+        if (provider == null) {
+            after.accept(false);
+            return;
+        }
 
         providerName = provider.getName();
         providerUrl = provider.getWebUrl();

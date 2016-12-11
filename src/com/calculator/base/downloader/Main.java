@@ -1,11 +1,8 @@
 package com.calculator.base.downloader;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.Calendar;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class Main {
     private static final Properties properties = new Properties();
@@ -25,30 +22,42 @@ public class Main {
     }
 
     private void readInstruments() {
-        System.out.print("Read ETFs... ");
+        System.out.println("Read ETFs... ");
         readInstrument("input.instruments.etf", Instrument.Type.ETF);
 
-        System.out.print("Read Funds... ");
+        System.out.println("Read Funds... ");
         readInstrument("input.instruments.funds", Instrument.Type.FUND);
     }
 
     private void readInstrument(String property, Instrument.Type type) {
-        new ReaderCSV("\"", ",", null)
-                .read(properties.getProperty(property))
-                .body()
-                .lines()
-                .forEach(line -> {
-                    if (instruments.stream().noneMatch(i -> i.getTicker().equals(line.get(0)))) {
-                        instruments.add(
-                                new Instrument(
-                                        line.get(0),
-                                        line.get(1),
-                                        type,
-                                        Instrument.BEGINNING,
-                                        Calendar.getInstance().getTime()
-                                )
-                        );
-                    }
+
+        String[] toRead = properties.getProperty(property).split(";");
+
+        Arrays.asList(toRead)
+                .forEach(tr -> {
+                    String[] trProps = tr.split("!");
+
+                    System.out.println("Read " + trProps[0] + " with " + trProps[1]);
+
+                    new ReaderCSV("\"", ",", null)
+                            .read(trProps[0])
+                            .body()
+                            .lines()
+                            .forEach(line -> {
+                                if (instruments.stream().noneMatch(i -> i.getTicker().equals(line.get(0)))) {
+                                    instruments.add(
+                                            new Instrument(
+                                                    line.get(0),
+                                                    line.get(1),
+                                                    type,
+                                                    Instrument.BEGINNING,
+                                                    Calendar.getInstance().getTime(),
+                                                    trProps[1]
+                                            )
+                                    );
+                                }
+                            });
+
                 });
 
         System.out.println("Got " + instruments.size() + ".");
@@ -61,13 +70,23 @@ public class Main {
     }
 
     private void processInstrument(Instrument instr) {
-        instr.download(new YahooDownloader(), allOk -> {
+        instr.download(allOk -> {
             if (allOk) {
                 sqlLite.saveInstrument(instr);
             } else {
                 System.out.println("Skip instrument: " + instr.getTicker());
             }
         });
+    }
+
+    static DataDownloader getDownloader(String name) {
+        switch (name) {
+            case "YahooDownloader":
+                return new YahooDownloader();
+
+            default:
+                return null;
+        }
     }
 
     public static void main(String[] args) throws IOException {
