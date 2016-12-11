@@ -13,7 +13,7 @@ class SQLiteSupport {
     SQLiteSupport() {
         try {
             Class.forName("org.sqlite.JDBC");
-            conn = DriverManager.getConnection("jdbc:sqlite:instruments.sqlite");
+            conn = DriverManager.getConnection("jdbc:sqlite:output/instruments.sqlite");
             conn.setAutoCommit(false);
             System.out.println("Opened database successfully");
         } catch ( Exception e ) {

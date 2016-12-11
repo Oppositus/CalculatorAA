@@ -18,7 +18,7 @@ public class SQLiteSupport {
     public SQLiteSupport() {
         try {
             Class.forName("org.sqlite.JDBC");
-            conn = DriverManager.getConnection("jdbc:sqlite:instruments.sqlite");
+            conn = DriverManager.getConnection("jdbc:sqlite:db/instruments.sqlite");
             conn.setAutoCommit(false);
         } catch (Exception e) {
             conn = null;
