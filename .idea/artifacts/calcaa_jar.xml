@@ -2,6 +2,7 @@
   <artifact type="jar" name="calcaa:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/calcaa_jar</output-path>
     <root id="archive" name="CalculatorAA.jar">
+      <element id="library" level="project" name="sqlite-jdbc-3.15.1" />
       <element id="module-output" name="CalculatorAA" />
     </root>
   </artifact>
