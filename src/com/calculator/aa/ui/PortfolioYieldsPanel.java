@@ -21,6 +21,8 @@ class PortfolioYieldsPanel extends JPanel {
     static final Color[] sigmaColor = new Color[] {new Color(255, 224, 224), new Color(255, 200, 200), new Color(255, 176, 176)};
     private static final int safeZone = 10;
     private static final int safeTop = 5;
+    private static final BasicStroke thick = new BasicStroke(2);
+    private static final BasicStroke thin = new BasicStroke(1);
 
     private double minY;
     private double maxY;
@@ -44,6 +46,11 @@ class PortfolioYieldsPanel extends JPanel {
 
     private BufferedImage labelCalculations;
 
+    private Rectangle labelArea;
+    private boolean inLabelArea;
+    private int mousePressedX;
+    private int mousePressedY;
+
     private double[] realYields;
     private double[] modelYields;
     private int periods;
@@ -60,6 +67,8 @@ class PortfolioYieldsPanel extends JPanel {
 
         @Override
         public void mousePressed(MouseEvent mouseEvent) {
+            mousePressedX = mouseEvent.getX();
+            mousePressedY = mouseEvent.getY();
         }
 
         @Override
@@ -81,12 +90,33 @@ class PortfolioYieldsPanel extends JPanel {
 
         @Override
         public void mouseDragged(MouseEvent mouseEvent) {
+            int x = mouseEvent.getX() - mousePressedX;
+            int y = mouseEvent.getY() - mousePressedY;
 
+            if (drawingArea.contains(x, y)) {
+                labelArea.setLocation(x, y);
+            }
+
+            repaint();
         }
 
         @Override
         public void mouseMoved(MouseEvent mouseEvent) {
-            moveMouseCross(mouseEvent.getX(), mouseEvent.getY());
+            int x = mouseEvent.getX();
+            int y = mouseEvent.getY();
+
+            if (labelArea.contains(x, y)) {
+                if (!inLabelArea) {
+                    setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+                }
+                inLabelArea = true;
+            } else {
+                if (inLabelArea) {
+                    setCursor(Main.voidCursor);
+                }
+                inLabelArea = false;
+            }
+            moveMouseCross(x, y);
         }
     }
 
@@ -97,6 +127,9 @@ class PortfolioYieldsPanel extends JPanel {
         addMouseMotionListener(new mouseMoveListener());
 
         setCursor(Main.voidCursor);
+
+        labelArea = new Rectangle();
+        inLabelArea = false;
     }
 
     void setData(String[] ls, double[] ry, double[] my, double r, boolean[] ss, boolean lg) {
@@ -304,7 +337,9 @@ class PortfolioYieldsPanel extends JPanel {
             }
         }
 
+        ((Graphics2D)g).setStroke(thick);
         g.drawPolyline(xs, ys, length);
+        ((Graphics2D)g).setStroke(thin);
     }
 
     private void drawCrossYields(Graphics g) {
@@ -385,6 +420,7 @@ class PortfolioYieldsPanel extends JPanel {
 
     private void drawLabels(Graphics g) {
         g.drawImage(labelCalculations, drawingArea.x + safeZone, drawingArea.y + safeZone, null);
+        labelArea.setLocation(drawingArea.x + safeZone, drawingArea.y + safeZone);
     }
 
     private void calculateStringMetrics(Graphics g) {
@@ -413,6 +449,8 @@ class PortfolioYieldsPanel extends JPanel {
         labelCalculations = new BufferedImage(labelCalculationsWidth, labelHeight + safeTop, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D glc = labelCalculations.createGraphics();
+
+        labelArea.setBounds(0, 0, labelCalculationsWidth, labelHeight + safeTop);
 
         glc.setColor(backColor);
         glc.fillRect(0, 0, labelCalculationsWidth, labelHeight + safeTop);
