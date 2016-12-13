@@ -50,6 +50,8 @@ class PortfolioYieldsPanel extends JPanel {
     private boolean inLabelArea;
     private int mousePressedX;
     private int mousePressedY;
+    private int labelPressedX;
+    private int labelPressedY;
 
     private double[] realYields;
     private double[] modelYields;
@@ -69,6 +71,8 @@ class PortfolioYieldsPanel extends JPanel {
         public void mousePressed(MouseEvent mouseEvent) {
             mousePressedX = mouseEvent.getX();
             mousePressedY = mouseEvent.getY();
+            labelPressedX = (int)labelArea.getX();
+            labelPressedY = (int)labelArea.getY();
         }
 
         @Override
@@ -90,11 +94,22 @@ class PortfolioYieldsPanel extends JPanel {
 
         @Override
         public void mouseDragged(MouseEvent mouseEvent) {
-            int x = mouseEvent.getX() - mousePressedX;
-            int y = mouseEvent.getY() - mousePressedY;
+            int dx = mouseEvent.getX() - mousePressedX;
+            int dy = mouseEvent.getY() - mousePressedY;
 
-            if (drawingArea.contains(x, y)) {
-                labelArea.setLocation(x, y);
+            labelArea.setLocation(labelPressedX + dx, labelPressedY + dy);
+
+            if (labelArea.getX() < 0) {
+                labelArea.setLocation(0, (int)labelArea.getY());
+            }
+            if (labelArea.getX() + labelArea.getWidth() > drawingArea.getWidth()) {
+                labelArea.setLocation((int)(drawingArea.getWidth() - labelArea.getWidth()), (int)labelArea.getY());
+            }
+            if (labelArea.getY() < 0) {
+                labelArea.setLocation((int)labelArea.getX(), 0);
+            }
+            if (labelArea.getY() + labelArea.getHeight() > drawingArea.getHeight()) {
+                labelArea.setLocation((int)labelArea.getX(), (int)(drawingArea.getHeight() - labelArea.getHeight()));
             }
 
             repaint();
@@ -105,7 +120,7 @@ class PortfolioYieldsPanel extends JPanel {
             int x = mouseEvent.getX();
             int y = mouseEvent.getY();
 
-            if (labelArea.contains(x, y)) {
+            if (drawingArea != null && labelArea.contains(x - drawingArea.getX(), y - drawingArea.getY())) {
                 if (!inLabelArea) {
                     setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
                 }
@@ -419,8 +434,7 @@ class PortfolioYieldsPanel extends JPanel {
     }
 
     private void drawLabels(Graphics g) {
-        g.drawImage(labelCalculations, drawingArea.x + safeZone, drawingArea.y + safeZone, null);
-        labelArea.setLocation(drawingArea.x + safeZone, drawingArea.y + safeZone);
+        g.drawImage(labelCalculations, drawingArea.x + (int)labelArea.getX(), drawingArea.y + (int)labelArea.getY(), null);
     }
 
     private void calculateStringMetrics(Graphics g) {
@@ -450,7 +464,7 @@ class PortfolioYieldsPanel extends JPanel {
 
         Graphics2D glc = labelCalculations.createGraphics();
 
-        labelArea.setBounds(0, 0, labelCalculationsWidth, labelHeight + safeTop);
+        labelArea.setBounds(safeZone, safeZone, labelCalculationsWidth, labelHeight + safeTop);
 
         glc.setColor(backColor);
         glc.fillRect(0, 0, labelCalculationsWidth, labelHeight + safeTop);
