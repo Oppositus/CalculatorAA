@@ -331,8 +331,23 @@ public class Calc {
         return result;
     }
 
+    public static Portfolio findCAL(List<Portfolio> portfolios, double rate) {
+        double max = Double.NEGATIVE_INFINITY;
+        Portfolio maxP = null;
+        DoublePoint riskFree = new DoublePoint(0, rate);
+        for (Portfolio p : portfolios) {
+            double sin = sine(riskFree, p.performance());
+            if (sin > max) {
+                max = sin;
+                maxP = p;
+            }
+        }
+
+        return maxP;
+    }
+
     private static Portfolio findMaxSine(Portfolio origin, List<Portfolio> portfolios) {
-        double max = Double.MIN_VALUE;
+        double max = Double.NEGATIVE_INFINITY;
         Portfolio maxPf = portfolios.get(0);
 
         for (Portfolio p : portfolios) {
@@ -427,7 +442,7 @@ public class Calc {
         int length = Math.max(arr1.length, arr2.length);
         int length1 = arr1.length;
         int length2 = arr2.length;
-        double max = Double.MIN_VALUE;
+        double max = Double.NEGATIVE_INFINITY;
 
         for (int i = 0; i < length; i++) {
             if (i < length1 && max < arr1[i]) {

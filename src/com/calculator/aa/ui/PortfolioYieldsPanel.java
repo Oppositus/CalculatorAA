@@ -204,7 +204,7 @@ class PortfolioYieldsPanel extends JPanel {
         for (int i = 0; i < length; i++) {
             double[] col = Calc.column(iy, i);
             minYield = Math.min(minYield, Arrays.stream(col).min().orElse(Double.MAX_VALUE));
-            maxYield = Math.max(maxYield, Arrays.stream(col).max().orElse(Double.MIN_VALUE));
+            maxYield = Math.max(maxYield, Arrays.stream(col).max().orElse(Double.NEGATIVE_INFINITY));
         }
 
         double dr = (maxYield - minYield) * 0.05;
