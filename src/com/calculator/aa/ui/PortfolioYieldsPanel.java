@@ -98,6 +98,11 @@ class PortfolioYieldsPanel extends JPanel {
 
         @Override
         public void mousePressed(MouseEvent mouseEvent) {
+            if (!inLabelArea) {
+                mousePressedX = -1;
+                return;
+            }
+
             mousePressedX = mouseEvent.getX();
             mousePressedY = mouseEvent.getY();
             labelPressedX = (int)labelArea.getX();
@@ -123,6 +128,11 @@ class PortfolioYieldsPanel extends JPanel {
 
         @Override
         public void mouseDragged(MouseEvent mouseEvent) {
+
+            if (mousePressedX < 0) {
+                return;
+            }
+
             int dx = mouseEvent.getX() - mousePressedX;
             int dy = mouseEvent.getY() - mousePressedY;
 
