@@ -54,7 +54,7 @@ public class SettingsDialog extends JDialog {
         checkBoxUpdates.setSelected("1".equals(Main.properties.getProperty("ui.updates_check", "1")));
 
         buttonCheckNow.addActionListener(actionEvent -> {
-            hasUpdate = Main.getMain().checkHasUpdate();
+            hasUpdate = Main.getMain().checkHasUpdate(true);
             JOptionPane.showMessageDialog(Main.getFrame(),
                     Main.resourceBundle.getString(hasUpdate ? "text.update_has" : "text.update_no"),
                     Main.resourceBundle.getString("text.update"),

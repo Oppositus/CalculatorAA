@@ -98,7 +98,7 @@ public class Main {
         return Arrays.copyOfRange(periods, fromIndex, max);
     }
 
-    public boolean checkHasUpdate() {
+    public boolean checkHasUpdate(boolean verbose) {
 
         try {
             HttpURLConnection.setFollowRedirects(true);
@@ -152,14 +152,18 @@ public class Main {
 
                 return hasUpdate;
             } else {
-                JOptionPane.showMessageDialog(mainFrame,
-                        String.format(resourceBundle.getString("text.update_error_http"), connection.getResponseCode()),
-                        resourceBundle.getString("text.error"),
-                        JOptionPane.ERROR_MESSAGE);
+                if (verbose) {
+                    JOptionPane.showMessageDialog(mainFrame,
+                            String.format(resourceBundle.getString("text.update_error_http"), connection.getResponseCode()),
+                            resourceBundle.getString("text.error"),
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
 
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(mainFrame, e, resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+            if (verbose) {
+                JOptionPane.showMessageDialog(mainFrame, e, resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+            }
         }
 
         return false;
@@ -241,7 +245,7 @@ public class Main {
 
             if ("1".equals(Main.properties.getProperty("ui.updates_check", "1"))) {
                 Timer tm = new Timer(10000, actionEvent -> {
-                    program.checkHasUpdate();
+                    program.checkHasUpdate(false);
                 });
                 tm.setRepeats(false);
                 tm.start();
