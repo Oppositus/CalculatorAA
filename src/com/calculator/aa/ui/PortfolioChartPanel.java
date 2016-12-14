@@ -211,6 +211,12 @@ class PortfolioChartPanel extends JPanel {
 
         portfoliosCompare = pfsComp;
 
+        if (riskFreeRate >= 0) {
+            bestCALPortfolio = Calc.findCAL(frontierPortfolios, riskFreeRate);
+        } else {
+            bestCALPortfolio = null;
+        }
+
         double minRisk = Math.min(
                 portfolios.get(0).risk(),
                 portfoliosCompare != null ? portfoliosCompare.get(0).risk() : Double.MAX_VALUE);
@@ -291,12 +297,6 @@ class PortfolioChartPanel extends JPanel {
 
     void setCAL(double rate) {
         riskFreeRate = rate;
-        if (riskFreeRate >= 0) {
-            bestCALPortfolio = Calc.findCAL(frontierPortfolios, riskFreeRate);
-        } else {
-            bestCALPortfolio = null;
-        }
-        repaint();
     }
 
     List<Portfolio> getFrontierPortfolios() {

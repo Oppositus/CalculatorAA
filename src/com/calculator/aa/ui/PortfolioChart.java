@@ -138,14 +138,11 @@ class PortfolioChart extends JDialog {
             }
 
             ((PortfolioChartPanel)chartPanel).resetZoom();
+            ((PortfolioChartPanel)chartPanel).setCAL(checkBoxCAL.isSelected() ? (double)spinnerCAL.getValue() / 100.0 : -1);
             ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
-            if (checkBoxCAL.isSelected()) {
-                ((PortfolioChartPanel)chartPanel).setCAL((double)spinnerCAL.getValue() / 100.0);
-            }
         });
 
-        cbFrontierOnly.addChangeListener(e -> ((PortfolioChartPanel) chartPanel).setFrontierOnlyMode(cbFrontierOnly.isSelected()));
-        checkBoxCAL.addChangeListener(e -> ((PortfolioChartPanel) chartPanel).setCAL(checkBoxCAL.isSelected() ? (double)spinnerCAL.getValue() / 100.0 : -1));
+        cbFrontierOnly.addActionListener(e -> ((PortfolioChartPanel) chartPanel).setFrontierOnlyMode(cbFrontierOnly.isSelected()));
 
         buttonAccuracy.addActionListener(e -> {
             List<Portfolio> frontier = ((PortfolioChartPanel) chartPanel).getFrontierPortfolios();
@@ -381,6 +378,7 @@ class PortfolioChart extends JDialog {
 
         accuracyPortfolios.sort(Portfolio::compareTo);
         ((PortfolioChartPanel)chartPanel).resetZoom();
+        ((PortfolioChartPanel)chartPanel).setCAL(checkBoxCAL.isSelected() ? (double)spinnerCAL.getValue() / 100.0 : -1);
         ((PortfolioChartPanel) chartPanel).setPortfolios(accuracyPortfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
 
         return accuracyPortfolios;
