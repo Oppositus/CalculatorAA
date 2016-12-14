@@ -73,7 +73,7 @@ class PortfolioYieldsPanel extends JPanel {
 
     private BufferedImage labelCalculations;
 
-    private Rectangle labelArea;
+    private final Rectangle labelArea;
     private boolean inLabelArea;
     private int mousePressedX;
     private int mousePressedY;

@@ -5,7 +5,7 @@ import java.util.Date;
 
 public class AAModelComparator {
 
-    private MainWindow.DateFormats format;
+    private final MainWindow.DateFormats format;
 
     AAModelComparator(MainWindow.DateFormats f) {
         format = f;

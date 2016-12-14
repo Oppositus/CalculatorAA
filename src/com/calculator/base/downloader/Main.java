@@ -10,7 +10,7 @@ public class Main {
     private final List<Instrument> instruments;
     private final SQLiteSupport sqlLite;
 
-    private Main() throws IOException {
+    private Main() {
         instruments = new LinkedList<>();
         sqlLite = new SQLiteSupport();
         sqlLite.createTables();

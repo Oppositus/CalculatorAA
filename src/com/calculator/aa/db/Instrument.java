@@ -27,8 +27,8 @@ public class Instrument {
     private final String provider;
     private final String site;
 
-    private List<Date> dates;
-    private List<Double> values;
+    private final List<Date> dates;
+    private final List<Double> values;
 
     public Instrument(String tk, String nm, InstrumentType it, Date fr, Date to, String pr, String st) {
         ticker = tk;
