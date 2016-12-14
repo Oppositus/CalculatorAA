@@ -34,6 +34,7 @@ public class MainWindow {
     private JButton buttonRemoveColumn;
     private JButton buttonSettings;
     private JButton buttonDataBase;
+    private JButton buttonUpdate;
 
     private String[] savedOptions;
     private String lastFileName;

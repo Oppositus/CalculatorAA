@@ -15,6 +15,7 @@ public class SettingsDialog extends JDialog {
     private JButton buttonCancel;
     private JButton buttonApply;
     private JComboBox<String> comboBoxLook;
+    private JCheckBox checkBoxUpdates;
 
     private UIManager.LookAndFeelInfo[] looksAndFeels;
     private LookAndFeel currentLookAndFeel;
@@ -41,10 +42,13 @@ public class SettingsDialog extends JDialog {
         // call onCancel() on ESCAPE
         contentPane.registerKeyboardAction(e -> onCancel(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
+        checkBoxUpdates.setSelected("1".equals(Main.properties.getProperty("ui.updates_check", "1")));
     }
 
     private void onOK() {
         onApply(null);
+        Main.properties.setProperty("ui.updates_check", checkBoxUpdates.isSelected() ? "1" : "0");
         dispose();
     }
 

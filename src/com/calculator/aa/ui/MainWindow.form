@@ -128,6 +128,15 @@
           <hspacer id="9dfe3">
             <constraints/>
           </hspacer>
+          <component id="b5487" class="javax.swing.JButton" binding="buttonUpdate">
+            <constraints/>
+            <properties>
+              <icon value="com/calculator/aa/ui/icons/update.png"/>
+              <text value=""/>
+              <toolTipText resource-bundle="com/calculator/aa/messages" key="ui.update"/>
+              <visible value="false"/>
+            </properties>
+          </component>
           <component id="f5dfe" class="javax.swing.JButton" binding="buttonSettings">
             <constraints/>
             <properties>

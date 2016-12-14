@@ -103,3 +103,5 @@ ui.found=Найдено
 ui.selected=Выбрано
 ui.add_to=>>
 ui.remove_from=<<
+ui.update=Доступны обновления
+ui.update_check=Проверять наличие обновлений при старте
