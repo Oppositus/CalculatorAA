@@ -9,7 +9,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RectangularShape;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 class PortfolioYieldsPanel extends JPanel {
 
@@ -18,7 +23,29 @@ class PortfolioYieldsPanel extends JPanel {
     private static final Color axisColor2 = Color.LIGHT_GRAY;
     private static final Color realColor = Color.BLUE;
     private static final Color modelColor = Color.RED;
-    static final Color[] sigmaColor = new Color[] {new Color(255, 224, 224), new Color(255, 200, 200), new Color(255, 176, 176)};
+    static final Color[] sigmaColor = new Color[] {new Color(0xFF, 0xDD, 0xDD), new Color(0xFF, 0xCC, 0xCC), new Color(0xFF, 0xBB, 0xBB)};
+    private static final Color[] colorArray = new Color[] {
+            new Color(0x99, 0x00, 0x00),
+            new Color(0x00, 0x99, 0x00),
+            new Color(0x00, 0x00, 0x99),
+
+            new Color(0xCC, 0x00, 0x00),
+            new Color(0x00, 0xCC, 0x00),
+            new Color(0x00, 0x00, 0xCC),
+
+            new Color(0x99, 0x66, 0x66),
+            new Color(0x66, 0x99, 0x66),
+            new Color(0x66, 0x66, 0x99),
+
+            new Color(0xCC, 0x66, 0x66),
+            new Color(0x66, 0xCC, 0x66),
+            new Color(0x66, 0x66, 0xCC),
+
+            new Color(0xCC, 0x99, 0x99),
+            new Color(0x99, 0xCC, 0x99),
+            new Color(0x99, 0x99, 0xCC)
+    };
+
     private static final int safeZone = 10;
     private static final int safeTop = 5;
     private static final BasicStroke thick = new BasicStroke(2);
@@ -55,10 +82,12 @@ class PortfolioYieldsPanel extends JPanel {
 
     private double[] realYields;
     private double[] modelYields;
+    private double[][] instrumentsYields;
     private int periods;
     private double risk;
     private boolean[] sigmas;
     private String[] labels;
+    private String[] instruments;
     private boolean isLog;
 
     private class mouseEnterExitListener implements MouseListener {
@@ -69,6 +98,11 @@ class PortfolioYieldsPanel extends JPanel {
 
         @Override
         public void mousePressed(MouseEvent mouseEvent) {
+            if (!inLabelArea) {
+                mousePressedX = -1;
+                return;
+            }
+
             mousePressedX = mouseEvent.getX();
             mousePressedY = mouseEvent.getY();
             labelPressedX = (int)labelArea.getX();
@@ -94,6 +128,11 @@ class PortfolioYieldsPanel extends JPanel {
 
         @Override
         public void mouseDragged(MouseEvent mouseEvent) {
+
+            if (mousePressedX < 0) {
+                return;
+            }
+
             int dx = mouseEvent.getX() - mousePressedX;
             int dy = mouseEvent.getY() - mousePressedY;
 
@@ -147,17 +186,26 @@ class PortfolioYieldsPanel extends JPanel {
         inLabelArea = false;
     }
 
-    void setData(String[] ls, double[] ry, double[] my, double r, boolean[] ss, boolean lg) {
+    void setData(String[] ls, double[] ry, double[] my, double r, boolean[] ss, boolean lg, double[][] iy, String[] is) {
         isLog = lg;
         labels = ls;
         realYields = ry;
         modelYields = my;
+        instrumentsYields = iy;
+        instruments = is;
         periods = realYields.length + (modelYields.length - realYields.length);
         risk = r;
         sigmas = ss;
 
         double minYield = Calc.minimum(realYields, modelYields);
         double maxYield = Calc.maximum(realYields, modelYields);
+
+        int length = is.length;
+        for (int i = 0; i < length; i++) {
+            double[] col = Calc.column(iy, i);
+            minYield = Math.min(minYield, Arrays.stream(col).min().orElse(Double.MAX_VALUE));
+            maxYield = Math.max(maxYield, Arrays.stream(col).max().orElse(Double.NEGATIVE_INFINITY));
+        }
 
         double dr = (maxYield - minYield) * 0.05;
         minY = minYield - dr;
@@ -174,6 +222,8 @@ class PortfolioYieldsPanel extends JPanel {
 
         stringHeight = -1;
         stringWidth = -1;
+
+        labelCalculations = null;
 
         repaint();
     }
@@ -209,11 +259,20 @@ class PortfolioYieldsPanel extends JPanel {
 
         drawAxis(g);
 
-        g.setColor(realColor);
-        drawYields(g, realYields);
+        int length = instruments.length;
+        int lengthCA = colorArray.length;
+        for (int i = 0; i < length; i++) {
+            double[] iy = Calc.column(instrumentsYields, i);
+            g.setColor(colorArray[i % lengthCA]);
+            drawYields(g, iy, false);
+        }
 
+        ((Graphics2D)g).setStroke(thick);
+        g.setColor(realColor);
+        drawYields(g, realYields, true);
         g.setColor(modelColor);
-        drawYields(g, modelYields);
+        drawYields(g, modelYields, true);
+        ((Graphics2D)g).setStroke(thin);
 
         if (mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) {
             g.setColor(axisColor);
@@ -335,7 +394,7 @@ class PortfolioYieldsPanel extends JPanel {
         g.drawLine(mouseX, 0, mouseX, h);
     }
 
-    private void drawYields(Graphics g, double[] yields) {
+    private void drawYields(Graphics g, double[] yields, boolean selectable) {
         int length = yields.length;
         int[] xs = new int[length];
         int[] ys = new int[length];
@@ -347,14 +406,12 @@ class PortfolioYieldsPanel extends JPanel {
 
             g.drawRect(xs[i] - 1, ys[i] - 1, 2, 2);
 
-            if(period == i) {
+            if(period == i && selectable) {
                 g.drawRect(xs[i] - 3, ys[i] - 3, 6, 6);
             }
         }
 
-        ((Graphics2D)g).setStroke(thick);
         g.drawPolyline(xs, ys, length);
-        ((Graphics2D)g).setStroke(thin);
     }
 
     private void drawCrossYields(Graphics g) {
@@ -448,17 +505,27 @@ class PortfolioYieldsPanel extends JPanel {
     }
 
     private void createLabels(Graphics g) {
-        String strReal = Main.resourceBundle.getString("text.label_real_performance");
-        String strCalc = Main.resourceBundle.getString("text.label_calculated_performance");
+        List<String> allLabels = new LinkedList<>();
+        allLabels.add(Main.resourceBundle.getString("text.label_real_performance"));
+        allLabels.add(Main.resourceBundle.getString("text.label_calculated_performance"));
+        allLabels.addAll(Arrays.asList(instruments));
+        int length = allLabels.size();
+
         FontMetrics fm = g.getFontMetrics();
 
-        Rectangle2D boundsReal = fm.getStringBounds(strReal, g);
-        Rectangle2D boundsCalc = fm.getStringBounds(strCalc, g);
+        List<Rectangle2D> allBounds = allLabels.stream().map(l -> fm.getStringBounds(l, g)).collect(Collectors.toList());
 
         int lineWidth = 20;
-        int labelCalculationsWidth = safeZone + lineWidth + safeTop + Math.max((int)boundsReal.getWidth(), (int)boundsCalc.getWidth()) + safeZone;
-        int labelHeight = (int)(boundsReal.getHeight() * 2);
-        int labelHeightDiv2 = labelHeight / 2;
+        int labelCalculationsWidth = safeZone * 2 + lineWidth + safeTop +
+                allBounds.stream()
+                        .map(RectangularShape::getWidth)
+                        .mapToInt(w -> (int)w.doubleValue())
+                        .max()
+                        .orElse(0);
+
+        int lineHeight = (int)allBounds.get(0).getHeight();
+        int lineHeightDiv2 = lineHeight / 2;
+        int labelHeight = lineHeight * length;
 
         labelCalculations = new BufferedImage(labelCalculationsWidth, labelHeight + safeTop, BufferedImage.TYPE_INT_ARGB);
 
@@ -472,13 +539,22 @@ class PortfolioYieldsPanel extends JPanel {
         glc.setColor(axisColor);
         glc.drawRect(0, 0, labelCalculationsWidth - 1, labelHeight + safeTop - 1);
 
-        glc.setColor(modelColor);
-        glc.drawLine(safeZone, labelHeightDiv2 - safeTop, safeTop + lineWidth, labelHeightDiv2 - safeTop);
-        glc.drawString(strCalc, safeZone + lineWidth + safeTop, labelHeightDiv2);
+        int lengthCA = colorArray.length;
+        for (int i = 0; i < length; i++) {
+            if (i == 0) {
+                glc.setColor(realColor);
+            } else if (i == 1) {
+                glc.setColor(modelColor);
+            } else {
+                glc.setColor(colorArray[(i - 2) % lengthCA]);
+            }
 
-        glc.setColor(realColor);
-        glc.drawLine(safeZone, labelHeight - safeTop, safeTop + lineWidth, labelHeight - safeTop);
-        glc.drawString(strReal, safeZone + lineWidth + safeTop, labelHeight);
+            glc.drawLine(safeZone, lineHeight * (i + 1) - lineHeightDiv2, safeTop + lineWidth, lineHeight * (i + 1) - lineHeightDiv2);
+            if (i < 2) {
+                glc.drawLine(safeZone, lineHeight * (i + 1) - lineHeightDiv2 + 1, safeTop + lineWidth, lineHeight * (i + 1) - lineHeightDiv2 + 1);
+            }
+            glc.drawString(allLabels.get(i), safeZone + lineWidth + safeTop, lineHeight * (i + 1));
+        }
 
         glc.dispose();
     }

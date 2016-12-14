@@ -24,6 +24,8 @@ class PortfolioChart extends JDialog {
     private JComboBox<String> comboBoxFrom;
     private JComboBox<String> comboBoxTo;
     private JCheckBox cbShowRebalances;
+    private JCheckBox checkBoxCAL;
+    private JSpinner spinnerCAL;
 
     private final String[] instruments;
     private final double[][] data;
@@ -37,7 +39,7 @@ class PortfolioChart extends JDialog {
 
         setContentPane(contentPane);
         setModal(true);
-        getRootPane().setDefaultButton(buttonOK);
+        getRootPane().setDefaultButton(buttonCompute);
 
         buttonOK.addActionListener(e -> onOK());
 
@@ -46,6 +48,7 @@ class PortfolioChart extends JDialog {
         comboBoxFrom.setSelectedIndex(0);
         comboBoxTo.setModel(new DefaultComboBoxModel<>(Arrays.copyOfRange(periods, 2, periods.length)));
         comboBoxTo.setSelectedIndex(periods.length - 3);
+        spinnerCAL.addMouseWheelListener(new SpinnerWheelListener(spinnerCAL));
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -134,10 +137,15 @@ class PortfolioChart extends JDialog {
                 portfolios.sort(Portfolio::compareTo);
             }
 
+            ((PortfolioChartPanel)chartPanel).resetZoom();
             ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
+            if (checkBoxCAL.isSelected()) {
+                ((PortfolioChartPanel)chartPanel).setCAL((double)spinnerCAL.getValue() / 100.0);
+            }
         });
 
         cbFrontierOnly.addChangeListener(e -> ((PortfolioChartPanel) chartPanel).setFrontierOnlyMode(cbFrontierOnly.isSelected()));
+        checkBoxCAL.addChangeListener(e -> ((PortfolioChartPanel) chartPanel).setCAL(checkBoxCAL.isSelected() ? (double)spinnerCAL.getValue() / 100.0 : -1));
 
         buttonAccuracy.addActionListener(e -> {
             List<Portfolio> frontier = ((PortfolioChartPanel) chartPanel).getFrontierPortfolios();
@@ -177,6 +185,11 @@ class PortfolioChart extends JDialog {
             }
         });
         cbShowRebalances.addActionListener(e -> {
+            for(ActionListener a: buttonCompute.getActionListeners()) {
+                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
+            }
+        });
+        checkBoxCAL.addActionListener(actionEvent -> {
             for(ActionListener a: buttonCompute.getActionListeners()) {
                 a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
             }
@@ -277,6 +290,7 @@ class PortfolioChart extends JDialog {
         chartPanel = new PortfolioChartPanel();
         comboBoxFrom = new JComboBox<>();
         comboBoxTo = new JComboBox<>();
+        spinnerCAL = new JSpinner(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.1));
     }
 
     private List<Portfolio> addAccuracy() {
@@ -366,6 +380,7 @@ class PortfolioChart extends JDialog {
         }
 
         accuracyPortfolios.sort(Portfolio::compareTo);
+        ((PortfolioChartPanel)chartPanel).resetZoom();
         ((PortfolioChartPanel) chartPanel).setPortfolios(accuracyPortfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
 
         return accuracyPortfolios;

@@ -25,6 +25,7 @@ class PortfolioChartPanel extends JPanel {
     private static final Color portfolioColor = Color.BLUE;
     private static final Color portfolioCompareColor = Color.BLACK;
     private static final Color frontierColor = Color.RED;
+    private static final Color CALColor = Color.GREEN;
     private static final Color backColor = Color.WHITE;
     private static final Color selectedColor = Color.RED;
     private static final Color zoomColor = Color.GRAY;
@@ -42,6 +43,7 @@ class PortfolioChartPanel extends JPanel {
     private List<Portfolio> portfoliosCompare = new ArrayList<>();
     private List<Portfolio> savedPortfolios;
     private List<Portfolio> frontierPortfolios = new ArrayList<>();
+    private Portfolio bestCALPortfolio;
 
     private double minX;
     private double minY;
@@ -68,6 +70,7 @@ class PortfolioChartPanel extends JPanel {
     private int dragEndX = 0;
 
     private boolean frontierOnlyMode = false;
+    private double riskFreeRate = -1;
 
     private Portfolio nearest = null;
 
@@ -76,6 +79,8 @@ class PortfolioChartPanel extends JPanel {
 
     private double zoomMin;
     private double zoomMax;
+
+    private boolean wasZoomed = false;
 
     private class mouseEnterExitListener implements MouseListener {
 
@@ -210,9 +215,13 @@ class PortfolioChartPanel extends JPanel {
                 portfolios.get(0).risk(),
                 portfoliosCompare != null ? portfoliosCompare.get(0).risk() : Double.MAX_VALUE);
 
+        if (!wasZoomed && riskFreeRate >= 0) {
+            minRisk = 0;
+        }
+
         double maxRisk = Math.max(
                 portfolios.get(portfolios.size() - 1).risk(),
-                portfoliosCompare != null ? portfoliosCompare.get(portfoliosCompare.size() - 1).risk() : Double.MIN_VALUE);
+                portfoliosCompare != null ? portfoliosCompare.get(portfoliosCompare.size() - 1).risk() : Double.NEGATIVE_INFINITY);
 
         double dr;
         if (portfolios != null && portfolios.size() == 1) {
@@ -221,11 +230,11 @@ class PortfolioChartPanel extends JPanel {
             dr = (maxRisk - minRisk) * 0.05;
         }
 
-        minX = minRisk - dr;
+        minX = Math.max(minRisk - dr, 0);
         double maxX = maxRisk + dr;
 
         double minYield = Double.MAX_VALUE;
-        double maxYield = Double.MIN_VALUE;
+        double maxYield = Double.NEGATIVE_INFINITY;
 
         List<Portfolio> tmp;
         if (portfoliosCompare != null) {
@@ -254,6 +263,11 @@ class PortfolioChartPanel extends JPanel {
             maxY = maxYield + dy;
         }
 
+        if (!wasZoomed && riskFreeRate >= 0) {
+            minY = Math.min(minY, 0);
+            maxY = Math.max(maxY, riskFreeRate);
+        }
+
         dRisk = maxX - minX;
         dYield = maxY - minY;
 
@@ -273,6 +287,14 @@ class PortfolioChartPanel extends JPanel {
             frontierOnlyMode = mode;
             setPortfolios(null, portfoliosCompare, null, null);
         }
+    }
+
+    void setCAL(double rate) {
+        riskFreeRate = rate;
+        if (riskFreeRate >= 0) {
+            bestCALPortfolio = Calc.findCAL(frontierPortfolios, riskFreeRate);
+        }
+        repaint();
     }
 
     List<Portfolio> getFrontierPortfolios() {
@@ -331,6 +353,11 @@ class PortfolioChartPanel extends JPanel {
         g.setColor(portfolioCompareColor);
         if (portfoliosCompare != null) {
             portfoliosCompare.forEach(pf -> drawLargePortfolio(g, pf));
+        }
+
+        if (riskFreeRate >= 0 && frontierPortfolios != null && !frontierPortfolios.isEmpty()) {
+            g.setColor(CALColor);
+            drawCAL(g);
         }
 
         if ((mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) || popupMenu.isVisible()) {
@@ -429,6 +456,25 @@ class PortfolioChartPanel extends JPanel {
         ((Graphics2D) g).setStroke(thick);
         g.drawPolyline(xxs, yys, length);
         ((Graphics2D) g).setStroke(thin);
+    }
+
+    private void drawCAL(Graphics g) {
+        int fromX = mapX(0);
+        int fromY = mapY(riskFreeRate);
+        int toX = mapX(bestCALPortfolio.risk());
+        int toY = mapY(bestCALPortfolio.yield());
+
+        g.setClip(drawingArea);
+        ((Graphics2D) g).setStroke(thick);
+        g.drawLine(fromX, fromY, toX, toY);
+        ((Graphics2D) g).setStroke(thin);
+        g.setClip(null);
+
+        if (!wasZoomed) {
+            g.drawString(Calc.formatPercent1(riskFreeRate), drawingArea.x - stringWidth - safeTop, Math.max(fromY, drawingArea.y + stringHeight));
+        }
+
+        drawLargePortfolio(g, bestCALPortfolio);
     }
 
     private void drawCross(Graphics g, int w, int h) {
@@ -580,6 +626,10 @@ class PortfolioChartPanel extends JPanel {
         return -1;
     }
 
+    public void resetZoom() {
+        wasZoomed = false;
+    }
+
     private void setZoom() {
         if (portfolios == null || portfolios.isEmpty()) {
             return;
@@ -602,6 +652,7 @@ class PortfolioChartPanel extends JPanel {
             pfsComp = null;
         }
 
+        wasZoomed = true;
         setPortfolios(pfs, pfsComp, dataFiltered, periodsFiltered);
     }
 

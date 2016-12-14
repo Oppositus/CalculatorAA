@@ -8,6 +8,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 class YieldsChart extends JDialog {
 
@@ -79,7 +81,9 @@ class YieldsChart extends JDialog {
                     checkBoxSigma2.isSelected(),
                     checkBoxSigma3.isSelected()
             };
-            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog);
+            double[][] instrumentsYields = calculateInstrumentYields(isLog);
+            String[] instrumentsFiltered = filterInstruments();
+            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog, instrumentsYields, instrumentsFiltered);
         });
         buttonLogScale.addActionListener(e -> {
             for(ActionListener a: buttonDraw.getActionListeners()) {
@@ -187,6 +191,48 @@ class YieldsChart extends JDialog {
         }
     }
 
+    private double[][] calculateInstrumentYields(boolean isLog) {
+        double[] weights = portfolio.weights();
+        int cols = weights.length;
+        int nonNullCols = 0;
+        for (double w : weights) {
+            if (w > 0) {
+                nonNullCols += 1;
+            }
+        }
+
+        int rows = data.length;
+        double[][] result = new double[rows][nonNullCols];
+        int indexCol = 0;
+        for (int col = 0; col < cols; col++) {
+            if (weights[col] > 0) {
+                double divider = data[0][col];
+                for (int row = 0; row < rows; row++) {
+                    double divided = data[row][col] / divider;
+                    result[row][indexCol] = isLog ? Math.log(divided) : divided;
+                }
+                indexCol += 1;
+            }
+        }
+        return result;
+    }
+
+    private String[] filterInstruments() {
+        List<String> result = new LinkedList<>();
+        double[] weights = portfolio.weights();
+        String[] instr = portfolio.getInstruments();
+        int index = 0;
+
+        for (double w : weights) {
+            if (w > 0) {
+                result.add(instr[index]);
+            }
+            index += 1;
+        }
+
+        return result.toArray(new String[0]);
+    }
+
     static void showYields(String[] labels, double[][] data, Portfolio portfolio) {
         double[][] filtered = Calc.filterValidData(data, portfolio.weights(), new int[] {0}, new int[] {data.length - 1});
         if (filtered == null) {
@@ -213,6 +259,7 @@ class YieldsChart extends JDialog {
         dialog.checkBoxSigma1.setSelected(s1);
         dialog.checkBoxSigma2.setSelected(s2);
         dialog.checkBoxSigma3.setSelected(s3);
+        dialog.checkBoxRebalance.setSelected(portfolio.getRebalancedMode());
 
         int forecast = Calc.safeParseInt(Main.properties.getProperty("forecast.p", "10"), 10);
         dialog.spinnerPeriods.setValue(forecast);

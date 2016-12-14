@@ -96,6 +96,10 @@ public class Portfolio implements Comparable<Portfolio> {
         return result;
     }
 
+    public String[] getInstruments() {
+        return instruments;
+    }
+
     public double[][] values() {
         int length = weights.length;
         double[][] result = new double[length + 2][1];
