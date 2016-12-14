@@ -351,8 +351,8 @@ class PortfolioYieldsPanel extends JPanel {
             return;
         }
 
-        g.drawLine(drawingArea.x - safeTop, mouseY, drawingArea.x, mouseY);
-        g.drawLine(mouseX, drawingArea.y + drawingArea.height, mouseX, drawingArea.y + drawingArea.height + safeTop);
+        g.drawLine(drawingArea.x + safeTop, mouseY, drawingArea.x, mouseY);
+        g.drawLine(mouseX, drawingArea.y + drawingArea.height, mouseX, drawingArea.y + drawingArea.height - safeTop);
 
         int labelX = mouseX;
         if (labelX + stringPeriodWidth > drawingArea.x + drawingArea.width) {

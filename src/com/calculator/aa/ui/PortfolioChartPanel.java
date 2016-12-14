@@ -392,8 +392,11 @@ class PortfolioChartPanel extends JPanel {
     }
 
     private void drawLargePortfolio(Graphics g, Portfolio pf) {
-        g.fillRect(mapX(pf.risk()) - 2, mapY(pf.yield()) - 2, 4, 4);
-        g.drawRect(mapX(pf.risk()) - 2, mapY(pf.yield()) - 2, 4, 4);
+        int risk = mapX(pf.risk());
+        int yield = mapY(pf.yield());
+        g.fillRect(risk - 2, yield - 2, 4, 4);
+        g.drawRect(risk - 2, yield - 2, 4, 4);
+        g.drawOval(risk - 10, yield - 10, 20, 20);
     }
 
     private void drawNearest(Graphics g) {
