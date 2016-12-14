@@ -166,7 +166,7 @@ class PortfolioYieldsPanel extends JPanel {
                 inLabelArea = true;
             } else {
                 if (inLabelArea) {
-                    setCursor(Main.voidCursor);
+                    setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
                 }
                 inLabelArea = false;
             }
@@ -180,7 +180,7 @@ class PortfolioYieldsPanel extends JPanel {
         addMouseListener(new mouseEnterExitListener());
         addMouseMotionListener(new mouseMoveListener());
 
-        setCursor(Main.voidCursor);
+        setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
 
         labelArea = new Rectangle();
         inLabelArea = false;
@@ -291,7 +291,7 @@ class PortfolioYieldsPanel extends JPanel {
             double max = Math.exp(maxY);
             for (double y = 2; y < max; y *= 2) {
                 int yy = mapY(Math.log(y));
-                g.drawLine(drawingArea.x - safeZone / 2, yy, drawingArea.x + drawingArea.width, yy);
+                g.drawLine(drawingArea.x - safeTop, yy, drawingArea.x + drawingArea.width, yy);
                 g.drawString(String.valueOf(y), drawingArea.x - stringWidth - safeTop, yy + safeTop);
             }
         } else {
@@ -301,7 +301,7 @@ class PortfolioYieldsPanel extends JPanel {
                     continue;
                 }
                 int yy = mapY(y);
-                g.drawLine(drawingArea.x - safeZone / 2, yy, drawingArea.x + drawingArea.width, yy);
+                g.drawLine(drawingArea.x - safeTop, yy, drawingArea.x + drawingArea.width, yy);
                 g.drawString(String.valueOf(y), drawingArea.x - stringWidth - safeTop, yy + safeTop);
             }
         }
@@ -326,11 +326,11 @@ class PortfolioYieldsPanel extends JPanel {
 
         g.drawRect(drawingArea.x, drawingArea.y, drawingArea.width, drawingArea.height);
 
-        g.drawLine(drawingArea.x, drawingArea.y, drawingArea.x - safeZone / 2, drawingArea.y);
-        g.drawLine(drawingArea.x, drawingArea.y + drawingArea.height, drawingArea.x - safeZone / 2, drawingArea.y + drawingArea.height);
+        g.drawLine(drawingArea.x, drawingArea.y, drawingArea.x - safeTop, drawingArea.y);
+        g.drawLine(drawingArea.x, drawingArea.y + drawingArea.height, drawingArea.x - safeTop, drawingArea.y + drawingArea.height);
 
-        g.drawLine(drawingArea.x, drawingArea.y + drawingArea.height, drawingArea.x, drawingArea.y + drawingArea.height + safeZone / 2);
-        g.drawLine(drawingArea.x + drawingArea.width, drawingArea.y + drawingArea.height, drawingArea.x + drawingArea.width, drawingArea.y + drawingArea.height + safeZone / 2);
+        g.drawLine(drawingArea.x, drawingArea.y + drawingArea.height, drawingArea.x, drawingArea.y + drawingArea.height + safeTop);
+        g.drawLine(drawingArea.x + drawingArea.width, drawingArea.y + drawingArea.height, drawingArea.x + drawingArea.width, drawingArea.y + drawingArea.height + safeTop);
 
         g.drawString(minYieldStr, drawingArea.x - stringWidth - safeTop, drawingArea.y + drawingArea.height);
         g.drawString(maxYieldStr, drawingArea.x - stringWidth - safeTop, drawingArea.y + stringHeight);
@@ -340,7 +340,7 @@ class PortfolioYieldsPanel extends JPanel {
 
         if (1.0 - minY > 0.05) {
             int pc100 = mapY(isLog ? Math.log(1.0) : 1.0);
-            g.drawLine(drawingArea.x - safeZone / 2, pc100, drawingArea.x + drawingArea.width, pc100);
+            g.drawLine(drawingArea.x - safeTop, pc100, drawingArea.x + drawingArea.width, pc100);
             g.drawString(Calc.formatDouble2(1.0), drawingArea.x - stringWidth - safeTop, pc100 + stringHeight / 2);
         }
     }
@@ -351,8 +351,8 @@ class PortfolioYieldsPanel extends JPanel {
             return;
         }
 
-        g.drawLine(drawingArea.x - safeZone / 2, mouseY, drawingArea.x + drawingArea.width + safeZone / 2, mouseY);
-        g.drawLine(mouseX, drawingArea.y - safeZone / 2, mouseX, drawingArea.y + drawingArea.height + safeZone / 2);
+        g.drawLine(drawingArea.x - safeTop, mouseY, drawingArea.x, mouseY);
+        g.drawLine(mouseX, drawingArea.y + drawingArea.height, mouseX, drawingArea.y + drawingArea.height + safeTop);
 
         int labelX = mouseX;
         if (labelX + stringPeriodWidth > drawingArea.x + drawingArea.width) {

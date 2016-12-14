@@ -176,7 +176,7 @@ class PortfolioChartPanel extends JPanel {
         addMouseListener(new mouseEnterExitListener());
         addMouseMotionListener(new mouseMoveListener());
 
-        setCursor(Main.voidCursor);
+        setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
 
         createPopupMenu();
     }
@@ -315,10 +315,6 @@ class PortfolioChartPanel extends JPanel {
         int h = getHeight();
 
         if (portfolios.isEmpty()) {
-            if (mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) {
-                g.setColor(axisColor);
-                drawEmptyCross(g, w, h);
-            }
             return;
         }
 
@@ -486,12 +482,11 @@ class PortfolioChartPanel extends JPanel {
 
     private void drawCross(Graphics g, int w, int h) {
         if (!drawingArea.contains(mouseX, mouseY)) {
-            drawEmptyCross(g, w, h);
             return;
         }
 
-        g.drawLine(drawingArea.x - safeZone / 2, mouseY, drawingArea.x + drawingArea.width + safeZone / 2, mouseY);
-        g.drawLine(mouseX, drawingArea.y - safeZone / 2, mouseX, drawingArea.y + drawingArea.height + safeZone / 2);
+        g.drawLine(drawingArea.x + safeTop, mouseY, drawingArea.x, mouseY);
+        g.drawLine(mouseX, drawingArea.y + drawingArea.height - safeTop, mouseX, drawingArea.y + drawingArea.height);
 
         if (nearest == null) {
             return;
@@ -532,12 +527,12 @@ class PortfolioChartPanel extends JPanel {
         }
 
         g.setColor(backColor);
-        g.fillRect(rectX, rectY, max + safeZone, stringHeight * 2 + safeZone / 2);
+        g.fillRect(rectX, rectY, max + safeZone, stringHeight * 2 + safeTop);
 
         g.setColor(frontierColor);
 
         g.drawLine(nearestRiskX, nearestYieldY, rectX, rectY);
-        g.drawRect(rectX, rectY, max + safeZone, stringHeight * 2 + safeZone / 2);
+        g.drawRect(rectX, rectY, max + safeZone, stringHeight * 2 + safeTop);
         g.drawString(rString, textX, textY);
         g.drawString(yString, textX, textY + stringHeight);
 
@@ -588,7 +583,6 @@ class PortfolioChartPanel extends JPanel {
         String calRiskStr = Main.resourceBundle.getString("text.risk_short") + " " + Calc.formatPercent2(bestCALPortfolio.risk() * calPercent);
 
         int calY = mapY((bestCALPortfolio.yield() - riskFreeRate) * calPercent + riskFreeRate);
-        int calSign = bestCALPortfolio.yield() >= riskFreeRate ? -1 : 1;
         String calYieldStr = Main.resourceBundle.getString("text.yield_short") + " " +
                 Calc.formatPercent2((bestCALPortfolio.yield() - riskFreeRate) * calPercent + riskFreeRate);
 
@@ -602,29 +596,27 @@ class PortfolioChartPanel extends JPanel {
         int calStrWidth = (int)maxCalStrWidth.getWidth();
         int calStrHeight = (int)maxCalStrWidth.getHeight();
         int calTextX = mouseX - safeZone - calStrWidth;
-        if (calSign < 0) {
-            g.setColor(backColor);
-            g.fillRect(calTextX - safeTop, calY - calStrHeight * 3 - safeZone, calStrWidth + safeZone, calStrHeight * 3 + safeTop);
-            g.setColor(CALColor);
-            g.drawRect(calTextX - safeTop, calY - calStrHeight * 3 - safeZone, calStrWidth + safeZone, calStrHeight * 3 + safeTop);
-            g.drawString(calPercentStr, calTextX, calY - calStrHeight * 2 - safeZone);
-            g.drawString(calRiskStr, calTextX, calY - calStrHeight - safeZone);
-            g.drawString(calYieldStr, calTextX, calY - safeZone);
-        } else {
-            g.setColor(backColor);
-            g.fillRect(calTextX - safeTop, calY + safeTop, calStrWidth + safeZone, calStrHeight * 3 + safeTop);
-            g.setColor(CALColor);
-            g.drawRect(calTextX - safeTop, calY + safeTop, calStrWidth + safeZone, calStrHeight * 3 + safeTop);
-            g.drawString(calPercentStr, calTextX, calY + safeTop + calStrHeight);
-            g.drawString(calRiskStr, calTextX, calY + safeTop + calStrHeight * 2);
-            g.drawString(calYieldStr, calTextX, calY + safeTop + calStrHeight * 3);
-        }
-        g.drawLine(mouseX, calY, mouseX - safeTop, calY + safeTop * calSign);
-    }
 
-    private void drawEmptyCross(Graphics g, int w, int h) {
-        g.drawLine(0, mouseY, w, mouseY);
-        g.drawLine(mouseX, 0, mouseX, h);
+        if (calTextX - safeTop < drawingArea.x) {
+            calTextX = drawingArea.x + safeTop;
+        }
+
+        int calYLine = calY;
+        if (calY - calStrHeight * 3 - safeZone < drawingArea.y) {
+            calY = drawingArea.y + calStrHeight * 3 + safeZone;
+        }
+
+        g.setColor(backColor);
+        g.fillRect(calTextX - safeTop, calY - calStrHeight * 3 - safeZone, calStrWidth + safeZone, calStrHeight * 3 + safeTop);
+        g.setColor(CALColor);
+        g.drawRect(calTextX - safeTop, calY - calStrHeight * 3 - safeZone, calStrWidth + safeZone, calStrHeight * 3 + safeTop);
+        g.drawString(calPercentStr, calTextX, calY - calStrHeight * 2 - safeZone);
+        g.drawString(calRiskStr, calTextX, calY - calStrHeight - safeZone);
+        g.drawString(calYieldStr, calTextX, calY - safeZone);
+
+        if (mouseX > calTextX + calStrWidth + safeTop) {
+            g.drawLine(mouseX, calYLine, calTextX + calStrWidth + safeTop, calYLine - safeTop);
+        }
     }
 
     private void calculateStringMetrics(Graphics g) {
@@ -789,12 +781,12 @@ class PortfolioChartPanel extends JPanel {
 
             @Override
             public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {
-                setCursor(Main.voidCursor);
+                setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
             }
 
             @Override
             public void popupMenuCanceled(PopupMenuEvent popupMenuEvent) {
-                setCursor(Main.voidCursor);
+                setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
             }
         };
 

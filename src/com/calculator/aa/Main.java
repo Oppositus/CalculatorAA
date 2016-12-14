@@ -25,7 +25,6 @@ public class Main {
 
     public static Properties properties;
     public static ResourceBundle resourceBundle;
-    public static Cursor voidCursor;
     public static SQLiteSupport sqLite;
 
     private Main() {
@@ -96,11 +95,6 @@ public class Main {
 
     public static void main(String[] args) {
         resourceBundle = ResourceBundle.getBundle("com.calculator.aa.messages", Locale.getDefault());
-
-        voidCursor = Toolkit.getDefaultToolkit().createCustomCursor(
-                new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
-                new Point(0, 0),
-                "null");
 
         properties = new Properties();
         try {
