@@ -517,4 +517,8 @@ public class MainWindow {
     public String[] getPeriods() {
         return ((AATableModel)mainTable.getModel()).formatPeriods();
     }
+
+    void setUpdateAvailable(boolean avail) {
+        buttonUpdate.setVisible(avail);
+    }
 }

@@ -8,7 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -18,6 +17,9 @@ import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
 public class Main {
+    public static final String versionApp = "2.1";
+    public static final String versionBase = "1.0";
+
     private static Main program;
     private final JFrame mainFrame;
     private final MainWindow mainWindow;
@@ -68,6 +70,10 @@ public class Main {
 
     public static JFrame getFrame() {
         return program.mainFrame;
+    }
+
+    public static MainWindow getWindow() {
+        return program.mainWindow;
     }
 
     public void restoreFrameProperties() {
