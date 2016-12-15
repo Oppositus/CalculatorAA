@@ -186,11 +186,21 @@ class PortfolioChart extends JDialog {
             }
         });
         checkBoxCAL.addActionListener(actionEvent -> {
+            buttonZoomPortfolios.setEnabled(checkBoxCAL.isSelected());
             for(ActionListener a: buttonCompute.getActionListeners()) {
                 a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
             }
         });
-        buttonZoomPortfolios.addActionListener(actionEvent -> ((PortfolioChartPanel)chartPanel).zoomAllToPortfolios());
+        buttonZoomPortfolios.addActionListener(actionEvent -> {
+
+            if (((PortfolioChartPanel)chartPanel).getZoom()) {
+                for (ActionListener a : buttonCompute.getActionListeners()) {
+                    a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {
+                    });
+                }
+            }
+            ((PortfolioChartPanel) chartPanel).zoomAllToPortfolios();
+        });
     }
 
     private int calculateDivision(int[] minimals, int[] maximals) {
