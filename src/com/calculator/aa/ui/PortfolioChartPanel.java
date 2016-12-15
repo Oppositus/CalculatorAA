@@ -506,38 +506,37 @@ class PortfolioChartPanel extends JPanel {
         Rectangle2D boundsY = fm.getStringBounds(yString, g);
         int max = (int)Math.ceil(Math.max(boundsR.getWidth(), boundsY.getWidth()));
 
-        int plus = 10;
-        int plus2 = 5;
-
         int nearestRiskX = mapX(nearest.risk());
         int nearestYieldY = mapY(nearest.yield());
 
-        int rectX = nearestRiskX + safeTop + plus2;
-        int rectY = nearestYieldY + plus;
-        int textX = nearestRiskX + safeZone + plus2;
-        int textY = nearestYieldY + stringHeight + plus;
+        int rectX = nearestRiskX + safeZone;
+        int rectY = nearestYieldY + safeZone;
+        int textX = nearestRiskX + safeZone;
+        int textY = nearestYieldY + stringHeight + safeZone;
 
         boolean popupVisible = popupMenu.isVisible();
 
         if (textX + max > drawingArea.x + drawingArea.width - safeZone || popupVisible) {
-            rectX -= max + safeZone * 2 + plus;
-            textX -= max + safeZone * 2 + plus;
+            rectX -= max + safeZone * 3;
+            textX -= max + safeZone * 3;
         }
 
         if (textY + stringHeight * 2 > drawingArea.y + drawingArea.height || popupVisible) {
-            rectY -= stringHeight * 4 - plus;
-            textY -= stringHeight * 4 - plus;
+            rectY -= stringHeight * 4 - safeZone;
+            textY -= stringHeight * 4 - safeZone;
         }
+
+        g.setColor(frontierColor);
+        g.drawLine(nearestRiskX, nearestYieldY, rectX, rectY);
 
         g.setColor(backColor);
         g.fillRect(rectX, rectY, max + safeZone, stringHeight * 2 + safeTop);
 
         g.setColor(frontierColor);
 
-        g.drawLine(nearestRiskX, nearestYieldY, rectX, rectY);
         g.drawRect(rectX, rectY, max + safeZone, stringHeight * 2 + safeTop);
-        g.drawString(rString, textX, textY);
-        g.drawString(yString, textX, textY + stringHeight);
+        g.drawString(rString, textX + safeTop, textY);
+        g.drawString(yString, textX + safeTop, textY + stringHeight);
 
         String rCrossString = Calc.formatPercent1(xPos);
         String yCrossString = Calc.formatPercent1(yPos);
@@ -618,7 +617,7 @@ class PortfolioChartPanel extends JPanel {
         g.drawString(calYieldStr, calTextX, calY - safeZone);
 
         if (mouseX > calTextX + calStrWidth + safeTop) {
-            g.drawLine(mouseX, calYLine, calTextX + calStrWidth + safeTop, calYLine - safeTop);
+            g.drawLine(mouseX, calYLine, calTextX + calStrWidth + safeTop, calY - safeTop);
         }
     }
 
