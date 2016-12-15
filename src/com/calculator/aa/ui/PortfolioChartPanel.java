@@ -66,8 +66,9 @@ class PortfolioChartPanel extends JPanel {
     private int mouseY = 0;
 
     private boolean dragMode = false;
-    private int dragStartX = 0;
-    private int dragEndX = 0;
+    private int dragStart = 0;
+    private int dragEnd = 0;
+    private boolean horizontalDrag;
 
     private boolean frontierOnlyMode = false;
     private double riskFreeRate = -1;
@@ -111,9 +112,19 @@ class PortfolioChartPanel extends JPanel {
                 return;
             }
 
-            dragMode = true;
-            dragStartX = mouseEvent.getX();
-            dragEndX = mouseEvent.getX();
+            if (!drawingArea.contains(mouseX, mouseY)) {
+                if (mouseX > drawingArea.x && mouseY > drawingArea.y + drawingArea.height) {
+                    dragStart = mouseEvent.getX();
+                    dragEnd = mouseEvent.getX();
+                    horizontalDrag = true;
+                    dragMode = true;
+                } else if (mouseX < drawingArea.x && mouseY < drawingArea.y + drawingArea.height) {
+                    dragStart = mouseEvent.getY();
+                    dragEnd = mouseEvent.getY();
+                    horizontalDrag = false;
+                    dragMode = true;
+                }
+            }
         }
 
         @Override
@@ -125,16 +136,25 @@ class PortfolioChartPanel extends JPanel {
                 return;
             }
 
-            dragEndX = mouseEvent.getX();
             if (dragMode) {
                 dragMode = false;
-                int from = Math.min(dragStartX, dragEndX);
-                int to = Math.max(dragStartX, dragEndX);
-
-                zoomMin = reMapX(from);
-                zoomMax = reMapX(to);
-
-                setZoom();
+                mouseX = mouseEvent.getX();
+                mouseY = mouseEvent.getY();
+                if (horizontalDrag) {
+                    dragEnd = mouseEvent.getX();
+                    int from = Math.min(dragStart, dragEnd);
+                    int to = Math.max(dragStart, dragEnd);
+                    zoomMin = reMapX(from);
+                    zoomMax = reMapX(to);
+                    setRiskZoom();
+                } else {
+                    dragEnd = mouseEvent.getY();
+                    int from = Math.max(dragStart, dragEnd);
+                    int to = Math.min(dragStart, dragEnd);
+                    zoomMin = reMapY(from);
+                    zoomMax = reMapY(to);
+                    setYieldZoom();
+                }
             } else {
                 moveMouseCross(mouseEvent.getX(), mouseEvent.getY());
             }
@@ -147,6 +167,7 @@ class PortfolioChartPanel extends JPanel {
 
         @Override
         public void mouseExited(MouseEvent mouseEvent) {
+            dragMode = false;
             stopMouseCross();
         }
     }
@@ -156,8 +177,13 @@ class PortfolioChartPanel extends JPanel {
         @Override
         public void mouseDragged(MouseEvent mouseEvent) {
             if (dragMode) {
-                dragEndX = mouseEvent.getX();
-                repaint();
+                if (horizontalDrag) {
+                    dragEnd = mouseEvent.getX();
+                    repaint();
+                } else {
+                    dragEnd = mouseEvent.getY();
+                    repaint();
+                }
             } else {
                 moveMouseCross(mouseEvent.getX(), mouseEvent.getY());
             }
@@ -270,8 +296,8 @@ class PortfolioChartPanel extends JPanel {
         }
 
         if (!wasZoomed && riskFreeRate >= 0) {
-            minY = Math.min(minY, riskFreeRate);
-            maxY = Math.max(maxY, riskFreeRate);
+            minY = Math.min(minY, 0);
+            maxY = Math.max(maxY, riskFreeRate * 1.05);
         }
 
         dRisk = maxX - minX;
@@ -286,6 +312,10 @@ class PortfolioChartPanel extends JPanel {
         stringWidth = -1;
 
         repaint();
+    }
+
+    private void changePortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp) {
+        setPortfolios(pfs, pfsComp, dataFiltered, periodsFiltered);
     }
 
     void setFrontierOnlyMode(boolean mode) {
@@ -326,7 +356,7 @@ class PortfolioChartPanel extends JPanel {
 
         if (dragMode) {
             g.setColor(zoomColor);
-            drawZoom(g, h);
+            drawZoom(g, w, h);
         }
 
         g.setColor(axisColor);
@@ -365,10 +395,15 @@ class PortfolioChartPanel extends JPanel {
         }
     }
 
-    private void drawZoom(Graphics g, int h) {
-        int from = Math.min(dragStartX, dragEndX);
-        int to = Math.max(dragStartX, dragEndX);
-        g.fillRect(from, 0, to - from, h);
+    private void drawZoom(Graphics g, int w, int h) {
+        int from = Math.min(dragStart, dragEnd);
+        int to = Math.max(dragStart, dragEnd);
+
+        if (horizontalDrag) {
+            g.fillRect(from, 0, to - from, h);
+        } else {
+            g.fillRect(0, from, w, to - from);
+        }
     }
 
     private void drawAxis(Graphics g) {
@@ -465,6 +500,11 @@ class PortfolioChartPanel extends JPanel {
         int toX = mapX(bestCALPortfolio.risk());
         int toY = mapY(bestCALPortfolio.yield());
 
+        // too much zoom
+        if (fromX < -100000) {
+            return;
+        }
+
         g.setClip(drawingArea);
         g.drawLine(fromX, fromY, toX, toY);
         g.setClip(null);
@@ -485,8 +525,22 @@ class PortfolioChartPanel extends JPanel {
 
     private void drawCross(Graphics g, int w, int h) {
         if (!drawingArea.contains(mouseX, mouseY)) {
+            if (mouseX > drawingArea.x && mouseY > drawingArea.y + drawingArea.height) {
+                setCursor(Main.weCursor);
+                g.drawLine(mouseX, drawingArea.y, mouseX, drawingArea.y + drawingArea.height);
+            } else if (mouseX < drawingArea.x && mouseY < drawingArea.y + drawingArea.height) {
+                setCursor(Main.nsCursor);
+                g.drawLine(drawingArea.x, mouseY, drawingArea.x + drawingArea.width, mouseY);
+            } else {
+                setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+            }
+
             return;
         }
+
+        boolean popupVisible = popupMenu.isVisible();
+
+        setCursor(popupVisible ? Cursor.getDefaultCursor() : Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
 
         g.drawLine(drawingArea.x + safeTop, mouseY, drawingArea.x, mouseY);
         g.drawLine(mouseX, drawingArea.y + drawingArea.height - safeTop, mouseX, drawingArea.y + drawingArea.height);
@@ -513,8 +567,6 @@ class PortfolioChartPanel extends JPanel {
         int rectY = nearestYieldY + safeZone;
         int textX = nearestRiskX + safeZone;
         int textY = nearestYieldY + stringHeight + safeZone;
-
-        boolean popupVisible = popupMenu.isVisible();
 
         if (textX + max > drawingArea.x + drawingArea.width - safeZone || popupVisible) {
             rectX -= max + safeZone * 3;
@@ -577,8 +629,14 @@ class PortfolioChartPanel extends JPanel {
         }
 
         double calPercent =  reMapX(mouseX) / bestCALPortfolio.risk();
+        int calMouseX = mouseX;
         if (calPercent > 1) {
-            return;
+            if (bestCALPortfolio != nearest) {
+                return;
+            } else {
+                calPercent = 1;
+                calMouseX = mapX(bestCALPortfolio.risk());
+            }
         }
 
         String calPercentStr = Calc.formatPercent1(calPercent);
@@ -597,7 +655,7 @@ class PortfolioChartPanel extends JPanel {
 
         int calStrWidth = (int)maxCalStrWidth.getWidth();
         int calStrHeight = (int)maxCalStrWidth.getHeight();
-        int calTextX = mouseX - safeZone - calStrWidth;
+        int calTextX = calMouseX - safeZone - calStrWidth;
 
         if (calTextX - safeTop < drawingArea.x) {
             calTextX = drawingArea.x + safeTop;
@@ -616,8 +674,8 @@ class PortfolioChartPanel extends JPanel {
         g.drawString(calRiskStr, calTextX, calY - calStrHeight - safeZone);
         g.drawString(calYieldStr, calTextX, calY - safeZone);
 
-        if (mouseX > calTextX + calStrWidth + safeTop) {
-            g.drawLine(mouseX, calYLine, calTextX + calStrWidth + safeTop, calY - safeTop);
+        if (calMouseX > calTextX + calStrWidth + safeTop) {
+            g.drawLine(calMouseX, calYLine, calTextX + calStrWidth + safeTop, calY - safeTop);
         }
     }
 
@@ -677,11 +735,16 @@ class PortfolioChartPanel extends JPanel {
         return -1;
     }
 
-    public void resetZoom() {
+    void resetZoom() {
         wasZoomed = false;
     }
 
-    private void setZoom() {
+    void zoomAllToPortfolios() {
+        wasZoomed = true;
+        changePortfolios(portfolios, portfoliosCompare);
+    }
+
+    private void setRiskZoom() {
         if (portfolios == null || portfolios.isEmpty()) {
             return;
         }
@@ -703,8 +766,42 @@ class PortfolioChartPanel extends JPanel {
             pfsComp = null;
         }
 
-        wasZoomed = true;
-        setPortfolios(pfs, pfsComp, dataFiltered, periodsFiltered);
+        if (!pfs.isEmpty()) {
+            wasZoomed = true;
+            changePortfolios(pfs, pfsComp);
+        } else {
+            repaint();
+        }
+    }
+
+    private void setYieldZoom() {
+        if (portfolios == null || portfolios.isEmpty()) {
+            return;
+        }
+
+        List<Portfolio> pfs = portfolios.stream()
+                .filter(p -> p.yield() >= zoomMin && p.yield() <= zoomMax)
+                .sorted(Portfolio::compareTo)
+                .collect(Collectors.toList());
+
+        List<Portfolio> pfsComp = null;
+
+        if (portfoliosCompare != null) {
+            pfsComp = portfoliosCompare.stream()
+                    .filter(p -> p.yield() >= zoomMin && p.yield() <= zoomMax)
+                    .sorted(Portfolio::compareTo)
+                    .collect(Collectors.toList());
+        }
+        if (pfsComp != null && pfsComp.size() == 0) {
+            pfsComp = null;
+        }
+
+        if (!pfs.isEmpty()) {
+            wasZoomed = true;
+            changePortfolios(pfs, pfsComp);
+        } else {
+            repaint();
+        }
     }
 
     private void startMouseCross(int x, int y) {

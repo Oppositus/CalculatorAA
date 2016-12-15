@@ -18,9 +18,12 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class Main {
-    public static final String versionApp = "2.0";
-    public static final String versionBase = "1.0";
+    private static final String versionApp = "2.0";
+    private static final String versionBase = "1.0";
     private static final String updateUrl = "https://raw.githubusercontent.com/Oppositus/CalculatorAA/master/builds/version.txt";
+
+    public static Cursor weCursor;
+    public static Cursor nsCursor;
 
     private static Main program;
     private final JFrame mainFrame;
@@ -194,32 +197,13 @@ public class Main {
         } catch (Exception ignored) {
         }
 
-        String[] savedOptions = new String[]{";", "\"", ".", "1"};
-
-        String s = properties.getProperty("import.delimiter");
-        if (s != null) {
-            savedOptions[0] = s;
-        }
-
-        s = properties.getProperty("import.mark");
-        if (s != null) {
-            savedOptions[1] = s;
-        }
-
-        s = properties.getProperty("import.decimal");
-        if (s != null) {
-            savedOptions[2] = s;
-        }
-
-        s = properties.getProperty("import.date");
-        if (s != null) {
-            savedOptions[3] = s;
-        }
+        String[] savedOptions = readImportOptions();
 
         sqLite = new SQLiteSupport();
 
         SwingUtilities.invokeLater(() -> {
             program = new Main();
+            createCursors();
 
             String file = properties.getProperty("files.last", "");
             if (!file.isEmpty()) {
@@ -251,5 +235,40 @@ public class Main {
                 tm.start();
             }
         });
+    }
+
+    private static String[] readImportOptions() {
+        String[] savedOptions = new String[]{";", "\"", ".", "1"};
+
+        String s = properties.getProperty("import.delimiter");
+        if (s != null) {
+            savedOptions[0] = s;
+        }
+
+        s = properties.getProperty("import.mark");
+        if (s != null) {
+            savedOptions[1] = s;
+        }
+
+        s = properties.getProperty("import.decimal");
+        if (s != null) {
+            savedOptions[2] = s;
+        }
+
+        s = properties.getProperty("import.date");
+        if (s != null) {
+            savedOptions[3] = s;
+        }
+
+        return savedOptions;
+    }
+
+    private static void createCursors() {
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+
+        Image we = toolkit.getImage(program.getClass().getResource("ui/icons/we-cursor.png"));
+        weCursor = toolkit.createCustomCursor(we, new Point(7, 4), "WE-CURSOR");
+        Image ns = toolkit.getImage(program.getClass().getResource("ui/icons/ns-cursor.png"));
+        nsCursor = toolkit.createCustomCursor(ns, new Point(4, 7), "NS-CURSOR");
     }
 }

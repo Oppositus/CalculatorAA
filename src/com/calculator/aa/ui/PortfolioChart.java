@@ -26,6 +26,7 @@ class PortfolioChart extends JDialog {
     private JCheckBox cbShowRebalances;
     private JCheckBox checkBoxCAL;
     private JSpinner spinnerCAL;
+    private JButton buttonZoomPortfolios;
 
     private final String[] instruments;
     private final double[][] data;
@@ -137,9 +138,7 @@ class PortfolioChart extends JDialog {
                 portfolios.sort(Portfolio::compareTo);
             }
 
-            ((PortfolioChartPanel)chartPanel).resetZoom();
-            ((PortfolioChartPanel)chartPanel).setCAL(checkBoxCAL.isSelected() ? (double)spinnerCAL.getValue() / 100.0 : -1);
-            ((PortfolioChartPanel)chartPanel).setPortfolios(portfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
+            updatePortfolios(portfolios, portfoliosCompare, dataFiltered);
         });
 
         cbFrontierOnly.addActionListener(e -> ((PortfolioChartPanel) chartPanel).setFrontierOnlyMode(cbFrontierOnly.isSelected()));
@@ -191,6 +190,7 @@ class PortfolioChart extends JDialog {
                 a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
             }
         });
+        buttonZoomPortfolios.addActionListener(actionEvent -> ((PortfolioChartPanel)chartPanel).zoomAllToPortfolios());
     }
 
     private int calculateDivision(int[] minimals, int[] maximals) {
@@ -377,11 +377,14 @@ class PortfolioChart extends JDialog {
         }
 
         accuracyPortfolios.sort(Portfolio::compareTo);
+        updatePortfolios(accuracyPortfolios, portfoliosCompare, dataFiltered);
+        return accuracyPortfolios;
+    }
+
+    private void updatePortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp, double[][] df) {
         ((PortfolioChartPanel)chartPanel).resetZoom();
         ((PortfolioChartPanel)chartPanel).setCAL(checkBoxCAL.isSelected() ? (double)spinnerCAL.getValue() / 100.0 : -1);
-        ((PortfolioChartPanel) chartPanel).setPortfolios(accuracyPortfolios, portfoliosCompare, dataFiltered, Main.getPeriods(indexFrom, indexTo));
-
-        return accuracyPortfolios;
+        ((PortfolioChartPanel) chartPanel).setPortfolios(pfs, pfsComp, df, Main.getPeriods(indexFrom, indexTo));
     }
 
     void setPortfolioToCompare(int[] weights) {
