@@ -87,12 +87,12 @@ class YieldsChart extends JDialog {
         });
         buttonLogScale.addActionListener(e -> {
             for(ActionListener a: buttonDraw.getActionListeners()) {
-                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
+                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
             }
         });
         checkBoxRebalance.addActionListener(e -> {
             for(ActionListener a: buttonDraw.getActionListeners()) {
-                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
+                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
             }
         });
     }
@@ -268,7 +268,7 @@ class YieldsChart extends JDialog {
 
         SwingUtilities.invokeLater(() -> {
             for(ActionListener a: dialog.buttonDraw.getActionListeners()) {
-                a.actionPerformed(new ActionEvent(dialog, ActionEvent.ACTION_PERFORMED, null) {});
+                a.actionPerformed(new ActionEvent(dialog, ActionEvent.ACTION_PERFORMED, null));
             }
         });
 

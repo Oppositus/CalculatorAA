@@ -154,7 +154,7 @@ class PortfolioChart extends JDialog {
             if (accuracyPortfolios.isEmpty()) {
                 SwingUtilities.invokeLater(() -> {
                     for(ActionListener a: buttonAccuracy.getActionListeners()) {
-                        a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
+                        a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
                     }
                 });
             }
@@ -173,7 +173,7 @@ class PortfolioChart extends JDialog {
             if (!accuracyPortfolios.equals(accuracyPortfolios2) || (accuracyPortfolios.size() == 0 && accuracyPortfolios2.size() == 0)) {
                 SwingUtilities.invokeLater(() -> {
                     for(ActionListener a: buttonAccuracyMax.getActionListeners()) {
-                        a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
+                        a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
                     }
                 });
             } else {
@@ -182,21 +182,20 @@ class PortfolioChart extends JDialog {
         });
         cbShowRebalances.addActionListener(e -> {
             for(ActionListener a: buttonCompute.getActionListeners()) {
-                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
+                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
             }
         });
         checkBoxCAL.addActionListener(actionEvent -> {
             buttonZoomPortfolios.setEnabled(checkBoxCAL.isSelected());
             for(ActionListener a: buttonCompute.getActionListeners()) {
-                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {});
+                a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
             }
         });
         buttonZoomPortfolios.addActionListener(actionEvent -> {
 
             if (((PortfolioChartPanel)chartPanel).getZoom()) {
                 for (ActionListener a : buttonCompute.getActionListeners()) {
-                    a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {
-                    });
+                    a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
                 }
             }
             ((PortfolioChartPanel) chartPanel).zoomAllToPortfolios();
@@ -426,7 +425,7 @@ class PortfolioChart extends JDialog {
 
         SwingUtilities.invokeLater(() -> {
             for(ActionListener a: dialog.buttonCompute.getActionListeners()) {
-                a.actionPerformed(new ActionEvent(dialog, ActionEvent.ACTION_PERFORMED, null) {});
+                a.actionPerformed(new ActionEvent(dialog, ActionEvent.ACTION_PERFORMED, null));
             }
         });
 
