@@ -3,6 +3,7 @@ package com.calculator.aa.ui;
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.Zipper;
+import com.calculator.aa.db.ReaderCSV;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -331,26 +332,25 @@ public class MainWindow {
         Main.properties.setProperty("import.decimal", decimal);
         Main.properties.setProperty("import.date", dates);
 
-        BufferedReader is = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
+        ReaderCSV csv = new ReaderCSV(mark, delim, decimal);
+        csv.readFromFile(f);
 
-        is.lines().forEach(line -> {
-            String[] splitted = processText(line, delim, mark);
-            if (columns.isEmpty()) {
-                columns.addAll(Arrays.asList(Arrays.copyOfRange(splitted, 1, splitted.length)));
-            } else {
-                if (!line.isEmpty()) {
-                    labels.add(splitted[0]);
-                    String[] numbers = Arrays.copyOfRange(splitted, 1, splitted.length);
-                    ArrayList<Double> parsed = new ArrayList<>(Arrays.stream(numbers).map(s -> s.replace(decimal, "."))
-                            .map(s -> s.isEmpty() ? -1.0 : Double.valueOf(s)).collect(Collectors.toList()));
+        List<String> headList = csv.head().toList().get(0);
+        columns.addAll(headList.subList(1, headList.size()));
+
+        csv.body()
+                .lines()
+                .forEach(line -> {
+                    labels.add(line.get(0));
+                    List<Double> parsed = csv.parse(line.subList(1, line.size()), -1)
+                            .boxed()
+                            .collect(Collectors.toList());
 
                     while (parsed.size() < columns.size()) {
                         parsed.add(-1.0);
                     }
                     data.add(parsed);
-                }
-            }
-        });
+                });
 
         int htLength = data.size();
         int whLength = columns.size();
@@ -394,7 +394,9 @@ public class MainWindow {
             os.write(
                     String.join(
                             delim,
-                            Arrays.stream(model.getInstruments()).map(i -> mark + i + mark).collect(Collectors.toList())
+                            Arrays.stream(model.getInstruments())
+                                    .map(i -> mark + i + mark)
+                                    .collect(Collectors.toList())
                     )
             );
             os.newLine();
@@ -428,48 +430,6 @@ public class MainWindow {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private String[] processText(String text, String delim, String mark) {
-        List<String> result = new LinkedList<>();
-        boolean inText = false;
-        int length = text.length();
-        String mark2 = mark + mark;
-        StringBuilder sb = new StringBuilder();
-        int i = 0;
-        while (i < length) {
-            String current = text.substring(i, i + 1);
-
-            if (current.equals(mark)) {
-                if (i < length - 1 && text.substring(i, i + 2).equals(mark2)) {
-                    sb.append(mark);
-                    i += 2;
-                } else {
-                    inText = !inText;
-                    i += 1;
-                }
-                continue;
-            }
-
-            if (current.equals(delim)) {
-                if (!inText) {
-                    result.add(sb.toString());
-                    sb.setLength(0);
-                } else {
-                    sb.append(current);
-                }
-            } else {
-                sb.append(current);
-            }
-
-            i += 1;
-        }
-
-        if (sb.length() > 0) {
-            result.add(sb.toString());
-        }
-
-        return result.toArray(new String[0]);
     }
 
     public void getTickersAndLoadData(String[] tickers, String[] options) {

@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 
 public class ReaderCSV {
@@ -19,28 +20,38 @@ public class ReaderCSV {
 
     private final String mark;
     private final String delim;
+    private final String decimal;
     private final List<List<String>> result;
+    private int headCount;
 
-    ReaderCSV(String m, String d) {
-        mark = m;
-        delim = d;
+    public ReaderCSV(String m, String d, String e) {
+        mark = m == null || m.isEmpty() ? dbMark : m;
+        delim = d == null || d.isEmpty() ? dbDelim : d;
+        decimal = e == null || e.isEmpty() ? dbDecimal : e;
+        headCount = -1;
         result = new LinkedList<>();
     }
 
     private ReaderCSV(ReaderCSV o, List<List<String>> res) {
         mark = o.mark;
         delim = o.delim;
+        decimal = o.decimal;
+        headCount = o.headCount;
         result = res;
     }
 
-    ReaderCSV readFromString(String source) {
+    public ReaderCSV readFromString(String source) {
         read(new BufferedReader(new StringReader(source)));
         return this;
     }
 
-    ReaderCSV readFromFile(String fileName) {
+    public ReaderCSV readFromFile(String fileName) {
+        return readFromFile(new File(fileName));
+    }
+
+    public ReaderCSV readFromFile(File file) {
         try {
-            read(new BufferedReader(new InputStreamReader(new FileInputStream(fileName), StandardCharsets.UTF_8)));
+            read(new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)));
             return this;
         } catch (FileNotFoundException e) {
             JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
@@ -48,8 +59,39 @@ public class ReaderCSV {
         }
     }
 
+    public ReaderCSV head() {
+        return new ReaderCSV(this, result.subList(0, 1));
+    }
+
+    public ReaderCSV body() {
+        return new ReaderCSV(this, result.subList(1, result.size()));
+    }
+
+    public List<List<String>> toList() {
+        return result;
+    }
+
+    public Stream<List<String>> lines() {
+        return result.stream();
+    }
+
+    public double parse(String text, double def) {
+        if (text == null || text.isEmpty()) {
+            return def;
+        }
+        try {
+            return Double.valueOf(text.replace(decimal, "."));
+        } catch (NumberFormatException e) {
+            return def;
+        }
+    }
+
+    public DoubleStream parse(List<String> texts, double def) {
+        return texts.stream().mapToDouble(s -> this.parse(s, def));
+    }
+
     private void read(BufferedReader is) {
-        result.addAll(is.lines().map(this::processText).collect(Collectors.toList()));
+        result.addAll(is.lines().filter(l -> !l.isEmpty()).map(this::processText).collect(Collectors.toList()));
     }
 
     private List<String> processText(String text) {
@@ -93,22 +135,14 @@ public class ReaderCSV {
             result.add(sb.toString());
         }
 
+        if (headCount < 0) {
+            headCount = result.size();
+        } else {
+            while (result.size() < headCount) {
+                result.add("");
+            }
+        }
+
         return result;
-    }
-
-    ReaderCSV head() {
-        return new ReaderCSV(this, result.subList(0, 1));
-    }
-
-    ReaderCSV body() {
-        return new ReaderCSV(this, result.subList(1, result.size()));
-    }
-
-    List<List<String>> toList() {
-        return result;
-    }
-
-    Stream<List<String>> lines() {
-        return result.stream();
     }
 }
