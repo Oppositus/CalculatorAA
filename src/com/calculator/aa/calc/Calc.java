@@ -464,6 +464,10 @@ public class Calc {
         return String.format("%.1f%%", f * 100);
     }
 
+    public static String formatPercent0(double f) {
+        return String.format("%.0f%%", f * 100);
+    }
+
     public static String formatDouble2(double f) {
         return String.format("%.2f", f);
     }

@@ -21,6 +21,8 @@ public class Main {
     private static final String versionApp = "2.0";
     private static final String versionBase = "1.0";
     private static final String updateUrl = "https://raw.githubusercontent.com/Oppositus/CalculatorAA/master/builds/version.txt";
+    public static String newVersionUrl = null;
+    public static String newDatabaseUrl = null;
 
     public static Cursor weCursor;
     public static Cursor nsCursor;
@@ -148,7 +150,19 @@ public class Main {
                         if ("database".equals(line[0]) && !versionBase.equals(line[1])) {
                             hasUpdate = true;
                         }
+
+                        if ("aurl".equals(line[0])) {
+                            newVersionUrl = line[1];
+                        }
+                        if ("durl".equals(line[0])) {
+                            newDatabaseUrl = line[1];
+                        }
                     }
+                }
+
+                if (!hasUpdate) {
+                    newVersionUrl = null;
+                    newDatabaseUrl = null;
                 }
 
                 mainWindow.setUpdateAvailable(hasUpdate);
