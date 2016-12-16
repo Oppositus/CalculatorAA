@@ -51,7 +51,19 @@ public class UpdateDownloader extends JDialog {
     }
 
     private void onOK() {
-        downloadFile(Main.newVersionUrl, progressBarApp, "bin" + File.separator + "update" + File.separator);
+        buttonOK.setEnabled(false);
+        downloadFile(Main.newVersionUrl, progressBarApp, "bin" + File.separator + "update" + File.separator, zipApp -> {
+
+            unZip(zipApp);
+
+            downloadFile(Main.newDatabaseUrl, progressBarBase, "data" + File.separator + "update" + File.separator, zipBase -> {
+
+                unZip(zipBase);
+                buttonOK.setEnabled(true);
+
+            });
+        });
+
     }
 
     private void onCancel() {
@@ -59,9 +71,7 @@ public class UpdateDownloader extends JDialog {
         dispose();
     }
 
-    private void downloadFile(String url, JProgressBar progress, String folderToUnzip) {
-        buttonOK.setEnabled(false);
-
+    private void downloadFile(String url, JProgressBar progress, String folderToUnzip, Consumer<File> after) {
         HttpURLConnection.setFollowRedirects(true);
         HttpURLConnection connection;
 
