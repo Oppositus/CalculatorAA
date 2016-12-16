@@ -146,13 +146,14 @@ public class UpdateDownloader extends JDialog {
         }
     }
 
-    private void closeStreams(HttpURLConnection conn, InputStream is, OutputStream os) {
-        try {
-            is.close();
-            os.close();
-            conn.disconnect();
-        } catch (IOException ignored) {
+    private void closeStreams(HttpURLConnection conn, Closeable... closeables) {
+        for (Closeable c : closeables) {
+            try {
+                c.close();
+            } catch (IOException ignored) {
+            }
         }
+        conn.disconnect();
     }
 
     private void unZip(File zip) {
