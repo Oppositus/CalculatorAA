@@ -53,6 +53,7 @@ text.update_has=Доступна новая версия программы
 text.update_no=Нет доступных обновлений
 text.update_error_http=<html>Произошла ошибка при запросе к серверу.<br/>Код ошибки: %d.</html>
 text.update_title=Загрузка обновлений
+text.update_failed=Обновление не удалось. Пожалуйста, попробуйте еще раз позже.
 ui.delimiter=Разделитель
 ui.text_mark=Признак текста
 ui.decimal_point=Десятичная точка

@@ -54,14 +54,29 @@ public class UpdateDownloader extends JDialog {
         buttonOK.setEnabled(false);
         downloadFile(Main.newVersionUrl, progressBarApp, "bin" + File.separator + "update" + File.separator, zipApp -> {
 
-            unZip(zipApp);
+            if (zipApp != null) {
+                unZip(zipApp);
 
-            downloadFile(Main.newDatabaseUrl, progressBarBase, "data" + File.separator + "update" + File.separator, zipBase -> {
+                downloadFile(Main.newDatabaseUrl, progressBarBase, "data" + File.separator + "update" + File.separator, zipBase -> {
 
-                unZip(zipBase);
-                buttonOK.setEnabled(true);
+                    if (zipBase != null) {
+                        unZip(zipBase);
+                    } else {
+                        JOptionPane.showMessageDialog(Main.getFrame(),
+                                Main.resourceBundle.getString("text.update_failed"),
+                                Main.resourceBundle.getString("text.error"),
+                                JOptionPane.ERROR_MESSAGE);
+                    }
 
-            });
+                    buttonOK.setEnabled(true);
+
+                });
+            } else {
+                JOptionPane.showMessageDialog(Main.getFrame(),
+                        Main.resourceBundle.getString("text.update_failed"),
+                        Main.resourceBundle.getString("text.error"),
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
 
     }
@@ -88,10 +103,10 @@ public class UpdateDownloader extends JDialog {
                 Path fullPath = Paths.get(fullName);
                 Files.createDirectories(fullPath.getParent());
 
-                File f = fullPath.toFile();
-                OutputStream os = new BufferedOutputStream(new FileOutputStream(f));
+                File downloadedFile = fullPath.toFile();
+                OutputStream os = new BufferedOutputStream(new FileOutputStream(downloadedFile));
 
-                downloadPart(connection, is, os, size, 0, progress, f, this::unZip);
+                downloadPart(connection, is, os, size, 0, progress, downloadedFile, after);
 
             } else {
                 connection.disconnect();
@@ -167,10 +182,6 @@ public class UpdateDownloader extends JDialog {
     }
 
     private void unZip(File zip) {
-        if (zip == null) {
-            return;
-        }
-
         try {
             ZipInputStream zis = new ZipInputStream(new FileInputStream(zip));
             ZipEntry ze = zis.getNextEntry();
@@ -207,7 +218,7 @@ public class UpdateDownloader extends JDialog {
             JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
         }
 
-        buttonOK.setEnabled(true);
+        zip.delete();
     }
 
     static void showDownloader() {
