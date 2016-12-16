@@ -25,6 +25,7 @@ public class UpdateDownloader extends JDialog {
     private JProgressBar progressBarBase;
 
     private boolean stopFlag;
+    private boolean rebootFlag;
 
     private UpdateDownloader() {
         setContentPane(contentPane);
@@ -32,6 +33,7 @@ public class UpdateDownloader extends JDialog {
         getRootPane().setDefaultButton(buttonOK);
 
         stopFlag = false;
+        rebootFlag = false;
 
         buttonOK.addActionListener(e -> onOK());
 
@@ -48,6 +50,14 @@ public class UpdateDownloader extends JDialog {
         // call onCancel() on ESCAPE
         contentPane.registerKeyboardAction(e -> onCancel(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
+        if (Main.newVersionUrl == null) {
+            progressBarApp.setString(Main.resourceBundle.getString("text.update_uptodate"));
+        }
+
+        if (Main.newDatabaseUrl == null) {
+            progressBarBase.setString(Main.resourceBundle.getString("text.update_uptodate"));
+        }
     }
 
     private void onOK() {
@@ -56,27 +66,30 @@ public class UpdateDownloader extends JDialog {
 
             if (zipApp != null) {
                 unZip(zipApp);
-
-                downloadFile(Main.newDatabaseUrl, progressBarBase, "data" + File.separator + "update" + File.separator, zipBase -> {
-
-                    if (zipBase != null) {
-                        unZip(zipBase);
-                    } else {
-                        JOptionPane.showMessageDialog(Main.getFrame(),
-                                Main.resourceBundle.getString("text.update_failed"),
-                                Main.resourceBundle.getString("text.error"),
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-
-                    buttonOK.setEnabled(true);
-
-                });
-            } else {
-                JOptionPane.showMessageDialog(Main.getFrame(),
-                        Main.resourceBundle.getString("text.update_failed"),
-                        Main.resourceBundle.getString("text.error"),
-                        JOptionPane.ERROR_MESSAGE);
+                rebootFlag = true;
             }
+
+            downloadFile(Main.newDatabaseUrl, progressBarBase, "data" + File.separator + "update" + File.separator, zipBase -> {
+
+                if (zipBase != null) {
+                    unZip(zipBase);
+                }
+
+                buttonOK.setEnabled(true);
+
+                if (rebootFlag) {
+                    int result = JOptionPane.showConfirmDialog(Main.getFrame(),
+                            Main.resourceBundle.getString("text.update_restart"),
+                            Main.resourceBundle.getString("text.error"),
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE);
+
+                    if (result == JOptionPane.YES_OPTION) {
+                        System.exit(4);
+                    }
+                }
+
+            });
         });
 
     }
@@ -87,6 +100,12 @@ public class UpdateDownloader extends JDialog {
     }
 
     private void downloadFile(String url, JProgressBar progress, String folderToUnzip, Consumer<File> after) {
+
+        if (url == null || url.isEmpty()) {
+            after.accept(null);
+            return;
+        }
+
         HttpURLConnection.setFollowRedirects(true);
         HttpURLConnection connection;
 

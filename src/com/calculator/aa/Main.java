@@ -139,16 +139,17 @@ public class Main {
                 connection.disconnect();
 
                 String[] lines = result.split("[\\r\\n]+");
-                boolean hasUpdate = false;
+                boolean hasAppUpdate = false;
+                boolean hasBaseUpdate = false;
 
                 for (String line1 : lines) {
                     String[] line = line1.split("=");
                     if (line.length == 2) {
                         if ("application".equals(line[0]) && !versionApp.equals(line[1])) {
-                            hasUpdate = true;
+                            hasAppUpdate = true;
                         }
                         if ("database".equals(line[0]) && !versionBase.equals(line[1])) {
-                            hasUpdate = true;
+                            hasBaseUpdate = true;
                         }
 
                         if ("aurl".equals(line[0])) {
@@ -160,14 +161,16 @@ public class Main {
                     }
                 }
 
-                if (!hasUpdate) {
+                if (!hasAppUpdate) {
                     newVersionUrl = null;
+                }
+                if (!hasBaseUpdate) {
                     newDatabaseUrl = null;
                 }
 
-                mainWindow.setUpdateAvailable(hasUpdate);
+                mainWindow.setUpdateAvailable(hasAppUpdate);
 
-                return hasUpdate;
+                return hasAppUpdate || hasBaseUpdate;
             } else {
                 if (verbose) {
                     JOptionPane.showMessageDialog(mainFrame,
