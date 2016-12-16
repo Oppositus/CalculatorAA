@@ -3,15 +3,10 @@ package com.calculator.aa.ui;
 import com.calculator.aa.Main;
 
 import javax.swing.*;
-import java.awt.event.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class SettingsDialog extends JDialog {

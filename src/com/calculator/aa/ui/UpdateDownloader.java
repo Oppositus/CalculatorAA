@@ -4,13 +4,18 @@ import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 
 import javax.swing.*;
-import java.awt.event.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Consumer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class UpdateDownloader extends JDialog {
     private JPanel contentPane;
@@ -21,7 +26,7 @@ public class UpdateDownloader extends JDialog {
 
     private boolean stopFlag;
 
-    public UpdateDownloader() {
+    private UpdateDownloader() {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
@@ -46,7 +51,7 @@ public class UpdateDownloader extends JDialog {
     }
 
     private void onOK() {
-        downloadFile(Main.newVersionUrl, progressBarApp, "bin/update/");
+        downloadFile(Main.newVersionUrl, progressBarApp, "bin" + File.separator + "update" + File.separator);
     }
 
     private void onCancel() {
@@ -55,6 +60,7 @@ public class UpdateDownloader extends JDialog {
     }
 
     private void downloadFile(String url, JProgressBar progress, String folderToUnzip) {
+        buttonOK.setEnabled(false);
 
         HttpURLConnection.setFollowRedirects(true);
         HttpURLConnection connection;
@@ -65,13 +71,20 @@ public class UpdateDownloader extends JDialog {
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 long size = connection.getHeaderFieldLong("Content-Length", -1);
                 InputStream is = connection.getInputStream();
-                OutputStream os = Files.newOutputStream(Files.createTempFile("calcaa", ".zip"), StandardOpenOption.CREATE);
 
-                downloadPart(connection, is, os, size, 0, progress, folderToUnzip, s -> {
-                    System.out.println("After: " + s);
-                });
+                String fileName = url.substring(url.lastIndexOf("/") + 1, url.length());
+                String fullName = folderToUnzip + fileName;
+
+                Path fullPath = Paths.get(fullName);
+                Files.createDirectories(fullPath.getParent());
+
+                File f = fullPath.toFile();
+                OutputStream os = new BufferedOutputStream(new FileOutputStream(f));
+
+                downloadPart(connection, is, os, size, 0, progress, f, this::unZip);
 
             } else {
+                connection.disconnect();
                 JOptionPane.showMessageDialog(Main.getFrame(),
                         String.format(Main.resourceBundle.getString("text.update_error_http"), connection.getResponseCode()),
                         Main.resourceBundle.getString("text.error"),
@@ -80,24 +93,18 @@ public class UpdateDownloader extends JDialog {
 
         } catch (IOException e) {
             JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
-            return;
         }
     }
 
-    private void downloadPart(HttpURLConnection conn, InputStream is, OutputStream os, long size, long downloaded, JProgressBar progress, String folderToUnzip, Consumer<String> after) {
+    private void downloadPart(HttpURLConnection conn, InputStream is, OutputStream os, long size, long downloaded, JProgressBar progress, File file, Consumer<File> after) {
 
         if (stopFlag) {
-            try {
-                is.close();
-                os.close();
-                conn.disconnect();
-            } catch (IOException ignored) {
-            }
+            closeStreams(conn, is, os);
             after.accept(null);
+            return;
         }
 
-        int bufferLength = 16 * 1024;
-        byte[] responseBuffer = new byte[bufferLength];
+        byte[] responseBuffer = new byte[16 * 1024];
 
         try {
             int wasRead = is.read(responseBuffer);
@@ -106,39 +113,90 @@ public class UpdateDownloader extends JDialog {
                 downloaded += wasRead;
             } else {
                 if (downloaded != size) {
-                    try {
-                        is.close();
-                        os.close();
-                        conn.disconnect();
-                    } catch (IOException ignored) {
-                    }
+                    closeStreams(conn, is, os);
                     after.accept(null);
+                    return;
                 }
             }
         } catch (IOException e) {
             JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
-
-            try {
-                is.close();
-                os.close();
-                conn.disconnect();
-            } catch (IOException ignored) {
-            }
+            closeStreams(conn, is, os);
             after.accept(null);
-
+            return;
         }
 
-        int percentI = (int)(((double)downloaded) / ((double)size));
+        int percentI = (int)(((double)downloaded) / ((double)size) * 100);
         String percentS = Calc.formatPercent0(((double)downloaded) / ((double)size));
         progress.setValue(percentI);
         progress.setString(percentS);
 
         if (downloaded == size) {
-            after.accept(folderToUnzip);
+            try {
+                os.flush();
+                closeStreams(conn, is, os);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            after.accept(file);
         } else {
             long dn = downloaded;
-            SwingUtilities.invokeLater(() -> downloadPart(conn, is, os, size, dn, progress, folderToUnzip, after));
+            SwingUtilities.invokeLater(() -> downloadPart(conn, is, os, size, dn, progress, file, after));
         }
+    }
+
+    private void closeStreams(HttpURLConnection conn, InputStream is, OutputStream os) {
+        try {
+            is.close();
+            os.close();
+            conn.disconnect();
+        } catch (IOException ignored) {
+        }
+    }
+
+    private void unZip(File zip) {
+        if (zip == null) {
+            return;
+        }
+
+        try {
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(zip));
+            ZipEntry ze = zis.getNextEntry();
+            String outputFolder = zip.getParent();
+            byte[] buffer = new byte[16 * 1024];
+
+            while(ze != null){
+                String fileName = ze.getName();
+                File newFile = new File(outputFolder + File.separator + fileName);
+
+                if (ze.isDirectory()) {
+                    Files.createDirectories(newFile.toPath());
+                } else {
+
+                    if (!Files.exists(newFile.toPath().getParent())) {
+                        Files.createDirectories(newFile.toPath().getParent());
+                    }
+
+                    BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(newFile));
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, len);
+                    }
+                    fos.close();
+                }
+
+                ze = zis.getNextEntry();
+            }
+
+            zis.closeEntry();
+            zis.close();
+
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+        }
+
+        buttonOK.setEnabled(true);
     }
 
     static void showDownloader() {
