@@ -62,14 +62,14 @@ public class UpdateDownloader extends JDialog {
 
     private void onOK() {
         buttonOK.setEnabled(false);
-        downloadFile(Main.newVersionUrl, progressBarApp, "bin" + File.separator + "update" + File.separator, zipApp -> {
+        downloadFile(Main.newVersionUrl, progressBarApp, "update" + File.separator, zipApp -> {
 
             if (zipApp != null) {
                 unZip(zipApp);
                 rebootFlag = true;
             }
 
-            downloadFile(Main.newDatabaseUrl, progressBarBase, "data" + File.separator + "update" + File.separator, zipBase -> {
+            downloadFile(Main.newDatabaseUrl, progressBarBase, "update" + File.separator, zipBase -> {
 
                 if (zipBase != null) {
                     unZip(zipBase);
