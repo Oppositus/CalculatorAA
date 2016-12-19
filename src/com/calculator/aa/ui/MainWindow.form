@@ -139,10 +139,11 @@
           <component id="b5487" class="javax.swing.JButton" binding="buttonUpdate">
             <constraints/>
             <properties>
+              <enabled value="false"/>
               <icon value="com/calculator/aa/ui/icons/update.png"/>
               <text value=""/>
               <toolTipText resource-bundle="com/calculator/aa/messages" key="ui.update"/>
-              <visible value="false"/>
+              <visible value="true"/>
             </properties>
           </component>
         </children>

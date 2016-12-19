@@ -85,6 +85,22 @@ public class UpdateDownloader extends JDialog {
                             JOptionPane.QUESTION_MESSAGE);
 
                     if (result == JOptionPane.YES_OPTION) {
+
+                        String os = System.getProperty("os.name").toLowerCase();
+
+                        if (os.startsWith("windows")) {
+
+                        } else if (os.startsWith("linux")) {
+                            try {
+                                Runtime.getRuntime().exec("./update.sh");
+                            } catch (IOException e) {
+                                JOptionPane.showMessageDialog(Main.getFrame(),
+                                        e,
+                                        Main.resourceBundle.getString("text.error"),
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
+                        }
+
                         System.exit(4);
                     }
                 }

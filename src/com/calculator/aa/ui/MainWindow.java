@@ -482,6 +482,6 @@ public class MainWindow {
     }
 
     public void setUpdateAvailable(boolean avail) {
-        buttonUpdate.setVisible(avail);
+        buttonUpdate.setEnabled(avail);
     }
 }
