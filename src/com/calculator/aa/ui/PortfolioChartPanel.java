@@ -14,6 +14,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -85,6 +86,8 @@ class PortfolioChartPanel extends JPanel {
     private double zoomMax;
 
     private boolean wasZoomed = false;
+
+    private BufferedImage buffer;
 
     private class mouseEnterExitListener implements MouseListener {
 
@@ -252,6 +255,8 @@ class PortfolioChartPanel extends JPanel {
             return;
         }
 
+        buffer = null;
+
         portfoliosCompare = pfsComp;
 
         if (riskFreeRate >= 0) {
@@ -343,6 +348,7 @@ class PortfolioChartPanel extends JPanel {
     }
 
     void setCAL(double rate) {
+        buffer = null;
         riskFreeRate = rate;
     }
 
@@ -371,49 +377,54 @@ class PortfolioChartPanel extends JPanel {
 
         calculateDrawingArea(w, h);
 
-        g.setColor(axisColor);
-        drawAxis(g);
+        if (buffer == null || buffer.getWidth() != w || buffer.getHeight() != h) {
 
-        if (frontierOnlyMode) {
-            if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
-                g.setColor(frontierColor);
-                drawEfficientFrontier(g);
+            buffer = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            Graphics2D gb = buffer.createGraphics();
+
+            drawAxis(gb, w, h);
+
+            if (frontierOnlyMode) {
+                if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
+                    drawEfficientFrontier(gb);
+                }
+                frontierPortfolios.forEach(pf -> drawPortfolio(gb, pf));
+            } else {
+                portfolios.forEach(pf -> drawPortfolio(gb, pf));
+                if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
+                    drawEfficientFrontier(gb);
+                }
             }
-            g.setColor(portfolioColor);
-            frontierPortfolios.forEach(pf -> drawPortfolio(g, pf));
-        } else {
-            g.setColor(portfolioColor);
-            portfolios.forEach(pf -> drawPortfolio(g, pf));
-            if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
-                g.setColor(frontierColor);
-                drawEfficientFrontier(g);
+
+            if (portfoliosCompare != null) {
+                portfoliosCompare.forEach(pf -> drawLargePortfolio(gb, pf, portfolioCompareColor));
+            }
+
+            if (riskFreeRate >= 0 && frontierPortfolios != null && !frontierPortfolios.isEmpty()) {
+                drawCAL(gb);
             }
         }
 
-        g.setColor(portfolioCompareColor);
-        if (portfoliosCompare != null) {
-            portfoliosCompare.forEach(pf -> drawLargePortfolio(g, pf));
-        }
-
-        if (riskFreeRate >= 0 && frontierPortfolios != null && !frontierPortfolios.isEmpty()) {
-            g.setColor(CALColor);
-            drawCAL(g);
-        }
+        drawBuffered(g);
 
         if ((mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) || popupMenu.isVisible()) {
             drawNearest(g);
-            g.setColor(axisColor);
             drawCross(g, w, h);
         }
 
         if (dragMode) {
-            g.setColor(zoomColor);
             drawZoom(g, w, h);
         }
 
     }
 
+    private void drawBuffered(Graphics g) {
+        g.drawImage(buffer, 0, 0, null);
+    }
+
     private void drawZoom(Graphics g, int w, int h) {
+
+        g.setColor(zoomColor);
 
         if (bothDrag) {
             int fromX = Math.min(dragStartPt.x, dragEndPt.x);
@@ -433,7 +444,14 @@ class PortfolioChartPanel extends JPanel {
         }
     }
 
-    private void drawAxis(Graphics g) {
+    private void drawAxis(Graphics g, int w, int h) {
+
+        g.setColor(backColor);
+
+        g.fillRect(0, 0, w, h);
+
+        g.setColor(axisColor);
+
         g.drawRect(drawingArea.x, drawingArea.y, drawingArea.width, drawingArea.height);
 
         g.drawLine(drawingArea.x, drawingArea.y, drawingArea.x - safeTop, drawingArea.y);
@@ -450,12 +468,15 @@ class PortfolioChartPanel extends JPanel {
     }
 
     private void drawPortfolio(Graphics g, Portfolio pf) {
+        g.setColor(portfolioColor);
         g.drawRect(mapX(pf.risk()) - 1, mapY(pf.yield()) - 1, 2, 2);
     }
 
-    private void drawLargePortfolio(Graphics g, Portfolio pf) {
+    private void drawLargePortfolio(Graphics g, Portfolio pf, Color color) {
         int risk = mapX(pf.risk());
         int yield = mapY(pf.yield());
+
+        g.setColor(color);
         g.fillRect(risk - 2, yield - 2, 4, 4);
         g.drawRect(risk - 2, yield - 2, 4, 4);
         g.drawOval(risk - 10, yield - 10, 20, 20);
@@ -516,6 +537,7 @@ class PortfolioChartPanel extends JPanel {
             i += 1;
         }
 
+        g.setColor(frontierColor);
         ((Graphics2D) g).setStroke(thick);
         g.drawPolyline(xxs, yys, length);
         ((Graphics2D) g).setStroke(thin);
@@ -532,6 +554,7 @@ class PortfolioChartPanel extends JPanel {
             return;
         }
 
+        g.setColor(CALColor);
         g.setClip(drawingArea);
         g.drawLine(fromX, fromY, toX, toY);
         g.setClip(null);
@@ -547,10 +570,12 @@ class PortfolioChartPanel extends JPanel {
             g.drawLine(drawingArea.x, freePos, drawingArea.x - safeTop, freePos);
         }
 
-        drawLargePortfolio(g, bestCALPortfolio);
+        drawLargePortfolio(g, bestCALPortfolio, CALColor);
     }
 
     private void drawCross(Graphics g, int w, int h) {
+        g.setColor(axisColor);
+
         if (!drawingArea.contains(mouseX, mouseY)) {
             if (mouseX > drawingArea.x && mouseY > drawingArea.y + drawingArea.height) {
                 setCursor(Main.weCursor);
@@ -763,6 +788,7 @@ class PortfolioChartPanel extends JPanel {
     }
 
     void resetZoom() {
+        buffer = null;
         wasZoomed = false;
     }
 
