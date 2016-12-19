@@ -88,17 +88,19 @@ public class UpdateDownloader extends JDialog {
 
                         String os = System.getProperty("os.name").toLowerCase();
 
-                        if (os.startsWith("windows")) {
+                        try {
 
-                        } else if (os.startsWith("linux")) {
-                            try {
+                            if (os.startsWith("windows")) {
+                                Runtime.getRuntime().exec("cmd /c start update.cmd");
+                            } else if (os.startsWith("linux")) {
                                 Runtime.getRuntime().exec("./update.sh");
-                            } catch (IOException e) {
-                                JOptionPane.showMessageDialog(Main.getFrame(),
-                                        e,
-                                        Main.resourceBundle.getString("text.error"),
-                                        JOptionPane.ERROR_MESSAGE);
                             }
+
+                        } catch (IOException e) {
+                            JOptionPane.showMessageDialog(Main.getFrame(),
+                                    e,
+                                    Main.resourceBundle.getString("text.error"),
+                                    JOptionPane.ERROR_MESSAGE);
                         }
 
                         System.exit(4);
