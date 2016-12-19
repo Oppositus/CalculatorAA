@@ -217,14 +217,16 @@ class PortfolioChartPanel extends JPanel {
     PortfolioChartPanel(PortfolioChartHelper hlp) {
         super();
 
-        helper = hlp;
-
         addMouseListener(new mouseEnterExitListener());
         addMouseMotionListener(new mouseMoveListener());
 
         setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
 
         createPopupMenu();
+    }
+
+    void setHelper(PortfolioChartHelper h) {
+        helper = h;
     }
 
     void setPortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp) {

@@ -39,7 +39,9 @@ class PortfolioChart extends JDialog {
     private PortfolioChart(String[] i, double[][] d) {
         instruments = i;
         data = d;
-        helper = new PortfolioChartHelper((PortfolioChartPanel)chartPanel);
+        helper = new PortfolioChartHelper();
+        helper.setPanel((PortfolioChartPanel)chartPanel);
+        ((PortfolioChartPanel)chartPanel).setHelper(helper);
 
         setContentPane(contentPane);
         setModal(true);

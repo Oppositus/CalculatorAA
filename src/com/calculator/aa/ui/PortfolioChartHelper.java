@@ -19,10 +19,13 @@ class PortfolioChartHelper {
 
     private Portfolio nearest;
 
-    PortfolioChartHelper(PortfolioChartPanel p) {
-        panel = p;
+    PortfolioChartHelper() {
         nearest = null;
         calValue = -1;
+    }
+
+    void setPanel(PortfolioChartPanel p) {
+        panel = p;
     }
 
     void setPortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp, double[][] df, String[] pf, double cal) {
