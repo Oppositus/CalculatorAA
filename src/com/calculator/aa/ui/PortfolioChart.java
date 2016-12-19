@@ -34,9 +34,12 @@ class PortfolioChart extends JDialog {
     private int indexFrom;
     private int indexTo;
 
+    private PortfolioChartHelper helper;
+
     private PortfolioChart(String[] i, double[][] d) {
         instruments = i;
         data = d;
+        helper = new PortfolioChartHelper((PortfolioChartPanel)chartPanel);
 
         setContentPane(contentPane);
         setModal(true);
@@ -293,7 +296,7 @@ class PortfolioChart extends JDialog {
     }
 
     private void createUIComponents() {
-        chartPanel = new PortfolioChartPanel();
+        chartPanel = new PortfolioChartPanel(helper);
         comboBoxFrom = new JComboBox<>();
         comboBoxTo = new JComboBox<>();
         spinnerCAL = new JSpinner(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.1));
@@ -308,7 +311,7 @@ class PortfolioChart extends JDialog {
         }
 
         int length = instruments.length - 1;
-        double[][] dataFiltered = ((PortfolioChartPanel)chartPanel).getDataFiltered();
+        double[][] dataFiltered = helper.getDataFiltered();
         double[][] corrTable = Calc.correlationTable(dataFiltered);
         double[] avYields = new double[length];
         double[] sdYields = new double[length];
@@ -391,9 +394,12 @@ class PortfolioChart extends JDialog {
     }
 
     private void updatePortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp, double[][] df) {
-        ((PortfolioChartPanel)chartPanel).resetZoom();
-        ((PortfolioChartPanel)chartPanel).setCAL(checkBoxCAL.isSelected() ? (double)spinnerCAL.getValue() / 100.0 : -1);
-        ((PortfolioChartPanel) chartPanel).setPortfolios(pfs, pfsComp, df, Main.getPeriods(indexFrom, indexTo));
+        helper.setPortfolios(pfs,
+                pfsComp,
+                df,
+                Main.getPeriods(indexFrom, indexTo),
+                checkBoxCAL.isSelected() ? (double)spinnerCAL.getValue() / 100.0 : -1
+        );
     }
 
     void setPortfolioToCompare(int[] weights) {

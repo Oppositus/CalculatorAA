@@ -79,15 +79,14 @@ class PortfolioChartPanel extends JPanel {
 
     private Portfolio nearest = null;
 
-    private double[][] dataFiltered;
-    private String[] periodsFiltered;
-
     private double zoomMin;
     private double zoomMax;
 
     private boolean wasZoomed = false;
 
     private BufferedImage buffer;
+
+    private PortfolioChartHelper helper;
 
     private class mouseEnterExitListener implements MouseListener {
 
@@ -99,8 +98,7 @@ class PortfolioChartPanel extends JPanel {
                 } else if (mouseEvent.isControlDown()) {
                     setComparePortfolio.actionPerformed(new ActionEvent(nearest, ActionEvent.ACTION_PERFORMED, null));
                 } else {
-                    Portfolio pn = new Portfolio(nearest);
-                    YieldsChart.showYields(periodsFiltered, dataFiltered, pn);
+                    helper.showYields();
                 }
             }
         }
@@ -216,8 +214,10 @@ class PortfolioChartPanel extends JPanel {
         }
     }
 
-    PortfolioChartPanel() {
+    PortfolioChartPanel(PortfolioChartHelper hlp) {
         super();
+
+        helper = hlp;
 
         addMouseListener(new mouseEnterExitListener());
         addMouseMotionListener(new mouseMoveListener());
@@ -227,18 +227,13 @@ class PortfolioChartPanel extends JPanel {
         createPopupMenu();
     }
 
-    void setPortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp, double[][] df, String[] pf) {
+    void setPortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp) {
         if (pfs != null && pfs.isEmpty()) {
             return;
         }
 
-        if (pfs != null && df != null && pf != null) {
-            portfolios = pfs;
-            dataFiltered = df;
-            periodsFiltered = pf;
-        }
-
         if (pfs != null) {
+            portfolios = pfs;
             frontierPortfolios = Calc.getEfficientFrontier(portfolios);
         }
 
@@ -336,14 +331,10 @@ class PortfolioChartPanel extends JPanel {
         repaint();
     }
 
-    private void changePortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp) {
-        setPortfolios(pfs, pfsComp, dataFiltered, periodsFiltered);
-    }
-
     void setFrontierOnlyMode(boolean mode) {
         if (frontierOnlyMode != mode) {
             frontierOnlyMode = mode;
-            setPortfolios(null, portfoliosCompare, null, null);
+            setPortfolios(null, portfoliosCompare);
         }
     }
 
@@ -354,10 +345,6 @@ class PortfolioChartPanel extends JPanel {
 
     List<Portfolio> getFrontierPortfolios() {
         return frontierPortfolios;
-    }
-
-    double[][] getDataFiltered() {
-        return dataFiltered;
     }
 
     @Override
@@ -798,7 +785,7 @@ class PortfolioChartPanel extends JPanel {
 
     void zoomAllToPortfolios() {
         wasZoomed = true;
-        changePortfolios(portfolios, portfoliosCompare);
+        setPortfolios(portfolios, portfoliosCompare);
     }
 
     private void setRiskZoom() {
@@ -825,7 +812,7 @@ class PortfolioChartPanel extends JPanel {
 
         if (!pfs.isEmpty()) {
             wasZoomed = true;
-            changePortfolios(pfs, pfsComp);
+            setPortfolios(pfs, pfsComp);
         } else {
             repaint();
         }
@@ -862,7 +849,7 @@ class PortfolioChartPanel extends JPanel {
 
         if (!pfs.isEmpty()) {
             wasZoomed = true;
-            changePortfolios(pfs, pfsComp);
+            setPortfolios(pfs, pfsComp);
         } else {
             repaint();
         }
@@ -892,7 +879,7 @@ class PortfolioChartPanel extends JPanel {
 
         if (!pfs.isEmpty()) {
             wasZoomed = true;
-            changePortfolios(pfs, pfsComp);
+            setPortfolios(pfs, pfsComp);
         } else {
             repaint();
         }
