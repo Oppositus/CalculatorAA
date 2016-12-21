@@ -76,6 +76,7 @@ public class UpdateDownloader extends JDialog {
                 }
 
                 buttonOK.setEnabled(true);
+                String os = System.getProperty("os.name").toLowerCase();
 
                 if (rebootFlag) {
                     int result = JOptionPane.showConfirmDialog(Main.getFrame(),
@@ -86,10 +87,9 @@ public class UpdateDownloader extends JDialog {
 
                     if (result == JOptionPane.YES_OPTION) {
 
-                        String os = System.getProperty("os.name").toLowerCase();
+
 
                         try {
-
                             if (os.startsWith("windows")) {
                                 Runtime.getRuntime().exec("cmd /c start update.cmd");
                             } else if (os.startsWith("linux")) {
@@ -105,8 +105,20 @@ public class UpdateDownloader extends JDialog {
 
                         System.exit(4);
                     }
+                } else {
+                    Main.reconnectDatabase(() -> {
+                        try {
+                            Files.deleteIfExists(Paths.get("instruments.sqlite"));
+                            File instr = new File("update" + File.separator + "instruments.sqlite");
+                            instr.renameTo(new File("instruments.sqlite"));
+                        } catch (IOException e) {
+                            JOptionPane.showMessageDialog(Main.getFrame(),
+                                    e,
+                                    Main.resourceBundle.getString("text.error"),
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    });
                 }
-
             });
         });
 

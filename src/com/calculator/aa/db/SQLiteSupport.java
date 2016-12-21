@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
+import java.util.function.Consumer;
 
 public class SQLiteSupport {
 
@@ -83,6 +84,161 @@ public class SQLiteSupport {
         }
 
         return instruments;
+    }
+
+    Date getLastUpdateDate(Instrument instr) {
+        String last = "1900-01-01";
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT `SINCE`, `UPDATED` FROM `INSTRUMENTS` WHERE `TICKER` = '" + instr.getTicker() + "';";
+
+            ResultSet result = stmt.executeQuery(sql);
+
+            if (result.first()) {
+                last = result.getString("UPDATED");
+                if (last == null) {
+                    last = result.getString("SINCE");
+                    if (last == null) {
+                        last = "1900-01-01";
+                    }
+                }
+            } else {
+                last = "1900-01-01";
+            }
+
+            result.close();
+            stmt.close();
+            conn.commit();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+        }
+
+        return convertToDate(last);
+    }
+
+    public void updateInstrumentHistory(Instrument instr, Consumer<Boolean> after) {
+        DataDownloader downloader = DownloaderFactory.getDownloader(instr.getDownloaderName());
+        if (downloader == null) {
+            after.accept(false);
+        } else {
+            downloader.download(instr, (s, r) -> updateInstrumentHistoryResult(downloader, instr, after, s, r));
+        }
+    }
+
+    public boolean newInstrument(Instrument instr, Date since) {
+        DataDownloader downloader = DownloaderFactory.getDownloader(instr.getDownloaderName());
+        if (downloader == null) {
+            return false;
+        } else {
+
+            try {
+                String sinceStr = printDate(since == null ? dateNow() : since);
+
+                Statement stmt = conn.createStatement();
+                String sql = "INSERT INTO `INSTRUMENTS` VALUES " +
+                        "(NULL, " +
+                        "'" + instr.getTicker() + "', " +
+                        downloader.getId() + ", '" +
+                        sinceStr + "', NULL);";
+
+                stmt.executeUpdate(sql);
+
+                conn.commit();
+                stmt.close();
+
+                return true;
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+    }
+
+    int getDownloaderId(DataDownloader downloader) {
+        int id = -1;
+
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT `ID` FROM `DOWNLOADERS` WHERE `NAME` = '" + downloader.getName() + "';";
+
+            ResultSet result = stmt.executeQuery(sql);
+
+            if (result.first()) {
+                id = result.getInt("ID");
+            }
+
+            conn.commit();
+            stmt.close();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+        }
+
+        return id;
+    }
+
+    private void updateInstrumentHistoryResult(DataDownloader downloader, Instrument instr, Consumer<Boolean> after, Boolean success, String data) {
+        if (!success) {
+            after.accept(false);
+        } else {
+            ReaderCSV csv = new ReaderCSV(ReaderCSV.dbMark, ReaderCSV.dbDelim, ReaderCSV.dbDecimal);
+            ReaderCSV csvBody = csv.readFromString(data).body();
+            csvBody.lines().forEach(l -> insertOrUpdate(downloader, instr, l));
+
+            try {
+
+                List<String> firstRow = csvBody.lines().findFirst().orElse(null);
+                if (firstRow == null) {
+                    firstRow = new ArrayList<>();
+                    firstRow.add("1900-01-01");
+                }
+
+                Date since = downloader.getDate(firstRow);
+                Date now = dateNow();
+
+                Statement stmt = conn.createStatement();
+                String sql = "UPDATE `INSTRUMENTS` SET " +
+                        "`SINCE`='" + printDate(since) + "', " +
+                        "`UPDATED`='" + printDate(now) + "' " +
+                        "WHERE `TICKER`='" + instr.getTicker() + "';";
+
+                stmt.executeUpdate(sql);
+
+                conn.commit();
+                stmt.close();
+
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+            }
+
+            after.accept(true);
+        }
+    }
+
+    private void insertOrUpdate(DataDownloader downloader, Instrument instr, List<String> line) {
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "INSERT OR REPLACE INTO `INSTRUMENTS` " +
+                    "(`ID`, `INSTRUMENT`, `DATE`, `OPEN`, `HIGH`, `LOW`, `CLOSE`, `CLOSEADJ`, `VOLUME`) " +
+                    "VALUES (NULL, " +
+                    "'" + instr.getTicker() + "', " +
+                    "'" + downloader.getDate(line) + "', " +
+                    downloader.getOpen(line) + "', " +
+                    downloader.getHigh(line) + "', " +
+                    downloader.getLow(line) + "', " +
+                    downloader.getClose(line) + "', " +
+                    downloader.getCloseAdj(line) + "', " +
+                    downloader.getVolume(line) + ");";
+
+            stmt.executeUpdate(sql);
+
+            conn.commit();
+            stmt.close();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public void setInstrumentHistory(Instrument instr, Instrument.ValueType value) {
@@ -188,6 +344,12 @@ public class SQLiteSupport {
         return String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
     }
 
+    static private String printDate(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        return printDate(cal);
+    }
+
     static private String printDate(Calendar cal) {
         return String.format("'%04d-%02d-%02d'", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
     }
@@ -218,6 +380,16 @@ public class SQLiteSupport {
         String[] parts = date.split("-");
         Calendar cal = Calendar.getInstance();
         cal.set(Calc.safeParseInt(parts[0], 1900), Calc.safeParseInt(parts[1], 1) - 1, 1);
+        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
+    }
+
+    private Date dateNow() {
+        Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR, 0);
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);

@@ -98,4 +98,8 @@ public class Instrument {
                 true
         );
     }
+
+    String getDownloaderName() {
+        return provider;
+    }
 }

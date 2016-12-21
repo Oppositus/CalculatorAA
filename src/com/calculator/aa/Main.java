@@ -189,6 +189,12 @@ public class Main {
         return false;
     }
 
+    public static void reconnectDatabase(Runnable middle) {
+        sqLite.dispose();
+        middle.run();
+        sqLite = new SQLiteSupport();
+    }
+
     public static void main(String[] args) {
         resourceBundle = ResourceBundle.getBundle("com.calculator.aa.messages", Locale.getDefault());
 
