@@ -2,6 +2,7 @@ package com.calculator.aa.ui;
 
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
+import com.calculator.aa.db.SQLiteSupport;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
@@ -108,9 +109,9 @@ public class UpdateDownloader extends JDialog {
                 } else {
                     Main.reconnectDatabase(() -> {
                         try {
-                            Files.deleteIfExists(Paths.get("instruments.sqlite"));
-                            File instr = new File("update" + File.separator + "instruments.sqlite");
-                            instr.renameTo(new File("instruments.sqlite"));
+                            Files.deleteIfExists(Paths.get(SQLiteSupport.dataBaseName));
+                            File instr = new File("update" + File.separator + SQLiteSupport.dataBaseName);
+                            instr.renameTo(new File(SQLiteSupport.dataBaseName));
                         } catch (IOException e) {
                             JOptionPane.showMessageDialog(Main.getFrame(),
                                     e,

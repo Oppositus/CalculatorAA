@@ -55,6 +55,7 @@ text.update_error_http=<html>Произошла ошибка при запрос
 text.update_title=Загрузка обновлений
 text.update_uptodate=Обновление не требуется
 text.update_restart=<html>Чтобы обновить программу, нужно ее перезапустить.<br/>Перезапустить сейчас?</html>
+text.no_base=База данныйх отсутствует. Пожалуйста, переустановите приложение.
 ui.delimiter=Разделитель
 ui.text_mark=Признак текста
 ui.decimal_point=Десятичная точка

@@ -4,6 +4,11 @@ import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 
 import javax.swing.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
@@ -11,12 +16,25 @@ import java.util.function.Consumer;
 
 public class SQLiteSupport {
 
+    public static String dataBaseName = "instruments.sqlite";
+    public static String sourceBaseName = "instruments.source";
+
     private Connection conn;
 
     public SQLiteSupport() {
+
+        if (!copyDatabase()) {
+            JOptionPane.showMessageDialog(null,
+                    Main.resourceBundle.getString("text.no_base"),
+                    Main.resourceBundle.getString("text.error"),
+                    JOptionPane.ERROR_MESSAGE);
+            conn = null;
+            return;
+        }
+
         try {
             Class.forName("org.sqlite.JDBC");
-            conn = DriverManager.getConnection("jdbc:sqlite:db/instruments.sqlite");
+            conn = DriverManager.getConnection("jdbc:sqlite:" + dataBaseName);
             conn.setAutoCommit(false);
         } catch (Exception e) {
             conn = null;
@@ -408,5 +426,21 @@ public class SQLiteSupport {
                 result.getString("PROVIDER"),
                 result.getString("SITE")
         );
+    }
+
+    private boolean copyDatabase() {
+        if (Files.exists(Paths.get(dataBaseName))) {
+            return true;
+        } else if (Files.exists(Paths.get(sourceBaseName))) {
+            try {
+                Files.copy(Paths.get(SQLiteSupport.sourceBaseName), Paths.get(SQLiteSupport.dataBaseName));
+                return true;
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 }
