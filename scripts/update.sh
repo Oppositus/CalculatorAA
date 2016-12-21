@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-sleep 1000
+sleep 1
 
 cp -rf ./update/* .
 rm -rf ./update
