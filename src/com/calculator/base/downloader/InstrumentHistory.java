@@ -57,23 +57,13 @@ public class InstrumentHistory implements Comparable<InstrumentHistory> {
     }
 
     String valuesToInsert() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(printDate(date));
-        sb.append(", ");
-        sb.append(printDouble(open));
-        sb.append(", ");
-        sb.append(printDouble(high));
-        sb.append(", ");
-        sb.append(printDouble(low));
-        sb.append(", ");
-        sb.append(printDouble(close));
-        sb.append(", ");
-        sb.append(printDouble(closeAdj));
-        sb.append(", ");
-        sb.append(printDouble(volume));
-
-        return sb.toString();
+        return printDate(date) + ", " +
+                printDouble(open) + ", " +
+                printDouble(high) + ", " +
+                printDouble(low) + ", " +
+                printDouble(close) + ", " +
+                printDouble(closeAdj) + ", " +
+                printDouble(volume);
     }
 
     private String printDate(Date d) {

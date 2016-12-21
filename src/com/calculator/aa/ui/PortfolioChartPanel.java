@@ -71,8 +71,8 @@ class PortfolioChartPanel extends JPanel {
     private int dragEnd;
     private boolean horizontalDrag;
     private boolean bothDrag;
-    private Point dragStartPt = new Point();
-    private Point dragEndPt = new Point();
+    private final Point dragStartPt = new Point();
+    private final Point dragEndPt = new Point();
 
     private boolean frontierOnlyMode = false;
     private double riskFreeRate = -1;
@@ -98,7 +98,7 @@ class PortfolioChartPanel extends JPanel {
                 } else if (mouseEvent.isControlDown()) {
                     setComparePortfolio.actionPerformed(new ActionEvent(nearest, ActionEvent.ACTION_PERFORMED, null));
                 } else {
-                    helper.showYields();
+                    helper.showYields(nearest);
                 }
             }
         }

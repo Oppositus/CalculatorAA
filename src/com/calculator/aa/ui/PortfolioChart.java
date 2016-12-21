@@ -34,7 +34,7 @@ class PortfolioChart extends JDialog {
     private int indexFrom;
     private int indexTo;
 
-    private PortfolioChartHelper helper;
+    private final PortfolioChartHelper helper;
 
     private PortfolioChart(String[] i, double[][] d) {
         instruments = i;

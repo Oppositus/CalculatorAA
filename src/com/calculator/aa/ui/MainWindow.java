@@ -320,7 +320,7 @@ public class MainWindow {
         }
     }
 
-    private AATableModel parseCSVAndLoadData(File f) throws Exception {
+    private AATableModel parseCSVAndLoadData(File f) {
         List<String> columns = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         List<List<Double>> data = new ArrayList<>();

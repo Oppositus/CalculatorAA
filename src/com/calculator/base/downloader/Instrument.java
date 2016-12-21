@@ -95,30 +95,13 @@ class Instrument {
     }
 
     String valuesToInsert() {
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(escapeSQLite(ticker));
-        sb.append(", ");
-
-        sb.append(escapeSQLite(fullName));
-        sb.append(", ");
-
-        sb.append(escapeSQLite(type.toString()));
-        sb.append(", ");
-
-        sb.append(printDate(fromDate));
-        sb.append(", ");
-
-        sb.append(printDate(toDate));
-        sb.append(", ");
-
-        sb.append(escapeSQLite(providerName));
-        sb.append(", ");
-
-        sb.append(escapeSQLite(providerUrl));
-
-        return sb.toString();
+        return escapeSQLite(ticker) + ", " +
+                escapeSQLite(fullName) + ", " +
+                escapeSQLite(type.toString()) + ", " +
+                printDate(fromDate) + ", " +
+                printDate(toDate) + ", " +
+                escapeSQLite(providerName) + ", " +
+                escapeSQLite(providerUrl);
     }
 
     String historyToInsert() {

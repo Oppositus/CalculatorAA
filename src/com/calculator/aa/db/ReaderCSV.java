@@ -75,7 +75,7 @@ public class ReaderCSV {
         return result.stream();
     }
 
-    public double parse(String text, double def) {
+    private double parse(String text, double def) {
         if (text == null || text.isEmpty()) {
             return def;
         }

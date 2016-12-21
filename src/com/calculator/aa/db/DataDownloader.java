@@ -1,7 +1,5 @@
 package com.calculator.aa.db;
 
-import com.calculator.base.downloader.InstrumentHistory;
-
 import java.util.Date;
 import java.util.List;
 import java.util.function.BiConsumer;

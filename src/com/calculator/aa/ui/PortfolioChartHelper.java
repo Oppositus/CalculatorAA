@@ -1,7 +1,5 @@
 package com.calculator.aa.ui;
 
-import com.calculator.aa.calc.Calc;
-import com.calculator.aa.calc.DoublePoint;
 import com.calculator.aa.calc.Portfolio;
 
 import java.util.List;
@@ -44,10 +42,10 @@ class PortfolioChartHelper {
         panel.setPortfolios(portfolios, portfoliosCompare);
     }
 
-    void showYields() {
-        if (nearest != null) {
-            YieldsChart.showYields(periodsFiltered, dataFiltered, new Portfolio(nearest));
-        }
+    void showYields(Portfolio p) {
+        //if (nearest != null) {
+        YieldsChart.showYields(periodsFiltered, dataFiltered, new Portfolio(p));
+        //}
     }
 
     double[][] getDataFiltered() {

@@ -4,10 +4,8 @@ import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 
 import javax.swing.*;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
@@ -16,8 +14,8 @@ import java.util.function.Consumer;
 
 public class SQLiteSupport {
 
-    public static String dataBaseName = "instruments.sqlite";
-    public static String sourceBaseName = "instruments.source";
+    public static final String dataBaseName = "instruments.sqlite";
+    private static final String sourceBaseName = "instruments.source";
 
     private Connection conn;
 
