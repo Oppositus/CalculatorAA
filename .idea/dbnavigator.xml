@@ -42,17 +42,19 @@
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
     <filter-list connection-id="5e2a626e-0006-4550-9c7d-e917b724ce7a" dataset="main.INSTRUMENTS" active-filter-id="EMPTY_FILTER" />
-    <filter-list connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea" dataset="main.DOWNLOADERS" active-filter-id="">
+    <filter-list connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea" dataset="main.INSTRUMENTS" active-filter-id="EMPTY_FILTER" />
+    <filter-list connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea" dataset="main.DOWNLOADERS" active-filter-id="EMPTY_FILTER">
       <filter id="6bece5cc-88cf-4bb7-b012-53f5c2a9aea9" name="Filter 1" temporary="false" custom-name="false" type="basic" join-type="AND">
         <condition column="ID" operator="=" value="" active="true" />
       </filter>
     </filter-list>
+    <filter-list connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea" dataset="main.DATA" active-filter-id="" />
   </component>
   <component name="DBNavigator.Project.EditorStateManager">
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
-    <mapping file-url="file://$PROJECT_DIR$/sql/create.sql" connection-id="5e2a626e-0006-4550-9c7d-e917b724ce7a" current-schema="main" />
+    <mapping file-url="file://$PROJECT_DIR$/sql/create.sql" connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea" current-schema="main" />
   </component>
   <component name="DBNavigator.Project.MethodExecutionManager">
     <method-browser />
