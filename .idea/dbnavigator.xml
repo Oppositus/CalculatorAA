@@ -16,7 +16,7 @@
       <scope value="GLOBAL" />
       <destination value="FILE" />
       <format value="EXCEL" />
-      <charset value="UTF-8" />
+      <charset value="windows-1251" />
     </export-instructions>
   </component>
   <component name="DBNavigator.Project.DatabaseBrowserManager">
@@ -25,10 +25,7 @@
     <show-object-properties value="true" />
     <loaded-nodes>
       <connection connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea">
-        <schema name="main" object-types="column, constraint, index, table, dataset trigger, view" />
-      </connection>
-      <connection connection-id="5e2a626e-0006-4550-9c7d-e917b724ce7a">
-        <schema name="main" object-types="column, constraint, index, table, dataset trigger, view" />
+        <schema name="main" object-types="column, index, table, view" />
       </connection>
     </loaded-nodes>
   </component>
@@ -85,9 +82,9 @@
           <database-type value="SQLITE" />
           <config-type value="BASIC" />
           <database-version value="3.0" />
-          <driver-source value="BUILTIN" />
-          <driver-library value="" />
-          <driver value="" />
+          <driver-source value="EXTERNAL" />
+          <driver-library value="C:\Users\Dem\IdeaProjects\CalculatorAA\lib\sqlite-jdbc-3.15.1.jar" />
+          <driver value="org.sqlite.JDBC" />
           <url-type value="FILE" />
           <host value="" />
           <port value="" />
@@ -162,9 +159,9 @@
           <database-type value="SQLITE" />
           <config-type value="BASIC" />
           <database-version value="3.0" />
-          <driver-source value="BUILTIN" />
-          <driver-library value="" />
-          <driver value="" />
+          <driver-source value="EXTERNAL" />
+          <driver-library value="C:\Users\Dem\IdeaProjects\CalculatorAA\lib\sqlite-jdbc-3.15.1.jar" />
+          <driver value="org.sqlite.JDBC" />
           <url-type value="FILE" />
           <host value="" />
           <port value="" />
@@ -364,6 +361,7 @@
           <content-type name="SQL" enabled="true" />
           <content-type name="PL/SQL" enabled="true" />
           <content-type name="Groovy" enabled="true" />
+          <content-type name="AIDL" enabled="true" />
           <content-type name="YAML" enabled="true" />
           <content-type name="Bash" enabled="true" />
           <content-type name="Manifest" enabled="true" />
