@@ -52,6 +52,14 @@ public class Instrument {
         return ticker;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public InstrumentType getType() {
+        return type;
+    }
+
     void fillHistory(List<Date> dts, List<Double> vls) {
         if (dts.size() != vls.size()) {
             throw new IllegalArgumentException("dates.size() != values.size()");

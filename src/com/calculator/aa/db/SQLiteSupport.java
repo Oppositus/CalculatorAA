@@ -167,7 +167,8 @@ public class SQLiteSupport {
                 String sql = "INSERT INTO `INSTRUMENTS` VALUES " +
                         "(NULL, " +
                         "'" + escapeSQLite(instr.getTicker()) + "', " +
-                        "'" + escapeSQLite(instr.getTicker()) + "', " +
+                        "'" + escapeSQLite(instr.getName()) + "', " +
+                        getClassId(instr.getType()) + ", " +
                         downloader.getId() + ", '" +
                         escapeSQLite(sinceStr) +
                         "', NULL);";
@@ -196,6 +197,29 @@ public class SQLiteSupport {
 
             if (result.first()) {
                 id = result.getInt("DOWNLOADER");
+            }
+
+            conn.commit();
+            stmt.close();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+        }
+
+        return id;
+    }
+
+    private int getInstrumentId(Instrument instr) {
+        int id = -1;
+
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT `INSTRUMENT` FROM `INSTRUMENTS` WHERE `TICKER` = '" + escapeSQLite(instr.getTicker()) + "';";
+
+            ResultSet result = stmt.executeQuery(sql);
+
+            if (result.first()) {
+                id = result.getInt("INSTRUMENT");
             }
 
             conn.commit();
@@ -249,10 +273,9 @@ public class SQLiteSupport {
     private void insertOrUpdate(DataDownloader downloader, Instrument instr, List<String> line) {
         try {
             Statement stmt = conn.createStatement();
-            String sql = "INSERT OR REPLACE INTO `INSTRUMENTS` " +
-                    "(`ID`, `INSTRUMENT`, `DATE`, `OPEN`, `HIGH`, `LOW`, `CLOSE`, `CLOSEADJ`, `VOLUME`) " +
+            String sql = "INSERT OR REPLACE INTO `DATA` " +
                     "VALUES (NULL, " +
-                    "'" + instr.getTicker() + "', " +
+                    "'" + getInstrumentId(instr) + "', " +
                     "'" + downloader.getDate(line) + "', " +
                     downloader.getOpen(line) + "', " +
                     downloader.getHigh(line) + "', " +
@@ -359,6 +382,28 @@ public class SQLiteSupport {
         }
 
         return classes;
+    }
+
+    public int getClassId(Instrument.InstrumentType type) {
+        int classId = -1;
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT `CLASS` FROM `CLASSES` WHERE `NAME`='" + type.toString() + "';";
+
+            ResultSet result = stmt.executeQuery(sql);
+
+            while (result.next()) {
+                classId = result.getInt("CLASS");
+            }
+
+            result.close();
+            stmt.close();
+            conn.commit();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+        }
+
+        return classId;
     }
 
     public List<String> getProviders() {

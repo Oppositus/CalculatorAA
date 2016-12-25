@@ -31,11 +31,7 @@
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="730ff760-6aca-4dcf-9a63-25fb572e77ea">
-      <console name="instruments.source" type="STANDARD"><![CDATA[SELECT
-    `DATE`, `CLOSEADJ` AS `VALUE`
-FROM `DATA` JOIN `INSTRUMENTS` USING (`INSTRUMENT`)
-WHERE `INSTRUMENTS`.`TICKER` = 'VOO'
-ORDER BY date(`DATE`);]]></console>
+      <console name="instruments.source" type="STANDARD"><![CDATA[SELECT `CLASS` FROM `CLASSES` WHERE `NAME`='ETF';]]></console>
     </connection>
     <connection id="5e2a626e-0006-4550-9c7d-e917b724ce7a">
       <console name="instruments.old" type="STANDARD" />
