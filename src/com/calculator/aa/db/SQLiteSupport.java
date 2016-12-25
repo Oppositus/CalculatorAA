@@ -56,6 +56,7 @@ public class SQLiteSupport {
             Statement stmt = conn.createStatement();
             StringBuilder sql = new StringBuilder(
                     "SELECT " +
+                        "`INSTRUMENTS`.`INSTRUMENT` AS `INSTRUMENT`, " +
                         "`INSTRUMENTS`.`TICKER` AS `TICKER`, " +
                         "`INSTRUMENTS`.`NAME` AS `NAME`, " +
                         "`CLASSES`.`NAME` AS `CLASS`, " +
@@ -170,7 +171,7 @@ public class SQLiteSupport {
                         "'" + escapeSQLite(instr.getName()) + "', " +
                         getClassId(instr.getType()) + ", " +
                         downloader.getId() + ", '" +
-                        escapeSQLite(sinceStr) +
+                        sinceStr +
                         "', NULL);";
 
                 stmt.executeUpdate(sql);
@@ -191,35 +192,12 @@ public class SQLiteSupport {
 
         try {
             Statement stmt = conn.createStatement();
-            String sql = "SELECT `DOWNLOADER` FROM `DOWNLOADERS` WHERE `NAME` = '" + downloader.getName() + "';";
+            String sql = "SELECT `DOWNLOADER` FROM `DOWNLOADERS` WHERE `NAME` = '" + escapeSQLite(downloader.getName()) + "';";
 
             ResultSet result = stmt.executeQuery(sql);
 
             if (result.first()) {
                 id = result.getInt("DOWNLOADER");
-            }
-
-            conn.commit();
-            stmt.close();
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
-        }
-
-        return id;
-    }
-
-    private int getInstrumentId(Instrument instr) {
-        int id = -1;
-
-        try {
-            Statement stmt = conn.createStatement();
-            String sql = "SELECT `INSTRUMENT` FROM `INSTRUMENTS` WHERE `TICKER` = '" + escapeSQLite(instr.getTicker()) + "';";
-
-            ResultSet result = stmt.executeQuery(sql);
-
-            if (result.first()) {
-                id = result.getInt("INSTRUMENT");
             }
 
             conn.commit();
@@ -255,7 +233,7 @@ public class SQLiteSupport {
                 String sql = "UPDATE `INSTRUMENTS` SET " +
                         "`SINCE`='" + printDate(since) + "', " +
                         "`UPDATED`='" + printDate(now) + "' " +
-                        "WHERE `TICKER`='" + instr.getTicker() + "';";
+                        "WHERE `TICKER`='" + escapeSQLite(instr.getTicker()) + "';";
 
                 stmt.executeUpdate(sql);
 
@@ -275,7 +253,7 @@ public class SQLiteSupport {
             Statement stmt = conn.createStatement();
             String sql = "INSERT OR REPLACE INTO `DATA` " +
                     "VALUES (NULL, " +
-                    "'" + getInstrumentId(instr) + "', " +
+                    "'" + instr.getId() + "', " +
                     "'" + downloader.getDate(line) + "', " +
                     downloader.getOpen(line) + "', " +
                     downloader.getHigh(line) + "', " +
@@ -303,7 +281,7 @@ public class SQLiteSupport {
             String sql = "SELECT " +
                             "`DATE`, `" + value.toString() + "` AS `VALUE` " +
                          "FROM `DATA` JOIN `INSTRUMENTS` USING (`INSTRUMENT`) " +
-                         "WHERE `INSTRUMENTS`.`TICKER` = '" + instr.getTicker() + "' " +
+                         "WHERE `INSTRUMENTS`.`TICKER` = '" + escapeSQLite(instr.getTicker()) + "' " +
                          "ORDER BY date(`DATE`);";
 
             ResultSet result = stmt.executeQuery(sql);
@@ -332,6 +310,7 @@ public class SQLiteSupport {
 
             String sql =
                     "SELECT " +
+                        "`INSTRUMENTS`.`INSTRUMENT` AS `INSTRUMENT`, " +
                         "`INSTRUMENTS`.`TICKER` AS `TICKER`, " +
                         "`INSTRUMENTS`.`NAME` AS `NAME`, " +
                         "`CLASSES`.`NAME` AS `CLASS`, " +
@@ -500,6 +479,7 @@ public class SQLiteSupport {
 
     private Instrument fromResultSet(ResultSet result) throws SQLException {
         return new Instrument(
+                result.getInt("INSTRUMENT"),
                 result.getString("TICKER"),
                 result.getString("NAME"),
                 getInstrumentType(result.getString("CLASS")),

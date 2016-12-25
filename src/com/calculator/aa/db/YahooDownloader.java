@@ -18,10 +18,12 @@ public class YahooDownloader implements DataDownloader {
     static final String Name = "Yahoo Finance";
     private static final String WebURL = "https://finance.yahoo.com/";
 
-    private final int id;
+    private static int id = -1;
 
     YahooDownloader() {
-        id = Main.sqLite.getDownloaderId(this);
+        if (id < 0) {
+            id = Main.sqLite.getDownloaderId(this);
+        }
     }
 
     @Override

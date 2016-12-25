@@ -19,6 +19,7 @@ public class Instrument {
         CLOSEADJ
     }
 
+    private final int id;
     private final String ticker;
     private final String name;
     private final InstrumentType type;
@@ -30,7 +31,8 @@ public class Instrument {
     private final List<Date> dates;
     private final List<Double> values;
 
-    public Instrument(String tk, String nm, InstrumentType it, Date fr, Date to, String pr, String st) {
+    public Instrument(int i, String tk, String nm, InstrumentType it, Date fr, Date to, String pr, String st) {
+        id = i;
         ticker = tk;
         name = nm;
         type = it;
@@ -46,6 +48,10 @@ public class Instrument {
     @Override
     public String toString() {
         return ticker + " (" + name + ")";
+    }
+
+    public int getId() {
+        return id;
     }
 
     public String getTicker() {
