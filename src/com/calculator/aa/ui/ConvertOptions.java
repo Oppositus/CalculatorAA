@@ -10,6 +10,7 @@ import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -67,8 +68,27 @@ public class ConvertOptions extends JDialog {
     }
 
     private void onOK() {
-        result = processInstruments(instruments, comboBoxValue.getSelectedIndex(), comboBoxMonth.getSelectedIndex(), checkBoxAnnual.isSelected());
+        List<Instrument> downloaded = updateInstruments(instruments);
+        result = processInstruments(downloaded, comboBoxValue.getSelectedIndex(), comboBoxMonth.getSelectedIndex(), checkBoxAnnual.isSelected());
         dispose();
+    }
+
+    private List<Instrument> updateInstruments(List<Instrument> instrs) {
+        List<Instrument> result = new LinkedList<>();
+        for (Instrument ins : instrs) {
+            Main.sqLite.updateInstrumentHistory(ins, res -> {
+                if (!res) {
+                    JOptionPane.showMessageDialog(Main.getFrame(),
+                            String.format(Main.resourceBundle.getString("text.error_downloading"), ins.toString()),
+                            Main.resourceBundle.getString("text.error"),
+                            JOptionPane.ERROR_MESSAGE);
+                } else {
+                    result.add(ins);
+                }
+            });
+        }
+
+        return result;
     }
 
     private void onCancel() {

@@ -123,7 +123,7 @@ public class SQLiteSupport {
 
             ResultSet result = stmt.executeQuery(sql);
 
-            if (result.first()) {
+            if (result.next()) {
                 last = result.getString("UPDATED");
                 if (last == null) {
                     last = result.getString("SINCE");
@@ -170,9 +170,9 @@ public class SQLiteSupport {
                         "'" + escapeSQLite(instr.getTicker()) + "', " +
                         "'" + escapeSQLite(instr.getName()) + "', " +
                         getClassId(instr.getType()) + ", " +
-                        downloader.getId() + ", '" +
+                        downloader.getId() + ", " +
                         sinceStr +
-                        "', NULL);";
+                        ", NULL);";
 
                 stmt.executeUpdate(sql);
 
@@ -196,7 +196,7 @@ public class SQLiteSupport {
 
             ResultSet result = stmt.executeQuery(sql);
 
-            if (result.first()) {
+            if (result.next()) {
                 id = result.getInt("DOWNLOADER");
             }
 
@@ -211,28 +211,23 @@ public class SQLiteSupport {
     }
 
     private void updateInstrumentHistoryResult(DataDownloader downloader, Instrument instr, Consumer<Boolean> after, Boolean success, String data) {
+
+        boolean result = false;
+
         if (!success) {
-            after.accept(false);
+            after.accept(result);
         } else {
-            ReaderCSV csv = new ReaderCSV(ReaderCSV.dbMark, ReaderCSV.dbDelim, ReaderCSV.dbDecimal);
+            ReaderCSV csv = downloader.createReader();
             ReaderCSV csvBody = csv.readFromString(data).body();
-            csvBody.lines().forEach(l -> insertOrUpdate(downloader, instr, l));
+            csvBody.lines()
+                    .sorted(downloader.getDateComparator())
+                    .forEach(l -> insertOrUpdate(downloader, instr, l));
 
             try {
-
-                List<String> firstRow = csvBody.lines().findFirst().orElse(null);
-                if (firstRow == null) {
-                    firstRow = new ArrayList<>();
-                    firstRow.add("1900-01-01");
-                }
-
-                Date since = downloader.getDate(firstRow);
                 Date now = dateNow();
-
                 Statement stmt = conn.createStatement();
                 String sql = "UPDATE `INSTRUMENTS` SET " +
-                        "`SINCE`='" + printDate(since) + "', " +
-                        "`UPDATED`='" + printDate(now) + "' " +
+                        "`UPDATED`=" + printDate(now) + " " +
                         "WHERE `TICKER`='" + escapeSQLite(instr.getTicker()) + "';";
 
                 stmt.executeUpdate(sql);
@@ -240,11 +235,13 @@ public class SQLiteSupport {
                 conn.commit();
                 stmt.close();
 
+                result = true;
+
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
             }
 
-            after.accept(true);
+            after.accept(result);
         }
     }
 
@@ -253,13 +250,13 @@ public class SQLiteSupport {
             Statement stmt = conn.createStatement();
             String sql = "INSERT OR REPLACE INTO `DATA` " +
                     "VALUES (NULL, " +
-                    "'" + instr.getId() + "', " +
-                    "'" + downloader.getDate(line) + "', " +
-                    downloader.getOpen(line) + "', " +
-                    downloader.getHigh(line) + "', " +
-                    downloader.getLow(line) + "', " +
-                    downloader.getClose(line) + "', " +
-                    downloader.getCloseAdj(line) + "', " +
+                    instr.getId() + ", " +
+                    printDate(downloader.getDate(line)) + ", " +
+                    downloader.getOpen(line) + ", " +
+                    downloader.getHigh(line) + ", " +
+                    downloader.getLow(line) + ", " +
+                    downloader.getClose(line) + ", " +
+                    downloader.getCloseAdj(line) + ", " +
                     downloader.getVolume(line) + ");";
 
             stmt.executeUpdate(sql);

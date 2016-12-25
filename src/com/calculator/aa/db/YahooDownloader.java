@@ -20,6 +20,13 @@ public class YahooDownloader implements DataDownloader {
 
     private static int id = -1;
 
+    private static Comparator<List<String>> dateComparator = (o1, o2) -> {
+        Date d1 = parseDate(o1.get(0));
+        Date d2 = parseDate(o2.get(0));
+
+        return d1.compareTo(d2);
+    };
+
     YahooDownloader() {
         if (id < 0) {
             id = Main.sqLite.getDownloaderId(this);
@@ -91,6 +98,16 @@ public class YahooDownloader implements DataDownloader {
     }
 
     @Override
+    public ReaderCSV createReader() {
+        return new ReaderCSV("\"", ",", ".");
+    }
+
+    @Override
+    public Comparator<List<String>> getDateComparator() {
+        return dateComparator;
+    }
+
+    @Override
     public int getId() {
         return id;
     }
@@ -140,7 +157,7 @@ public class YahooDownloader implements DataDownloader {
         return parseDouble(line.get(5));
     }
 
-    private Date parseDate(String str) {
+    private static Date parseDate(String str) {
         int[] splitted = Arrays.stream(str.split("-")).mapToInt(s -> Calc.safeParseInt(s, 0)).toArray();
 
         Calendar cal = Calendar.getInstance();

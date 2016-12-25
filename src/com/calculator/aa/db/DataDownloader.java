@@ -1,11 +1,14 @@
 package com.calculator.aa.db;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.function.BiConsumer;
 
 interface DataDownloader {
     void download(Instrument instrument, BiConsumer<Boolean, String> after);
+    ReaderCSV createReader();
+    Comparator<List<String>> getDateComparator();
     int getId();
     String getName();
     String getWebUrl();

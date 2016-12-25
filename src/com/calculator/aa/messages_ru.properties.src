@@ -10,6 +10,7 @@ text.yield=Доходность
 text.correlations_table=Таблица корреляций
 text.covariances_table=Таблица ковариаций
 text.error=Ошибка
+text.error_downloading=Ошибка при загрузке инструмента %s
 text.portfolios=Портфели
 text.min=Мин
 text.max=Макс

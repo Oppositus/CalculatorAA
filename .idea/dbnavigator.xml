@@ -24,8 +24,8 @@
     <autoscroll-from-editor value="true" />
     <show-object-properties value="true" />
     <loaded-nodes>
-      <connection connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea">
-        <schema name="main" object-types="column, index, table, view" />
+      <connection connection-id="0e715153-4f08-442b-8169-17d28e3f442b">
+        <schema name="main" object-types="column, constraint, index, table, dataset trigger, view" />
       </connection>
     </loaded-nodes>
   </component>
@@ -36,9 +36,14 @@
     <connection id="5e2a626e-0006-4550-9c7d-e917b724ce7a">
       <console name="instruments.old" type="STANDARD" />
     </connection>
+    <connection id="0e715153-4f08-442b-8169-17d28e3f442b">
+      <console name="Current" type="STANDARD"><![CDATA[delete from data;]]></console>
+    </connection>
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
     <filter-list connection-id="5e2a626e-0006-4550-9c7d-e917b724ce7a" dataset="main.INSTRUMENTS" active-filter-id="EMPTY_FILTER" />
+    <filter-list connection-id="0e715153-4f08-442b-8169-17d28e3f442b" dataset="main.INSTRUMENTS" active-filter-id="EMPTY_FILTER" />
+    <filter-list connection-id="0e715153-4f08-442b-8169-17d28e3f442b" dataset="main.DATA" active-filter-id="EMPTY_FILTER" />
     <filter-list connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea" dataset="main.INSTRUMENTS" active-filter-id="EMPTY_FILTER" />
     <filter-list connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea" dataset="main.DOWNLOADERS" active-filter-id="EMPTY_FILTER">
       <filter id="6bece5cc-88cf-4bb7-b012-53f5c2a9aea9" name="Filter 1" temporary="false" custom-name="false" type="basic" join-type="AND">
@@ -168,6 +173,83 @@
           <database value="" />
           <files>
             <file path="$PROJECT_DIR$/db/instruments.sqlite" schema="main" />
+          </files>
+          <os-authentication value="false" />
+          <empty-password value="false" />
+          <user value="" />
+          <password value="" />
+        </database>
+        <properties>
+          <auto-commit value="false" />
+        </properties>
+        <ssh-settings>
+          <active value="false" />
+          <proxy-host value="" />
+          <proxy-port value="22" />
+          <proxy-user value="" />
+          <proxy-password value="" />
+          <auth-type value="PASSWORD" />
+          <key-file value="" />
+          <key-passphrase value="" />
+        </ssh-settings>
+        <details>
+          <charset value="UTF-8" />
+          <ddl-file-binding value="true" />
+          <database-logging value="true" />
+          <environment-type value="default" />
+          <idle-time-to-disconnect value="30" />
+          <password-expiry-time value="10" />
+          <max-connection-pool-size value="7" />
+          <alternative-statement-delimiter value="" />
+          <connect-automatically value="true" />
+        </details>
+        <object-filters hide-empty-schemas="false">
+          <object-type-filter use-master-settings="true">
+            <object-type name="SCHEMA" enabled="true" />
+            <object-type name="USER" enabled="true" />
+            <object-type name="ROLE" enabled="true" />
+            <object-type name="PRIVILEGE" enabled="true" />
+            <object-type name="CHARSET" enabled="true" />
+            <object-type name="TABLE" enabled="true" />
+            <object-type name="VIEW" enabled="true" />
+            <object-type name="MATERIALIZED_VIEW" enabled="true" />
+            <object-type name="NESTED_TABLE" enabled="true" />
+            <object-type name="COLUMN" enabled="true" />
+            <object-type name="INDEX" enabled="true" />
+            <object-type name="CONSTRAINT" enabled="true" />
+            <object-type name="DATASET_TRIGGER" enabled="true" />
+            <object-type name="DATABASE_TRIGGER" enabled="true" />
+            <object-type name="SYNONYM" enabled="true" />
+            <object-type name="SEQUENCE" enabled="true" />
+            <object-type name="PROCEDURE" enabled="true" />
+            <object-type name="FUNCTION" enabled="true" />
+            <object-type name="PACKAGE" enabled="true" />
+            <object-type name="TYPE" enabled="true" />
+            <object-type name="TYPE_ATTRIBUTE" enabled="true" />
+            <object-type name="ARGUMENT" enabled="true" />
+            <object-type name="DIMENSION" enabled="true" />
+            <object-type name="CLUSTER" enabled="true" />
+            <object-type name="DBLINK" enabled="true" />
+          </object-type-filter>
+          <object-name-filters />
+        </object-filters>
+      </connection>
+      <connection id="0e715153-4f08-442b-8169-17d28e3f442b" active="true">
+        <database>
+          <name value="Current" />
+          <description value="" />
+          <database-type value="SQLITE" />
+          <config-type value="BASIC" />
+          <database-version value="3.0" />
+          <driver-source value="EXTERNAL" />
+          <driver-library value="C:\Users\Dem\IdeaProjects\CalculatorAA\lib\sqlite-jdbc-3.15.1.jar" />
+          <driver value="org.sqlite.JDBC" />
+          <url-type value="FILE" />
+          <host value="" />
+          <port value="" />
+          <database value="" />
+          <files>
+            <file path="C:\Users\Dem\IdeaProjects\CalculatorAA\instruments.sqlite" schema="main" />
           </files>
           <os-authentication value="false" />
           <empty-password value="false" />
