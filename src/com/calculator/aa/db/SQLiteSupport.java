@@ -54,25 +54,37 @@ public class SQLiteSupport {
 
         try {
             Statement stmt = conn.createStatement();
-            StringBuilder sql = new StringBuilder("SELECT * FROM `INSTRUMENTS` ");
+            StringBuilder sql = new StringBuilder(
+                    "SELECT " +
+                        "`INSTRUMENTS`.`TICKER` AS `TICKER`, " +
+                        "`INSTRUMENTS`.`NAME` AS `NAME`, " +
+                        "`CLASSES`.`NAME` AS `CLASS`, " +
+                        "`INSTRUMENTS`.`SINCE` AS `SINCE`, " +
+                        "`INSTRUMENTS`.`UPDATED` AS `UPDATED`, " +
+                        "`DOWNLOADERS`.`NAME` AS `DOWNLOADER`, " +
+                        "`DOWNLOADERS`.`URI` AS `URI` " +
+                    "FROM `INSTRUMENTS` " +
+                    "JOIN `CLASSES` ON (`INSTRUMENTS`.`CLASS` = `CLASSES`.`CLASS`) " +
+                    "JOIN `DOWNLOADERS` ON (`INSTRUMENTS`.`DOWNLOADER` = `DOWNLOADERS`.`DOWNLOADER`) "
+            );
             List<String> wheres = new ArrayList<>();
 
             if (it != null) {
-                wheres.add(" `TYPE` = '" + escapeSQLite(it.toString()) + "' ");
+                wheres.add(" `CLASSES`.`NAME` = '" + escapeSQLite(it.toString()) + "' ");
             }
             if (provider != null && !provider.isEmpty()) {
-                wheres.add(" `PROVIDER` = '" + escapeSQLite(provider) + "' ");
+                wheres.add(" `DOWNLOADERS`.`NAME` = '" + escapeSQLite(provider) + "' ");
             }
             if (minMonths > 0) {
                 Calendar cal = Calendar.getInstance();
                 cal.set(Calendar.DAY_OF_MONTH, 1);
                 cal.add(Calendar.MONTH, -minMonths);
-                wheres.add(" date(`FROM`) <= date(" + printDate(cal) + ") ");
+                wheres.add(" DATE(`INSTRUMENTS`.`SINCE`) <= DATE(" + printDate(cal) + ") ");
             }
             if (name != null && !name.isEmpty()) {
-                String textFilter = " `TICKER` LIKE '" + escapeSQLite(name) + "%' ";
+                String textFilter = " `INSTRUMENTS`.`TICKER` LIKE '" + escapeSQLite(name) + "%' ";
                 if (name.length() >= 3) {
-                    textFilter = " (" + textFilter + " OR `NAME` LIKE '%" + escapeSQLite(name) + "%') ";
+                    textFilter = " (" + textFilter + " OR `INSTRUMENTS`.`NAME` LIKE '%" + escapeSQLite(name) + "%') ";
                 }
                 wheres.add(textFilter);
             }
@@ -83,7 +95,7 @@ public class SQLiteSupport {
                 sql.append(" )");
             }
 
-            sql.append(" ORDER BY `TICKER` ;");
+            sql.append(" ORDER BY `INSTRUMENTS`.`TICKER` ;");
 
             ResultSet result = stmt.executeQuery(sql.toString());
 
@@ -106,7 +118,7 @@ public class SQLiteSupport {
         String last = "1900-01-01";
         try {
             Statement stmt = conn.createStatement();
-            String sql = "SELECT `SINCE`, `UPDATED` FROM `INSTRUMENTS` WHERE `TICKER` = '" + instr.getTicker() + "';";
+            String sql = "SELECT `SINCE`, `UPDATED` FROM `INSTRUMENTS` WHERE `TICKER` = '" + escapeSQLite(instr.getTicker()) + "';";
 
             ResultSet result = stmt.executeQuery(sql);
 
@@ -130,7 +142,7 @@ public class SQLiteSupport {
             JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
         }
 
-        return convertToDate(last);
+        return convertToDate(last, null);
     }
 
     public void updateInstrumentHistory(Instrument instr, Consumer<Boolean> after) {
@@ -154,9 +166,11 @@ public class SQLiteSupport {
                 Statement stmt = conn.createStatement();
                 String sql = "INSERT INTO `INSTRUMENTS` VALUES " +
                         "(NULL, " +
-                        "'" + instr.getTicker() + "', " +
+                        "'" + escapeSQLite(instr.getTicker()) + "', " +
+                        "'" + escapeSQLite(instr.getTicker()) + "', " +
                         downloader.getId() + ", '" +
-                        sinceStr + "', NULL);";
+                        escapeSQLite(sinceStr) +
+                        "', NULL);";
 
                 stmt.executeUpdate(sql);
 
@@ -176,12 +190,12 @@ public class SQLiteSupport {
 
         try {
             Statement stmt = conn.createStatement();
-            String sql = "SELECT `ID` FROM `DOWNLOADERS` WHERE `NAME` = '" + downloader.getName() + "';";
+            String sql = "SELECT `DOWNLOADER` FROM `DOWNLOADERS` WHERE `NAME` = '" + downloader.getName() + "';";
 
             ResultSet result = stmt.executeQuery(sql);
 
             if (result.first()) {
-                id = result.getInt("ID");
+                id = result.getInt("DOWNLOADER");
             }
 
             conn.commit();
@@ -263,13 +277,16 @@ public class SQLiteSupport {
             LinkedList<Double> valuesRead = new LinkedList<>();
 
             Statement stmt = conn.createStatement();
-            String sql = "SELECT `DATE`, `" + value.toString() + "` AS `VALUE` FROM `HISTORY` " +
-                    "WHERE `TICKER` = '" + instr.getTicker() + "' ORDER BY date(`DATE`);";
+            String sql = "SELECT " +
+                            "`DATE`, `" + value.toString() + "` AS `VALUE` " +
+                         "FROM `DATA` JOIN `INSTRUMENTS` USING (`INSTRUMENT`) " +
+                         "WHERE `INSTRUMENTS`.`TICKER` = '" + instr.getTicker() + "' " +
+                         "ORDER BY date(`DATE`);";
 
             ResultSet result = stmt.executeQuery(sql);
 
             while (result.next()) {
-                datesRead.add(convertToDate(result.getString("DATE")));
+                datesRead.add(convertToDate(result.getString("DATE"), null));
                 valuesRead.add(result.getDouble("VALUE"));
             }
 
@@ -289,7 +306,20 @@ public class SQLiteSupport {
 
         try {
             Statement stmt = conn.createStatement();
-            String sql = "SELECT * FROM `INSTRUMENTS` WHERE (`TICKER` = '" + escapeSQLite(ticker) + "');";
+
+            String sql =
+                    "SELECT " +
+                        "`INSTRUMENTS`.`TICKER` AS `TICKER`, " +
+                        "`INSTRUMENTS`.`NAME` AS `NAME`, " +
+                        "`CLASSES`.`NAME` AS `CLASS`, " +
+                        "`INSTRUMENTS`.`SINCE` AS `SINCE`, " +
+                        "`INSTRUMENTS`.`UPDATED` AS `UPDATED`, " +
+                        "`DOWNLOADERS`.`NAME` AS `DOWNLOADER`, " +
+                        "`DOWNLOADERS`.`URI` AS `URI` " +
+                    "FROM `INSTRUMENTS` " +
+                    "JOIN `CLASSES` ON (`INSTRUMENTS`.`CLASS` = `CLASSES`.`CLASS`) " +
+                    "JOIN `DOWNLOADERS` ON (`INSTRUMENTS`.`DOWNLOADER` = `DOWNLOADERS`.`DOWNLOADER`) " +
+                    "WHERE (`TICKER` = '" + escapeSQLite(ticker) + "');";
 
             ResultSet result = stmt.executeQuery(sql);
 
@@ -308,17 +338,17 @@ public class SQLiteSupport {
         return instr;
     }
 
-    public List<String> getTypes() {
-        List<String> types = new LinkedList<>();
+    public List<String> getClasses() {
+        List<String> classes = new LinkedList<>();
 
         try {
             Statement stmt = conn.createStatement();
-            String sql = "SELECT DISTINCT `TYPE` FROM `INSTRUMENTS`;";
+            String sql = "SELECT `NAME` FROM `CLASSES`;";
 
             ResultSet result = stmt.executeQuery(sql);
 
             while (result.next()) {
-                types.add(result.getString("TYPE"));
+                classes.add(result.getString("NAME"));
             }
 
             result.close();
@@ -328,7 +358,7 @@ public class SQLiteSupport {
             JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
         }
 
-        return types;
+        return classes;
     }
 
     public List<String> getProviders() {
@@ -336,12 +366,12 @@ public class SQLiteSupport {
 
         try {
             Statement stmt = conn.createStatement();
-            String sql = "SELECT DISTINCT `PROVIDER` FROM `INSTRUMENTS`;";
+            String sql = "SELECT `NAME` FROM `DOWNLOADERS`;";
 
             ResultSet result = stmt.executeQuery(sql);
 
             while (result.next()) {
-                providers.add(result.getString("PROVIDER"));
+                providers.add(result.getString("NAME"));
             }
 
             result.close();
@@ -392,8 +422,17 @@ public class SQLiteSupport {
         }
     }
 
-    private Date convertToDate(String date) {
-        String[] parts = date.split("-");
+    private Date convertToDate(String date, String defaultDate) {
+
+        String useDate = date;
+        if (useDate == null) {
+            useDate = defaultDate;
+        }
+        if (useDate == null) {
+            useDate = "1900-01-01";
+        }
+
+        String[] parts = useDate.split("-");
         Calendar cal = Calendar.getInstance();
         cal.set(Calc.safeParseInt(parts[0], 1900), Calc.safeParseInt(parts[1], 1) - 1, 1);
         cal.set(Calendar.HOUR, 0);
@@ -418,11 +457,11 @@ public class SQLiteSupport {
         return new Instrument(
                 result.getString("TICKER"),
                 result.getString("NAME"),
-                getInstrumentType(result.getString("TYPE")),
-                convertToDate(result.getString("FROM")),
-                convertToDate(result.getString("TO")),
-                result.getString("PROVIDER"),
-                result.getString("SITE")
+                getInstrumentType(result.getString("CLASS")),
+                convertToDate(result.getString("SINCE"), null),
+                convertToDate(result.getString("UPDATED"), result.getString("SINCE")),
+                result.getString("DOWNLOADER"),
+                result.getString("URI")
         );
     }
 

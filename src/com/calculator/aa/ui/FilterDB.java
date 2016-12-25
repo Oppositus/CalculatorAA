@@ -149,7 +149,7 @@ public class FilterDB extends JDialog {
     private void prepareLists() {
         DefaultListModel<String> types = new DefaultListModel<>();
         types.addElement(Main.resourceBundle.getString("text.all"));
-        Main.sqLite.getTypes().forEach(types::addElement);
+        Main.sqLite.getClasses().forEach(types::addElement);
         listInstrumentTypes.setModel(types);
         listInstrumentTypes.setSelectedIndex(0);
 
