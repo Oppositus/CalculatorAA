@@ -24,6 +24,9 @@
     <autoscroll-from-editor value="true" />
     <show-object-properties value="true" />
     <loaded-nodes>
+      <connection connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea">
+        <schema name="main" object-types="column, constraint, index, table, dataset trigger, view" />
+      </connection>
       <connection connection-id="0e715153-4f08-442b-8169-17d28e3f442b">
         <schema name="main" object-types="column, constraint, index, table, dataset trigger, view" />
       </connection>
@@ -37,14 +40,26 @@
       <console name="instruments.old" type="STANDARD" />
     </connection>
     <connection id="0e715153-4f08-442b-8169-17d28e3f442b">
-      <console name="Current" type="STANDARD"><![CDATA[delete from data;]]></console>
+      <console name="Current" type="STANDARD"><![CDATA[update INSTRUMENTS set UPDATED=null ;]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
     <filter-list connection-id="5e2a626e-0006-4550-9c7d-e917b724ce7a" dataset="main.INSTRUMENTS" active-filter-id="EMPTY_FILTER" />
-    <filter-list connection-id="0e715153-4f08-442b-8169-17d28e3f442b" dataset="main.INSTRUMENTS" active-filter-id="EMPTY_FILTER" />
-    <filter-list connection-id="0e715153-4f08-442b-8169-17d28e3f442b" dataset="main.DATA" active-filter-id="EMPTY_FILTER" />
-    <filter-list connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea" dataset="main.INSTRUMENTS" active-filter-id="EMPTY_FILTER" />
+    <filter-list connection-id="0e715153-4f08-442b-8169-17d28e3f442b" dataset="main.INSTRUMENTS" active-filter-id="5d5d8064-894d-4182-81db-ad872a590f62">
+      <filter id="5d5d8064-894d-4182-81db-ad872a590f62" name="VB" temporary="false" custom-name="false" type="basic" join-type="AND">
+        <condition column="TICKER" operator="=" value="VB" active="true" />
+      </filter>
+    </filter-list>
+    <filter-list connection-id="0e715153-4f08-442b-8169-17d28e3f442b" dataset="main.DATA" active-filter-id="EMPTY_FILTER">
+      <filter id="b1463193-df25-4ded-97b8-bd2d74021b62" name="26" temporary="false" custom-name="false" type="basic" join-type="AND">
+        <condition column="INSTRUMENT" operator="=" value="26" active="true" />
+      </filter>
+    </filter-list>
+    <filter-list connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea" dataset="main.INSTRUMENTS" active-filter-id="0dbe20fd-d4ef-4fd8-8c9a-a7a45f3f0ef3">
+      <filter id="0dbe20fd-d4ef-4fd8-8c9a-a7a45f3f0ef3" name="VB" temporary="false" custom-name="false" type="basic" join-type="AND">
+        <condition column="TICKER" operator="=" value="VB" active="true" />
+      </filter>
+    </filter-list>
     <filter-list connection-id="730ff760-6aca-4dcf-9a63-25fb572e77ea" dataset="main.DOWNLOADERS" active-filter-id="EMPTY_FILTER">
       <filter id="6bece5cc-88cf-4bb7-b012-53f5c2a9aea9" name="Filter 1" temporary="false" custom-name="false" type="basic" join-type="AND">
         <condition column="ID" operator="=" value="" active="true" />

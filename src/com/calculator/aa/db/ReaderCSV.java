@@ -40,7 +40,7 @@ public class ReaderCSV {
         result = res;
     }
 
-    public ReaderCSV readFromString(String source) {
+    ReaderCSV readFromString(String source) {
         read(new BufferedReader(new StringReader(source)));
         return this;
     }

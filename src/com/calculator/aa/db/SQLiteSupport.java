@@ -11,6 +11,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.Date;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class SQLiteSupport {
 
@@ -219,9 +220,20 @@ public class SQLiteSupport {
         } else {
             ReaderCSV csv = downloader.createReader();
             ReaderCSV csvBody = csv.readFromString(data).body();
-            csvBody.lines()
+            List<String> lines = csvBody.lines()
                     .sorted(downloader.getDateComparator())
-                    .forEach(l -> insertOrUpdate(downloader, instr, l));
+                    .map(line -> "(NULL, " +
+                            instr.getId() + ", " +
+                            printDate(downloader.getDate(line)) + ", " +
+                            downloader.getOpen(line) + ", " +
+                            downloader.getHigh(line) + ", " +
+                            downloader.getLow(line) + ", " +
+                            downloader.getClose(line) + ", " +
+                            downloader.getCloseAdj(line) + ", " +
+                            downloader.getVolume(line) + ")")
+                    .collect(Collectors.toList());
+
+            insertOrUpdate(String.join(",", lines));
 
             try {
                 Date now = dateNow();
@@ -245,19 +257,11 @@ public class SQLiteSupport {
         }
     }
 
-    private void insertOrUpdate(DataDownloader downloader, Instrument instr, List<String> line) {
+    private void insertOrUpdate(String values) {
         try {
             Statement stmt = conn.createStatement();
             String sql = "INSERT OR REPLACE INTO `DATA` " +
-                    "VALUES (NULL, " +
-                    instr.getId() + ", " +
-                    printDate(downloader.getDate(line)) + ", " +
-                    downloader.getOpen(line) + ", " +
-                    downloader.getHigh(line) + ", " +
-                    downloader.getLow(line) + ", " +
-                    downloader.getClose(line) + ", " +
-                    downloader.getCloseAdj(line) + ", " +
-                    downloader.getVolume(line) + ");";
+                    "VALUES " + values + ";";
 
             stmt.executeUpdate(sql);
 
