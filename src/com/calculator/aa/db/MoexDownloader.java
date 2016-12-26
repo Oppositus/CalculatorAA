@@ -29,7 +29,7 @@ public class MoexDownloader implements DataDownloader {
 
     private static int id = -1;
 
-    private static Comparator<List<String>> dateComparator = (o1, o2) -> {
+    private static final Comparator<List<String>> dateComparator = (o1, o2) -> {
         Date d1 = parseDate(o1.get(0));
         Date d2 = parseDate(o2.get(0));
 
@@ -209,7 +209,7 @@ public class MoexDownloader implements DataDownloader {
                 List<String> thisMonth = months.get(dt);
                 thisMonth.add(l);
             } else {
-                List<String> thisMonth = new LinkedList<String>();
+                List<String> thisMonth = new LinkedList<>();
                 thisMonth.add(l);
                 months.put(dt, thisMonth);
             }

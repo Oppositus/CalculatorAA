@@ -30,11 +30,16 @@ public class ConvertOptions extends JDialog {
 
     private final List<Instrument> instruments;
     private AATableModel result;
+    private boolean dialogAborted;
+    private boolean downloadingInProgress;
 
     private ConvertOptions(List<Instrument> instrs) {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
+
+        dialogAborted = false;
+        downloadingInProgress = false;
 
         buttonOK.addActionListener(e -> onOK());
 
@@ -71,15 +76,22 @@ public class ConvertOptions extends JDialog {
     }
 
     private void onOK() {
+        downloadingInProgress = true;
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        SwingUtilities.invokeLater(() -> {
-            updateInstruments(instruments, new LinkedList<>());
-        });
+        SwingUtilities.invokeLater(() -> updateInstruments(instruments, new LinkedList<>()));
     }
 
     private void afterOk(List<Instrument> downloaded) {
-        result = processInstruments(downloaded, comboBoxValue.getSelectedIndex(), comboBoxMonth.getSelectedIndex(), checkBoxAnnual.isSelected());
+        downloadingInProgress = false;
+
         setCursor(Cursor.getDefaultCursor());
+
+        if (downloaded != null && !downloaded.isEmpty()) {
+            result = processInstruments(downloaded, comboBoxValue.getSelectedIndex(), comboBoxMonth.getSelectedIndex(), checkBoxAnnual.isSelected());
+        } else {
+            result = null;
+        }
+
         dispose();
     }
 
@@ -87,31 +99,36 @@ public class ConvertOptions extends JDialog {
         if (instrs.isEmpty()) {
             afterOk(result);
         } else {
+
+            if (dialogAborted) {
+                afterOk(null);
+                return;
+            }
+
             Instrument ins = instrs.get(0);
             instrs.remove(0);
 
-            SwingUtilities.invokeLater(() -> {
-                Main.sqLite.updateInstrumentHistory(ins, checkBoxReload.isSelected(), progressLabel, res -> {
-                    if (!res) {
-                        JOptionPane.showMessageDialog(Main.getFrame(),
-                                String.format(Main.resourceBundle.getString("text.error_downloading"), ins.toString()),
-                                Main.resourceBundle.getString("text.error"),
-                                JOptionPane.ERROR_MESSAGE);
-                    } else {
-                        result.add(ins);
-                    }
+            SwingUtilities.invokeLater(() -> Main.sqLite.updateInstrumentHistory(ins, checkBoxReload.isSelected(), progressLabel, res -> {
+                if (!res) {
+                    JOptionPane.showMessageDialog(Main.getFrame(),
+                            String.format(Main.resourceBundle.getString("text.error_downloading"), ins.toString()),
+                            Main.resourceBundle.getString("text.error"),
+                            JOptionPane.ERROR_MESSAGE);
+                } else {
+                    result.add(ins);
+                }
 
-                    SwingUtilities.invokeLater(() -> {
-                        updateInstruments(instrs, result);
-                    });
-                });
-            });
+                SwingUtilities.invokeLater(() -> updateInstruments(instrs, result));
+            }));
         }
     }
 
     private void onCancel() {
-        result = null;
-        dispose();
+        dialogAborted = true;
+        if (!downloadingInProgress) {
+            result = null;
+            dispose();
+        }
     }
 
     private void createUIComponents() {

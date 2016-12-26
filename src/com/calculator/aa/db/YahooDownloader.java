@@ -20,7 +20,7 @@ public class YahooDownloader implements DataDownloader {
 
     private static int id = -1;
 
-    private static Comparator<List<String>> dateComparator = (o1, o2) -> {
+    private static final Comparator<List<String>> dateComparator = (o1, o2) -> {
         Date d1 = parseDate(o1.get(0));
         Date d2 = parseDate(o2.get(0));
 

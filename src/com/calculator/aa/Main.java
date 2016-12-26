@@ -251,9 +251,7 @@ public class Main {
             }
 
             if ("1".equals(Main.properties.getProperty("ui.updates_check", "1"))) {
-                Timer tm = new Timer(10000, actionEvent -> {
-                    program.checkHasUpdate(false);
-                });
+                Timer tm = new Timer(10000, actionEvent -> program.checkHasUpdate(false));
                 tm.setRepeats(false);
                 tm.start();
             }

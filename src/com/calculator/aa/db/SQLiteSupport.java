@@ -153,12 +153,10 @@ public class SQLiteSupport {
             after.accept(false);
         } else {
             progress.setText(String.format(Main.resourceBundle.getString("text.progress_download"), instr.getTicker()));
-            SwingUtilities.invokeLater(() -> {
-                downloader.download(instr, reload, (s, r) -> {
-                    progress.setText(String.format(Main.resourceBundle.getString("text.progress_insert"), instr.getTicker()));
-                    SwingUtilities.invokeLater(() -> updateInstrumentHistoryResult(downloader, instr, after, s, r));
-                });
-            });
+            SwingUtilities.invokeLater(() -> downloader.download(instr, reload, (s, r) -> {
+                progress.setText(String.format(Main.resourceBundle.getString("text.progress_insert"), instr.getTicker()));
+                SwingUtilities.invokeLater(() -> updateInstrumentHistoryResult(downloader, instr, after, s, r));
+            }));
         }
     }
 
@@ -375,7 +373,7 @@ public class SQLiteSupport {
         return classes;
     }
 
-    public int getClassId(Instrument.InstrumentType type) {
+    private int getClassId(Instrument.InstrumentType type) {
         int classId = -1;
         try {
             Statement stmt = conn.createStatement();
