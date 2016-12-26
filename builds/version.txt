@@ -1,4 +1,4 @@
 application=2.1
-database=1.0
+database=2.0
 aurl=https://raw.githubusercontent.com/Oppositus/CalculatorAA/master/builds/calcaa_2_0.zip
-durl=https://raw.githubusercontent.com/Oppositus/CalculatorAA/master/builds/instruments.sqlite.zip
+durl=https://raw.githubusercontent.com/Oppositus/CalculatorAA/master/builds/instruments.source.zip

@@ -134,6 +134,8 @@ INSERT INTO "INSTRUMENTS" VALUES
     (NULL, 'XLRE', 'Real Estate Select Sector SPDR Fund', 1, 1, '2015-10-08', NULL),
     (NULL, 'RWO', 'SPDR Dow Jones Global Real Estate ETF', 1, 1, '2008-05-22', NULL),
     (NULL, 'REM', 'iShares Mortgage Real Estate Capped ETF', 1, 1, '2007-05-04', NULL),
+    (NULL, 'TLT', 'iShares 20+ Year Treasury Bond', 1, 1, '2002-07-30', NULL),
+
     (NULL, 'SCRYX', 'AB Sm Cp Core', 2, 1, '2015-12-29', NULL),
     (NULL, 'JSMGX', 'Janus Triton', 2, 1, '2005-11-30', NULL),
     (NULL, 'HFMIX', 'Hartfd:MidCap', 2, 1, '2009-02-27', NULL),

@@ -1,6 +1,6 @@
 timeout 1
 
-xcopy ./update/* . /s /e
-rd ./update /s /q
+xcopy update . /E /R /Y
+rd /S /Q update
 
 start calcaa.cmd

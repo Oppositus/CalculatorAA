@@ -523,6 +523,10 @@ class PortfolioYieldsPanel extends JPanel {
                         .max()
                         .orElse(0);
 
+        if (Main.osName.startsWith("windows")) {
+            labelCalculationsWidth += safeZone * 2;
+        }
+
         int lineHeight = (int)allBounds.get(0).getHeight();
         int lineHeightDiv2 = lineHeight / 2;
         int labelHeight = lineHeight * length;

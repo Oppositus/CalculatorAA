@@ -155,7 +155,12 @@ public class SQLiteSupport {
             progress.setText(String.format(Main.resourceBundle.getString("text.progress_download"), instr.getTicker()));
             SwingUtilities.invokeLater(() -> downloader.download(instr, reload, (s, r) -> {
                 progress.setText(String.format(Main.resourceBundle.getString("text.progress_insert"), instr.getTicker()));
-                SwingUtilities.invokeLater(() -> updateInstrumentHistoryResult(downloader, instr, after, s, r));
+                SwingUtilities.invokeLater(() -> {
+                    if (reload) {
+                        clearInstrumentData(instr);
+                    }
+                    updateInstrumentHistoryResult(downloader, instr, after, s, r);
+                });
             }));
         }
     }
@@ -213,6 +218,21 @@ public class SQLiteSupport {
         }
 
         return id;
+    }
+
+    private void clearInstrumentData(Instrument instr) {
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "DELETE FROM `DATA` WHERE `INSTRUMENT` = " + instr.getId() + ";";
+
+            stmt.executeUpdate(sql);
+
+            conn.commit();
+            stmt.close();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void updateInstrumentHistoryResult(DataDownloader downloader, Instrument instr, Consumer<Boolean> after, Boolean success, String data) {

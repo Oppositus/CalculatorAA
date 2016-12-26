@@ -77,7 +77,6 @@ public class UpdateDownloader extends JDialog {
                 }
 
                 buttonOK.setEnabled(true);
-                String os = System.getProperty("os.name").toLowerCase();
 
                 if (rebootFlag) {
                     int result = JOptionPane.showConfirmDialog(Main.getFrame(),
@@ -87,13 +86,10 @@ public class UpdateDownloader extends JDialog {
                             JOptionPane.QUESTION_MESSAGE);
 
                     if (result == JOptionPane.YES_OPTION) {
-
-
-
                         try {
-                            if (os.startsWith("windows")) {
+                            if (Main.osName.startsWith("windows")) {
                                 Runtime.getRuntime().exec("cmd /c start update.cmd");
-                            } else if (os.startsWith("linux")) {
+                            } else {
                                 Runtime.getRuntime().exec("./update.sh");
                             }
 

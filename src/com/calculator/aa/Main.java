@@ -35,6 +35,7 @@ public class Main {
     public static Properties properties;
     public static ResourceBundle resourceBundle;
     public static SQLiteSupport sqLite;
+    public static String osName;
 
     private Main() {
         mainFrame = new JFrame(resourceBundle.getString("text.program_name"));
@@ -224,6 +225,8 @@ public class Main {
 
         sqLite = new SQLiteSupport();
 
+        osName = System.getProperty("os.name").toLowerCase();
+
         SwingUtilities.invokeLater(() -> {
             program = new Main();
             createCursors();
@@ -285,11 +288,17 @@ public class Main {
     }
 
     private static void createCursors() {
-        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        if (osName.startsWith("windows")) {
+            weCursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR);
+            nsCursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR);
+        } else {
+            Toolkit toolkit = Toolkit.getDefaultToolkit();
 
-        Image we = toolkit.getImage(program.getClass().getResource("ui/icons/we-cursor.png"));
-        weCursor = toolkit.createCustomCursor(we, new Point(7, 4), "WE-CURSOR");
-        Image ns = toolkit.getImage(program.getClass().getResource("ui/icons/ns-cursor.png"));
-        nsCursor = toolkit.createCustomCursor(ns, new Point(4, 7), "NS-CURSOR");
+            Image we = toolkit.getImage(program.getClass().getResource("ui/icons/we-cursor.png"));
+            weCursor = toolkit.createCustomCursor(we, new Point(7, 4), "WE-CURSOR");
+            Image ns = toolkit.getImage(program.getClass().getResource("ui/icons/ns-cursor.png"));
+            nsCursor = toolkit.createCustomCursor(ns, new Point(4, 7), "NS-CURSOR");
+
+        }
     }
 }

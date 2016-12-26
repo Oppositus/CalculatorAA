@@ -27,6 +27,8 @@ class PortfolioChart extends JDialog {
     private JCheckBox checkBoxCAL;
     private JSpinner spinnerCAL;
     private JButton buttonZoomPortfolios;
+    private JButton buttonConvertRate;
+    private JLabel labelRatePeriod;
 
     private final String[] instruments;
     private final double[][] data;
@@ -42,6 +44,9 @@ class PortfolioChart extends JDialog {
         helper = new PortfolioChartHelper();
         helper.setPanel((PortfolioChartPanel)chartPanel);
         ((PortfolioChartPanel)chartPanel).setHelper(helper);
+        buttonConvertRate.setText(Main.resourceBundle.getString("ui.convert_y_m"));
+        buttonConvertRate.setToolTipText(Main.resourceBundle.getString("ui.convert_y_m_help"));
+        labelRatePeriod.setText(Main.resourceBundle.getString("ui.label_y"));
 
         setContentPane(contentPane);
         setModal(true);
@@ -69,81 +74,89 @@ class PortfolioChart extends JDialog {
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
         buttonCompute.addActionListener(e -> {
-            int length = instruments.length - 1;
 
-            DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-            int[] minimals = new int[length];
-            int[] maximals = new int[length];
-            int[] compares = new int[length];
+            SwingUtilities.invokeLater(() -> {
 
-            for (int col = 0; col < length; col++) {
-                int minValue = Integer.valueOf((String) model.getValueAt(0, col + 1));
-                int maxValue = Integer.valueOf((String) model.getValueAt(1, col + 1));
+                int length = instruments.length - 1;
 
-                if (minValue < 0 || maxValue > 100 || minValue > maxValue) {
+                DefaultTableModel model = (DefaultTableModel) tableLimitations.getModel();
+
+                int[] minimals = new int[length];
+                int[] maximals = new int[length];
+                int[] compares = new int[length];
+
+                for (int col = 0; col < length; col++) {
+                    int minValue = Integer.valueOf((String) model.getValueAt(0, col + 1));
+                    int maxValue = Integer.valueOf((String) model.getValueAt(1, col + 1));
+
+                    if (minValue < 0 || maxValue > 100 || minValue > maxValue) {
+                        return;
+                    }
+
+                    minimals[col] = minValue;
+                    maximals[col] = maxValue;
+                    compares[col] = Integer.valueOf((String) model.getValueAt(2, col + 1));
+                }
+
+                List<String> periodsList = Arrays.asList(periods);
+
+                int[] fromIndex = new int[1];
+                fromIndex[0] = periodsList.indexOf((String) comboBoxFrom.getSelectedItem());
+                if (fromIndex[0] < 0) {
+                    fromIndex[0] = 0;
+                }
+
+                int[] toIndex = new int[1];
+                toIndex[0] = periodsList.indexOf((String) comboBoxTo.getSelectedItem());
+                if (toIndex[0] < 0) {
+                    toIndex[0] = data.length - 1;
+                }
+
+                double[][] dataFiltered = Calc.filterValidData(data, maximals, fromIndex, toIndex);
+
+                if (dataFiltered == null) {
                     return;
                 }
 
-                minimals[col] = minValue;
-                maximals[col] = maxValue;
-                compares[col] = Integer.valueOf((String) model.getValueAt(2, col + 1));
-            }
+                indexFrom = fromIndex[0];
+                indexTo = toIndex[0];
 
-            List<String> periodsList = Arrays.asList(periods);
+                double[][] corrTable = Calc.correlationTable(dataFiltered);
+                double[] avYields = new double[length];
+                double[] sdYields = new double[length];
 
-            int[] fromIndex = new int[1];
-            fromIndex[0]= periodsList.indexOf((String)comboBoxFrom.getSelectedItem());
-            if (fromIndex[0] < 0) {
-                fromIndex[0] = 0;
-            }
+                for (int col = 0; col < length; col++) {
+                    double[] column = Calc.column(dataFiltered, col);
+                    avYields[col] = Calc.averagePercentYields(column);
+                    sdYields[col] = Calc.stdevYields(column);
+                }
 
-            int[] toIndex = new int[1];
-            toIndex[0] = periodsList.indexOf((String)comboBoxTo.getSelectedItem());
-            if (toIndex[0] < 0) {
-                toIndex[0] = data.length - 1;
-            }
+                String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
+                int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length));
+                List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dataFiltered, dividers);
 
-            double[][] dataFiltered = Calc.filterValidData(data, maximals, fromIndex, toIndex);
+                List<Portfolio> portfoliosCompare = null;
+                if (Arrays.stream(compares).sum() == 100) {
+                    portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, dataFiltered, 100);
+                }
 
-            if (dataFiltered == null) {
-                return;
-            }
+                boolean isSelected = cbShowRebalances.isSelected();
+                portfolios.forEach(p -> p.setRebalancedMode(isSelected));
+                if (portfoliosCompare != null) {
+                    portfoliosCompare.forEach(p -> p.setRebalancedMode(isSelected));
+                    portfoliosCompare.sort(Portfolio::compareTo);
+                }
 
-            indexFrom = fromIndex[0];
-            indexTo = toIndex[0];
+                if (isSelected) {
+                    portfolios.sort(Portfolio::compareTo);
+                }
 
-            double[][] corrTable = Calc.correlationTable(dataFiltered);
-            double[] avYields = new double[length];
-            double[] sdYields = new double[length];
+                updatePortfolios(portfolios, portfoliosCompare, dataFiltered);
 
-            for (int col = 0; col < length; col++) {
-                double[] column = Calc.column(dataFiltered, col);
-                avYields[col] = Calc.averagePercentYields(column);
-                sdYields[col] = Calc.stdevYields(column);
-            }
-
-            String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
-            int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length));
-            List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dataFiltered, dividers);
-
-            List<Portfolio> portfoliosCompare = null;
-            if (Arrays.stream(compares).sum() == 100) {
-                portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, dataFiltered, 100);
-            }
-
-            boolean isSelected = cbShowRebalances.isSelected();
-            portfolios.forEach(p -> p.setRebalancedMode(isSelected));
-            if (portfoliosCompare != null) {
-                portfoliosCompare.forEach(p -> p.setRebalancedMode(isSelected));
-                portfoliosCompare.sort(Portfolio::compareTo);
-            }
-
-            if (isSelected) {
-                portfolios.sort(Portfolio::compareTo);
-            }
-
-            updatePortfolios(portfolios, portfoliosCompare, dataFiltered);
+                SwingUtilities.invokeLater(() -> setCursor(Cursor.getDefaultCursor()));
+            });
         });
 
         cbFrontierOnly.addActionListener(e -> ((PortfolioChartPanel) chartPanel).setFrontierOnlyMode(cbFrontierOnly.isSelected()));
@@ -204,6 +217,30 @@ class PortfolioChart extends JDialog {
                 }
             }
             ((PortfolioChartPanel) chartPanel).zoomAllToPortfolios();
+        });
+        buttonConvertRate.addActionListener(e -> {
+
+            double rate = (double)spinnerCAL.getValue() / 100.0 + 1;
+
+            if (buttonConvertRate.getText().equals(Main.resourceBundle.getString("ui.convert_y_m"))) {
+                buttonConvertRate.setText(Main.resourceBundle.getString("ui.convert_m_y"));
+                buttonConvertRate.setToolTipText(Main.resourceBundle.getString("ui.convert_m_y_help"));
+                labelRatePeriod.setText(Main.resourceBundle.getString("ui.label_m"));
+                rate = Math.pow(rate, 1.0 / 12.0);
+            } else {
+                buttonConvertRate.setText(Main.resourceBundle.getString("ui.convert_y_m"));
+                buttonConvertRate.setToolTipText(Main.resourceBundle.getString("ui.convert_y_m_help"));
+                labelRatePeriod.setText(Main.resourceBundle.getString("ui.label_y"));
+                rate = Math.pow(rate, 12);
+            }
+
+            spinnerCAL.setValue((rate - 1) * 100);
+
+            if (checkBoxCAL.isSelected()) {
+                for (ActionListener a : buttonCompute.getActionListeners()) {
+                    a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
+                }
+            }
         });
     }
 

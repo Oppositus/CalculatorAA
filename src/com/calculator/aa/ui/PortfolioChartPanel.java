@@ -539,24 +539,22 @@ class PortfolioChartPanel extends JPanel {
         int toY = mapY(bestCALPortfolio.yield());
 
         // too much zoom
-        if (fromX < -100000) {
-            return;
-        }
+        if (fromX > -100000) {
+            g.setColor(CALColor);
+            g.setClip(drawingArea);
+            g.drawLine(fromX, fromY, toX, toY);
+            g.setClip(null);
 
-        g.setColor(CALColor);
-        g.setClip(drawingArea);
-        g.drawLine(fromX, fromY, toX, toY);
-        g.setClip(null);
-
-        int freePos = mapY(riskFreeRate);
-        if (wasZoomed) {
-            if (riskFreeRate <= maxY && riskFreeRate >= minY) {
-                g.drawString(Calc.formatPercent1(riskFreeRate), drawingArea.x - stringWidth - safeTop, freePos);
+            int freePos = mapY(riskFreeRate);
+            if (wasZoomed) {
+                if (riskFreeRate <= maxY && riskFreeRate >= minY) {
+                    g.drawString(Calc.formatPercent1(riskFreeRate), drawingArea.x - stringWidth - safeTop, freePos);
+                    g.drawLine(drawingArea.x, freePos, drawingArea.x - safeTop, freePos);
+                }
+            } else {
+                g.drawString(Calc.formatPercent1(riskFreeRate), drawingArea.x - stringWidth - safeTop, Math.max(fromY, drawingArea.y + stringHeight));
                 g.drawLine(drawingArea.x, freePos, drawingArea.x - safeTop, freePos);
             }
-        } else {
-            g.drawString(Calc.formatPercent1(riskFreeRate), drawingArea.x - stringWidth - safeTop, Math.max(fromY, drawingArea.y + stringHeight));
-            g.drawLine(drawingArea.x, freePos, drawingArea.x - safeTop, freePos);
         }
 
         drawLargePortfolio(g, bestCALPortfolio, CALColor);
