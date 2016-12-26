@@ -116,7 +116,7 @@ public class SQLiteSupport {
         return instruments;
     }
 
-    Date getLastUpdateDate(Instrument instr) {
+    Date getLastUpdateDate(Instrument instr, boolean reload) {
         String last = "1900-01-01";
         try {
             Statement stmt = conn.createStatement();
@@ -126,7 +126,7 @@ public class SQLiteSupport {
 
             if (result.next()) {
                 last = result.getString("UPDATED");
-                if (last == null) {
+                if (reload || last == null) {
                     last = result.getString("SINCE");
                     if (last == null) {
                         last = "1900-01-01";
@@ -147,12 +147,12 @@ public class SQLiteSupport {
         return convertToDate(last, null);
     }
 
-    public void updateInstrumentHistory(Instrument instr, Consumer<Boolean> after) {
+    public void updateInstrumentHistory(Instrument instr, boolean reload, Consumer<Boolean> after) {
         DataDownloader downloader = DownloaderFactory.getDownloader(instr.getDownloaderName());
         if (downloader == null) {
             after.accept(false);
         } else {
-            downloader.download(instr, (s, r) -> updateInstrumentHistoryResult(downloader, instr, after, s, r));
+            downloader.download(instr, reload, (s, r) -> updateInstrumentHistoryResult(downloader, instr, after, s, r));
         }
     }
 

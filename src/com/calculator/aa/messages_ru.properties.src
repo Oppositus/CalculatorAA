@@ -120,3 +120,4 @@ ui.zoom_actual=Вместить
 ui.update_download_app=Загрузка программы
 ui.update_download_base=Загрузка базы данных
 ui.start_update=Начать обновление
+ui.reload_data=Скачать заново всю историю инструментов

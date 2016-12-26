@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 interface DataDownloader {
-    void download(Instrument instrument, BiConsumer<Boolean, String> after);
+    void download(Instrument instrument, boolean reload, BiConsumer<Boolean, String> after);
     ReaderCSV createReader();
     Comparator<List<String>> getDateComparator();
     int getId();

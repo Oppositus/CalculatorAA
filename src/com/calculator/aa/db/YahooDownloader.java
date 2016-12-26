@@ -34,19 +34,19 @@ public class YahooDownloader implements DataDownloader {
     }
 
     @Override
-    public void download(Instrument instrument, BiConsumer<Boolean, String> after) {
+    public void download(Instrument instrument, boolean reload, BiConsumer<Boolean, String> after) {
 
-        Date lastUpdated = Main.sqLite.getLastUpdateDate(instrument);
+        Date lastUpdated = Main.sqLite.getLastUpdateDate(instrument, reload);
 
         Calendar calFrom = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         calFrom.setTime(lastUpdated);
         Calendar calTo = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
         String url = DownloadURL.replace("{instrument}", instrument.getTicker())
-                .replace("{month_from}", String.valueOf(calFrom.get(Calendar.MONTH)))
+                .replace("{month_from}", String.valueOf(calFrom.get(Calendar.MONTH) + 1))
                 .replace("{day_from}", "1")
                 .replace("{year_from}", String.valueOf(calFrom.get(Calendar.YEAR)))
-                .replace("{month_to}", String.valueOf(calTo.get(Calendar.MONTH)))
+                .replace("{month_to}", String.valueOf(calTo.get(Calendar.MONTH) + 1))
                 .replace("{day_to}", String.valueOf(calTo.get(Calendar.DAY_OF_MONTH)))
                 .replace("{year_to}", String.valueOf(calTo.get(Calendar.YEAR)))
                 .replace("{period}", "m");

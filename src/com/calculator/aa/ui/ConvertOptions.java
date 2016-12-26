@@ -7,6 +7,7 @@ import com.calculator.aa.db.Instrument;
 import com.calculator.aa.db.ReaderCSV;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -24,6 +25,7 @@ public class ConvertOptions extends JDialog {
     private JComboBox<String> comboBoxMonth;
     private JCheckBox checkBoxAnnual;
     private JLabel labelMonth;
+    private JCheckBox checkBoxReload;
 
     private final List<Instrument> instruments;
     private AATableModel result;
@@ -68,15 +70,19 @@ public class ConvertOptions extends JDialog {
     }
 
     private void onOK() {
-        List<Instrument> downloaded = updateInstruments(instruments);
-        result = processInstruments(downloaded, comboBoxValue.getSelectedIndex(), comboBoxMonth.getSelectedIndex(), checkBoxAnnual.isSelected());
-        dispose();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        SwingUtilities.invokeLater(() -> {
+            List<Instrument> downloaded = updateInstruments(instruments);
+            result = processInstruments(downloaded, comboBoxValue.getSelectedIndex(), comboBoxMonth.getSelectedIndex(), checkBoxAnnual.isSelected());
+            setCursor(Cursor.getDefaultCursor());
+            dispose();
+        });
     }
 
     private List<Instrument> updateInstruments(List<Instrument> instrs) {
         List<Instrument> result = new LinkedList<>();
         for (Instrument ins : instrs) {
-            Main.sqLite.updateInstrumentHistory(ins, res -> {
+            Main.sqLite.updateInstrumentHistory(ins, checkBoxReload.isSelected(), res -> {
                 if (!res) {
                     JOptionPane.showMessageDialog(Main.getFrame(),
                             String.format(Main.resourceBundle.getString("text.error_downloading"), ins.toString()),
