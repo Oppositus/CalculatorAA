@@ -218,39 +218,44 @@ public class SQLiteSupport {
         if (!success) {
             after.accept(result);
         } else {
-            ReaderCSV csv = downloader.createReader();
-            ReaderCSV csvBody = csv.readFromString(data).body();
-            List<String> lines = csvBody.lines()
-                    .sorted(downloader.getDateComparator())
-                    .map(line -> "(NULL, " +
-                            instr.getId() + ", " +
-                            printDate(downloader.getDate(line)) + ", " +
-                            downloader.getOpen(line) + ", " +
-                            downloader.getHigh(line) + ", " +
-                            downloader.getLow(line) + ", " +
-                            downloader.getClose(line) + ", " +
-                            downloader.getCloseAdj(line) + ", " +
-                            downloader.getVolume(line) + ")")
-                    .collect(Collectors.toList());
 
-            insertOrUpdate(String.join(",", lines));
+            if (!data.isEmpty()) {
+                ReaderCSV csv = downloader.createReader();
+                ReaderCSV csvBody = csv.readFromString(data).body();
+                List<String> lines = csvBody.lines()
+                        .sorted(downloader.getDateComparator())
+                        .map(line -> "(NULL, " +
+                                instr.getId() + ", " +
+                                printDate(downloader.getDate(line)) + ", " +
+                                downloader.getOpen(line) + ", " +
+                                downloader.getHigh(line) + ", " +
+                                downloader.getLow(line) + ", " +
+                                downloader.getClose(line) + ", " +
+                                downloader.getCloseAdj(line) + ", " +
+                                downloader.getVolume(line) + ")")
+                        .collect(Collectors.toList());
 
-            try {
-                Date now = dateNow();
-                Statement stmt = conn.createStatement();
-                String sql = "UPDATE `INSTRUMENTS` SET " +
-                        "`UPDATED`=" + printDate(now) + " " +
-                        "WHERE `TICKER`='" + escapeSQLite(instr.getTicker()) + "';";
+                insertOrUpdate(String.join(",", lines));
 
-                stmt.executeUpdate(sql);
+                try {
+                    Date now = dateNow();
+                    Statement stmt = conn.createStatement();
+                    String sql = "UPDATE `INSTRUMENTS` SET " +
+                            "`UPDATED`=" + printDate(now) + " " +
+                            "WHERE `TICKER`='" + escapeSQLite(instr.getTicker()) + "';";
 
-                conn.commit();
-                stmt.close();
+                    stmt.executeUpdate(sql);
 
+                    conn.commit();
+                    stmt.close();
+
+                    result = true;
+
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
                 result = true;
-
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
             }
 
             after.accept(result);
@@ -459,7 +464,7 @@ public class SQLiteSupport {
 
         String[] parts = useDate.split("-");
         Calendar cal = Calendar.getInstance();
-        cal.set(Calc.safeParseInt(parts[0], 1900), Calc.safeParseInt(parts[1], 1) - 1, 1);
+        cal.set(Calc.safeParseInt(parts[0], 1900), Calc.safeParseInt(parts[1], 1) - 1, Calc.safeParseInt(parts[2], 1));
         cal.set(Calendar.HOUR, 0);
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
@@ -468,7 +473,7 @@ public class SQLiteSupport {
         return cal.getTime();
     }
 
-    private Date dateNow() {
+    public static Date dateNow() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR, 0);
         cal.set(Calendar.HOUR_OF_DAY, 0);

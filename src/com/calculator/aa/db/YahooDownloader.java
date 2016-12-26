@@ -38,6 +38,11 @@ public class YahooDownloader implements DataDownloader {
 
         Date lastUpdated = Main.sqLite.getLastUpdateDate(instrument, reload);
 
+        if (SQLiteSupport.dateNow().equals(lastUpdated)) {
+            after.accept(true, "");
+            return;
+        }
+
         Calendar calFrom = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         calFrom.setTime(lastUpdated);
         Calendar calTo = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -160,8 +165,12 @@ public class YahooDownloader implements DataDownloader {
     private static Date parseDate(String str) {
         int[] splitted = Arrays.stream(str.split("-")).mapToInt(s -> Calc.safeParseInt(s, 0)).toArray();
 
-        Calendar cal = Calendar.getInstance();
-        cal.set(splitted[0], splitted[1] - 1, splitted[2]);
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.set(splitted[0], splitted[1] - 1, splitted[2], 0, 0, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        System.out.println("Y: " + str + " -> " + cal.getTime());
+
         return cal.getTime();
     }
 
