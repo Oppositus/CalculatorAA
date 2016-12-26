@@ -13,5 +13,4 @@ hs_err_pid*
 Будет удалено out/
 calcaa.properties
 out/
-
-
+.idea/dbnavigator.xml
