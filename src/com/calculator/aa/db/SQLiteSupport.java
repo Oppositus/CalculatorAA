@@ -147,12 +147,18 @@ public class SQLiteSupport {
         return convertToDate(last, null);
     }
 
-    public void updateInstrumentHistory(Instrument instr, boolean reload, Consumer<Boolean> after) {
+    public void updateInstrumentHistory(Instrument instr, boolean reload, JLabel progress, Consumer<Boolean> after) {
         DataDownloader downloader = DownloaderFactory.getDownloader(instr.getDownloaderName());
         if (downloader == null) {
             after.accept(false);
         } else {
-            downloader.download(instr, reload, (s, r) -> updateInstrumentHistoryResult(downloader, instr, after, s, r));
+            progress.setText(String.format(Main.resourceBundle.getString("text.progress_download"), instr.getTicker()));
+            SwingUtilities.invokeLater(() -> {
+                downloader.download(instr, reload, (s, r) -> {
+                    progress.setText(String.format(Main.resourceBundle.getString("text.progress_insert"), instr.getTicker()));
+                    SwingUtilities.invokeLater(() -> updateInstrumentHistoryResult(downloader, instr, after, s, r));
+                });
+            });
         }
     }
 

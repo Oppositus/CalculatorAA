@@ -169,8 +169,6 @@ public class YahooDownloader implements DataDownloader {
         cal.set(splitted[0], splitted[1] - 1, splitted[2], 0, 0, 0);
         cal.set(Calendar.MILLISECOND, 0);
 
-        System.out.println("Y: " + str + " -> " + cal.getTime());
-
         return cal.getTime();
     }
 
