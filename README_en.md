@@ -51,7 +51,13 @@ it's behavior depends on current locale:
         Other variants: first is day, second is month
 
 - "Instruments base" button opens dialog there you can find an instrument. Available filters are:
-instrument type, data provider, instrument history length and name.
+instrument type, data provider, instrument history length and name. After pressing "Next >>"
+button user should to choose:
+    - Which value for the period to use (Open, High, Low, Close, Adjusted Close). Adjusted Close
+    is the price of an instrument with dividends and other payments included.
+    - Checkbox "Convert monthly data to annual" converts data to annual values using selected month.
+    - Checkbox "Reload all history for instruments" erases stored data for the instrument and
+    downloads it again.
 - "Open" button allows you to open a CSV file with data. Multiple files can be selected.
 In the case of multiple files are selected they will be merged.
 - "Merge" button adds data from another CSV file to the current table.
@@ -114,8 +120,8 @@ This feature allows watching portfolio evolution.
 - Drop down lists "From" and "To" set the interval for which yields will be calculated.
 If "From" value is less than the minimal date with full instruments history,
 the minimal date will be used.
-- "Frontier only" button switches drawing mode: all portfolios or efficient-frontier portfolios.
-- "Rebalances" button colorizes chart depending on portfolio performance with rebalances.
+- "Frontier only" checkbox switches drawing mode: all portfolios or efficient-frontier portfolios.
+- "Rebalances" checkbox colorizes chart depending on portfolio performance with rebalances.
 - "Draw" button redraws the chart.
 - The nearest portfolio is highlighted then the mouse is moved.
 - Left mouse button click opens yields chart for the portfolio.
@@ -124,6 +130,9 @@ the minimal date will be used.
 for comparing or to view it's components.
 - "Increase accuracy" button recalculate efficient frontier with more accuracy.
 - "Maximize accuracy" button recalculate efficient frontier with maximum accuracy.
+- Checkbox "CAL for risk-free rate..." shows best possible capital allocation line
+for given interest rate. "Y->M" ("M->Y") button converts annual interest rate to monthly and 
+vice versa.
 
 When drawing portfolios the application is behaves depending on instruments count and weights limitations.
 Depending on its the step between portfolios is selected. If there are too many instruments then calculations
@@ -137,7 +146,7 @@ to include maximum available history.
 - Checkboxes 1σ, 2σ, 3σ enables drawing risk deviations.
 - "Portfolio components" button shows a table with portfolio components.
 - "Logarithmic scale" button switch vertical scale type.
-- "Rebalances" button shows portfolio yields with rebalances.
+- "Rebalances" checkbox shows portfolio yields with rebalances.
 - "Forecast" button shows portfolio yields comparing to model yields.
 
 ## Installing and launching
