@@ -199,7 +199,7 @@ class PortfolioYieldsPanel extends JPanel {
             instruments[i] = String.format("%s (%s)", is[i], Calc.formatPercent0(ws[i]));
         }
 
-        periods = realYields.length + (modelYields.length - realYields.length);
+        periods = realYields.length + (modelYields.length - realYields.length) - 1;
         risk = r;
         sigmas = ss;
 
