@@ -228,8 +228,6 @@ public class ConvertOptions extends JDialog {
         int month = Calc.safeParseInt(Main.properties.getProperty("convert.month", "0"), 0);
         boolean annual = "1".equals(Main.properties.getProperty("convert.annual", "0"));
 
-        Instrument.ValueType vt =typeFromInt(val);
-
         List<Instrument> instruments = Stream.of(tickers)
                 .map(Main.sqLite::findInstrument)
                 .filter(Objects::nonNull)

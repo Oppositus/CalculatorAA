@@ -214,7 +214,7 @@ class PortfolioChartPanel extends JPanel {
         }
     }
 
-    PortfolioChartPanel(PortfolioChartHelper hlp) {
+    PortfolioChartPanel() {
         super();
 
         addMouseListener(new mouseEnterExitListener());
@@ -398,7 +398,7 @@ class PortfolioChartPanel extends JPanel {
 
         if ((mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) || popupMenu.isVisible()) {
             drawNearest(g);
-            drawCross(g, w, h);
+            drawCross(g, w);
         }
 
         if (dragMode) {
@@ -560,7 +560,7 @@ class PortfolioChartPanel extends JPanel {
         drawLargePortfolio(g, bestCALPortfolio, CALColor);
     }
 
-    private void drawCross(Graphics g, int w, int h) {
+    private void drawCross(Graphics g, int w) {
         g.setColor(axisColor);
 
         if (!drawingArea.contains(mouseX, mouseY)) {

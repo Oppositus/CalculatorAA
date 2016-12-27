@@ -165,38 +165,6 @@ public class SQLiteSupport {
         }
     }
 
-    public boolean newInstrument(Instrument instr, Date since) {
-        DataDownloader downloader = DownloaderFactory.getDownloader(instr.getDownloaderName());
-        if (downloader == null) {
-            return false;
-        } else {
-
-            try {
-                String sinceStr = printDate(since == null ? dateNow() : since);
-
-                Statement stmt = conn.createStatement();
-                String sql = "INSERT INTO `INSTRUMENTS` VALUES " +
-                        "(NULL, " +
-                        "'" + escapeSQLite(instr.getTicker()) + "', " +
-                        "'" + escapeSQLite(instr.getName()) + "', " +
-                        getClassId(instr.getType()) + ", " +
-                        downloader.getId() + ", " +
-                        sinceStr +
-                        ", NULL);";
-
-                stmt.executeUpdate(sql);
-
-                conn.commit();
-                stmt.close();
-
-                return true;
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
-                return false;
-            }
-        }
-    }
-
     int getDownloaderId(DataDownloader downloader) {
         int id = -1;
 

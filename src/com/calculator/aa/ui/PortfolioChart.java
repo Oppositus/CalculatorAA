@@ -340,7 +340,7 @@ class PortfolioChart extends JDialog {
     }
 
     private void createUIComponents() {
-        chartPanel = new PortfolioChartPanel(helper);
+        chartPanel = new PortfolioChartPanel();
         comboBoxFrom = new JComboBox<>();
         comboBoxTo = new JComboBox<>();
         spinnerCAL = new JSpinner(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.1));
