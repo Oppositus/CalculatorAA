@@ -94,7 +94,7 @@ public class Instrument {
         }
     }
 
-    public AATableModel getModel() {
+    public AATableModel getTableModelForInstrument() {
         int length = values.size();
         double[][] vals = new double[length][1];
         String[] periods = new String[length];

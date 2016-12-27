@@ -44,6 +44,10 @@ CREATE TABLE "DATA" (
 	"VOLUME"        REAL                        NOT NULL
 );
 
+CREATE TABLE "VERSION" (
+	"VER"          TEXT
+);
+
 -- Create indexes
 CREATE INDEX "INSTRUMENTS_DOWNLOADER" ON "INSTRUMENTS" ("DOWNLOADER");
 CREATE INDEX "INSTRUMENTS_CLASS" ON "INSTRUMENTS" ("CLASS");
@@ -51,17 +55,17 @@ CREATE INDEX "INSTRUMENTS_SINCE" ON "INSTRUMENTS" ("SINCE");
 CREATE UNIQUE INDEX "DATA_UNIQ" ON "DATA" ("INSTRUMENT", "DATE");
 
 -- Create data
--- Create classes
+INSERT INTO "VERSION" VALUES
+    ('2.0');
+
 INSERT INTO "CLASSES" VALUES
     (1, 'ETF'),
     (2, 'FUND');
 
--- Create downloaders
 INSERT INTO "DOWNLOADERS" VALUES
     (1, 'Yahoo Finance', 'https://finance.yahoo.com/'),
     (2, 'Moscow Exchange', 'http://moex.com/');
 
--- Create instruments
 INSERT INTO "INSTRUMENTS" VALUES
     (NULL, 'SPY', 'SPDR S&P 500 ETF', 1, 1, '1993-01-29', NULL),
     (NULL, 'IVV', 'iShares Core S&P 500 ETF', 1, 1, '2000-05-19', NULL),

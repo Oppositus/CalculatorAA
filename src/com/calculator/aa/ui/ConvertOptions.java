@@ -178,7 +178,7 @@ public class ConvertOptions extends JDialog {
                     return i;
                 })
                 .map(i -> {
-                    AATableModel model = i.getModel();
+                    AATableModel model = i.getTableModelForInstrument();
                     model.setDateFormat(MainWindow.DateFormats.DATE_FORMAT_YYYY_MM_DD);
                     return model;
                 })

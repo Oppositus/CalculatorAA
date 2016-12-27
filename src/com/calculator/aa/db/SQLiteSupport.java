@@ -220,6 +220,29 @@ public class SQLiteSupport {
         return id;
     }
 
+    public String getDatabaseVersion() {
+        String version = "0";
+
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT `VER` FROM `VERSION` LIMIT 1;";
+
+            ResultSet result = stmt.executeQuery(sql);
+
+            if (result.next()) {
+                version = result.getString("VER");
+            }
+
+            conn.commit();
+            stmt.close();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
+        }
+
+        return version;
+    }
+
     private void clearInstrumentData(Instrument instr) {
         try {
             Statement stmt = conn.createStatement();
