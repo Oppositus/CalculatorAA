@@ -186,14 +186,20 @@ class PortfolioYieldsPanel extends JPanel {
         inLabelArea = false;
     }
 
-    void setData(String[] ls, double[] ry, double[] my, double r, boolean[] ss, boolean lg, double[][] iy, String[] is) {
+    void setData(String[] ls, double[] ry, double[] my, double r, boolean[] ss, boolean lg, double[][] iy, String[] is, double[] ws) {
         isLog = lg;
         labels = ls;
         realYields = ry;
         modelYields = my;
         instrumentsYields = iy;
-        instruments = is;
-        periods = realYields.length + (modelYields.length - realYields.length);
+
+        int len = is.length;
+        instruments = new String[len];
+        for (int i = 0; i < len; i++) {
+            instruments[i] = String.format("%s (%s)", is[i], Calc.formatPercent0(ws[i]));
+        }
+
+        periods = realYields.length + (modelYields.length - realYields.length) - 1;
         risk = r;
         sigmas = ss;
 

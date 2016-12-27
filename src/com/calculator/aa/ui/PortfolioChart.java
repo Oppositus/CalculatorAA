@@ -114,6 +114,11 @@ class PortfolioChart extends JDialog {
                     toIndex[0] = data.length - 1;
                 }
 
+                if (toIndex[0] - fromIndex[0] < 2) {
+                    setCursor(Cursor.getDefaultCursor());
+                    return;
+                }
+
                 double[][] dataFiltered = Calc.filterValidData(data, maximals, fromIndex, toIndex);
 
                 if (dataFiltered == null) {
@@ -335,7 +340,7 @@ class PortfolioChart extends JDialog {
     }
 
     private void createUIComponents() {
-        chartPanel = new PortfolioChartPanel(helper);
+        chartPanel = new PortfolioChartPanel();
         comboBoxFrom = new JComboBox<>();
         comboBoxTo = new JComboBox<>();
         spinnerCAL = new JSpinner(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.1));

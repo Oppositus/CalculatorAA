@@ -83,7 +83,8 @@ class YieldsChart extends JDialog {
             };
             double[][] instrumentsYields = calculateInstrumentYields(isLog);
             String[] instrumentsFiltered = filterInstruments();
-            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog, instrumentsYields, instrumentsFiltered);
+            double[] instrumentWeights = filterWeights();
+            ((PortfolioYieldsPanel)yieldsPanel).setData(labels, realYields, portfolioYields, portfolio.risk(), sigmas, isLog, instrumentsYields, instrumentsFiltered, instrumentWeights);
         });
         buttonLogScale.addActionListener(e -> {
             for(ActionListener a: buttonDraw.getActionListeners()) {
@@ -231,6 +232,25 @@ class YieldsChart extends JDialog {
         }
 
         return result.toArray(new String[0]);
+    }
+
+    private double[] filterWeights() {
+        List<Double> result = new LinkedList<>();
+        double[] weights = portfolio.weights();
+
+        for (double w : weights) {
+            if (w > 0) {
+                result.add(w);
+            }
+        }
+
+        int length = result.size();
+        double[] doubleResult = new double[length];
+        for (int i = 0; i < length; i++) {
+            doubleResult[i] = result.get(i);
+        }
+
+        return doubleResult;
     }
 
     static void showYields(String[] labels, double[][] data, Portfolio portfolio) {

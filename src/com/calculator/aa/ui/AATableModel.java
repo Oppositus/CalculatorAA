@@ -311,9 +311,13 @@ public class AATableModel extends AbstractTableModel {
 
     Zipper toZipper() {
 
-        int cols = data[0].length;
+        int cols = data.length != 0 ? data[0].length : 0;
 
         List<Object> keys = Arrays.asList(dateFormat == MainWindow.DateFormats.DATE_FORMAT_NONE ? periodsSource : periods);
+        if (keys.size() == 0) {
+            keys = new LinkedList<>();
+            keys.add(SQLiteSupport.dateNow());
+        }
         List<List<Double>> values = new LinkedList<>();
         List<String> labels = Arrays.asList(Arrays.copyOfRange(instruments, 1, instruments.length));
 
@@ -322,6 +326,11 @@ public class AATableModel extends AbstractTableModel {
             for (int col = 0; col < cols; col++) {
                 r.add(row[col]);
             }
+            values.add(r);
+        }
+        if (values.size() == 0) {
+            List<Double> r = new LinkedList<>();
+            r.add(0.0);
             values.add(r);
         }
 

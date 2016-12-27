@@ -178,7 +178,7 @@ public class ConvertOptions extends JDialog {
                     return i;
                 })
                 .map(i -> {
-                    AATableModel model = i.getModel();
+                    AATableModel model = i.getTableModelForInstrument();
                     model.setDateFormat(MainWindow.DateFormats.DATE_FORMAT_YYYY_MM_DD);
                     return model;
                 })
@@ -205,10 +205,10 @@ public class ConvertOptions extends JDialog {
         }
     }
 
-    static AATableModel showOptions(List<Instrument> instruments) {
+    static AATableModel showOptions(List<Instrument> instruments, String title) {
 
         ConvertOptions dialog = new ConvertOptions(instruments);
-        dialog.setTitle(Main.resourceBundle.getString("ui.convert_options"));
+        dialog.setTitle(title == null ? Main.resourceBundle.getString("ui.convert_options") : title);
         dialog.setLocationRelativeTo(Main.getFrame());
 
         dialog.pack();
@@ -227,8 +227,6 @@ public class ConvertOptions extends JDialog {
         int val = Calc.safeParseInt(Main.properties.getProperty("convert.value", "0"), 0);
         int month = Calc.safeParseInt(Main.properties.getProperty("convert.month", "0"), 0);
         boolean annual = "1".equals(Main.properties.getProperty("convert.annual", "0"));
-
-        Instrument.ValueType vt =typeFromInt(val);
 
         List<Instrument> instruments = Stream.of(tickers)
                 .map(Main.sqLite::findInstrument)

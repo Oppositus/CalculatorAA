@@ -3,6 +3,7 @@ package com.calculator.aa.ui;
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.Zipper;
+import com.calculator.aa.db.Instrument;
 import com.calculator.aa.db.ReaderCSV;
 
 import javax.swing.*;
@@ -14,9 +15,7 @@ import java.awt.event.KeyEvent;
 import java.awt.font.TextAttribute;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,6 +37,7 @@ public class MainWindow {
     private JButton buttonSettings;
     private JButton buttonDataBase;
     private JButton buttonUpdate;
+    private JButton buttonUpdateData;
 
     private String[] savedOptions;
     private String lastFileName;
@@ -267,13 +267,22 @@ public class MainWindow {
         buttonDataBase.addActionListener(actionEvent -> {
             String[] instr = ((AATableModel)mainTable.getModel()).getInstrumentsOnly();
             AATableModel newModel = FilterDB.showFilter(instr);
+            setNewModel(newModel);
             if (newModel != null) {
-                setNewModel(newModel);
                 String[] newInstr = newModel.getInstrumentsOnly();
                 Main.properties.setProperty("files.last", "base:" + String.join(";", newInstr));
             }
         });
         buttonUpdate.addActionListener(actionEvent -> UpdateDownloader.showDownloader());
+        buttonUpdateData.addActionListener(actionEvent -> {
+            String[] instr = ((AATableModel)mainTable.getModel()).getInstrumentsOnly();
+            List<Instrument> instrs = Stream.of(instr)
+                    .map(Main.sqLite::findInstrument)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            AATableModel newModel = ConvertOptions.showOptions(instrs, Main.resourceBundle.getString("text.convert_options_update"));
+            setNewModel(newModel);
+        });
     }
 
     private void askCSVOptions(boolean askDates, Runnable after) {
@@ -369,12 +378,14 @@ public class MainWindow {
     }
 
     private void setNewModel(AATableModel newModel) {
-        int width = newModel.getWidth();
-        int height = newModel.getHeight();
+        if (newModel != null) {
+            int width = newModel.getWidth();
+            int height = newModel.getHeight();
 
-        mainTable.setModel(newModel);
-        for (int i = 0; i < width; i++) {
-            mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(height));
+            mainTable.setModel(newModel);
+            for (int i = 0; i < width; i++) {
+                mainTable.getColumnModel().getColumn(i).setCellRenderer(new AATableCellRenderer(height));
+            }
         }
     }
 

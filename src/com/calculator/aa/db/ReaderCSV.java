@@ -45,10 +45,6 @@ public class ReaderCSV {
         return this;
     }
 
-    public ReaderCSV readFromFile(String fileName) {
-        return readFromFile(new File(fileName));
-    }
-
     public ReaderCSV readFromFile(File file) {
         try {
             read(new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)));
