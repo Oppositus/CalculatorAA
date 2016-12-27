@@ -18,8 +18,8 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class Main {
-    private static final String versionApp = "2.0";
-    private static final String versionBase = "1.0";
+    private static final String versionApp = "2.1";
+    private static final String versionBase = "2.0";
     private static final String updateUrl = "https://raw.githubusercontent.com/Oppositus/CalculatorAA/master/builds/version.txt";
     public static String newVersionUrl = null;
     public static String newDatabaseUrl = null;
