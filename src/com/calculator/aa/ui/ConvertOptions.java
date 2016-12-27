@@ -205,10 +205,10 @@ public class ConvertOptions extends JDialog {
         }
     }
 
-    static AATableModel showOptions(List<Instrument> instruments) {
+    static AATableModel showOptions(List<Instrument> instruments, String title) {
 
         ConvertOptions dialog = new ConvertOptions(instruments);
-        dialog.setTitle(Main.resourceBundle.getString("ui.convert_options"));
+        dialog.setTitle(title == null ? Main.resourceBundle.getString("ui.convert_options") : title);
         dialog.setLocationRelativeTo(Main.getFrame());
 
         dialog.pack();

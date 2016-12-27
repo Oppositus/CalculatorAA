@@ -27,6 +27,14 @@
               <toolTipText resource-bundle="com/calculator/aa/messages" key="ui.instrument_db"/>
             </properties>
           </component>
+          <component id="ea71f" class="javax.swing.JButton" binding="buttonUpdateData">
+            <constraints/>
+            <properties>
+              <icon value="com/calculator/aa/ui/icons/update_instruments.png"/>
+              <text value=""/>
+              <toolTipText resource-bundle="com/calculator/aa/messages" key="ui.update_data"/>
+            </properties>
+          </component>
           <component id="f126" class="javax.swing.JButton" binding="buttonOpen">
             <constraints/>
             <properties>
@@ -125,9 +133,10 @@
               <toolTipText resource-bundle="com/calculator/aa/messages" key="ui.remove_column"/>
             </properties>
           </component>
-          <hspacer id="9dfe3">
+          <component id="e5c8e" class="javax.swing.JToolBar$Separator">
             <constraints/>
-          </hspacer>
+            <properties/>
+          </component>
           <component id="f5dfe" class="javax.swing.JButton" binding="buttonSettings">
             <constraints/>
             <properties>

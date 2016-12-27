@@ -166,7 +166,7 @@ public class FilterDB extends JDialog {
 
     private void onOK() {
         if (selectedTickets.size() > 0) {
-            result = ConvertOptions.showOptions(selectedTickets);
+            result = ConvertOptions.showOptions(selectedTickets, null);
         }
         isAborted = false;
         if (result != null) {
