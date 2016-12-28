@@ -13,6 +13,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 class PortfolioChart extends JDialog {
+
+    enum Coefficients {
+        NONE,
+        SHARP
+    }
+
     private JPanel contentPane;
     private JButton buttonOK;
     private JPanel chartPanel;
@@ -29,6 +35,8 @@ class PortfolioChart extends JDialog {
     private JButton buttonZoomPortfolios;
     private JButton buttonConvertRate;
     private JLabel labelRatePeriod;
+    private JRadioButton radioButtonNone;
+    private JRadioButton radioButtonSharp;
 
     private final String[] instruments;
     private final double[][] data;
@@ -247,6 +255,16 @@ class PortfolioChart extends JDialog {
                 }
             }
         });
+        radioButtonNone.addActionListener(e -> {
+            if (radioButtonNone.isSelected()) {
+                setCoefficientVisible(Coefficients.NONE);
+            }
+        });
+        radioButtonSharp.addActionListener(e -> {
+            if (radioButtonSharp.isSelected()) {
+                setCoefficientVisible(Coefficients.SHARP);
+            }
+        });
     }
 
     private int calculateDivision(int[] minimals, int[] maximals) {
@@ -453,6 +471,10 @@ class PortfolioChart extends JDialog {
         for (int i = 0; i < length; i++) {
             model.setValueAt(String.valueOf(weights[i]), 2, i + 1);
         }
+    }
+
+    private void setCoefficientVisible(Coefficients coefficient) {
+
     }
 
     static void showChart(String[] instruments, double[][] data) {

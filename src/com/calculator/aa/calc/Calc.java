@@ -478,5 +478,9 @@ public class Calc {
             return def;
         }
     }
+
+    public double coeffSharp(Portfolio p, double riskFree) {
+        return (p.yield() - riskFree) / p.risk();
+    }
 }
 

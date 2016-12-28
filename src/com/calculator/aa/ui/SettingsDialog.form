@@ -3,7 +3,7 @@
   <grid id="cbd77" binding="contentPane" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="10" left="10" bottom="10" right="10"/>
     <constraints>
-      <xy x="48" y="54" width="356" height="139"/>
+      <xy x="48" y="54" width="356" height="276"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -57,7 +57,7 @@
           </grid>
         </children>
       </grid>
-      <grid id="e3588" layout-manager="GridLayoutManager" row-count="2" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="e3588" layout-manager="GridLayoutManager" row-count="5" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="0" right="0"/>
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -67,7 +67,7 @@
         <children>
           <component id="6fef6" class="javax.swing.JLabel">
             <constraints>
-              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+              <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
               <labelFor value="733f1"/>
@@ -76,7 +76,7 @@
           </component>
           <component id="733f1" class="javax.swing.JComboBox" binding="comboBoxLook" custom-create="true">
             <constraints>
-              <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+              <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties/>
           </component>
@@ -95,6 +95,98 @@
             <properties>
               <text resource-bundle="com/calculator/aa/messages" key="ui.update_now"/>
             </properties>
+          </component>
+          <grid id="6abcd" layout-manager="GridLayoutManager" row-count="3" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="0" left="0" bottom="0" right="0"/>
+            <constraints>
+              <grid row="4" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="be3ee" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text resource-bundle="com/calculator/aa/messages" key="ui.gradient_scale"/>
+                </properties>
+              </component>
+              <grid id="f30d5" binding="panel0Percent" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="0" right="0"/>
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                    <minimum-size width="25" height="25"/>
+                    <preferred-size width="25" height="25"/>
+                    <maximum-size width="25" height="25"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <background color="-65536"/>
+                </properties>
+                <border type="line"/>
+                <children/>
+              </grid>
+              <grid id="ab6fc" binding="panelShowGradient" custom-create="true" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="0" right="0"/>
+                <constraints>
+                  <grid row="2" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <minimum-size width="-1" height="25"/>
+                    <preferred-size width="-1" height="25"/>
+                    <maximum-size width="-1" height="25"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <autoscrolls value="true"/>
+                </properties>
+                <border type="line">
+                  <color color="-16777216"/>
+                </border>
+                <children/>
+              </grid>
+              <grid id="2d5b5" binding="panel100Percent" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="0" right="0"/>
+                <constraints>
+                  <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false">
+                    <minimum-size width="25" height="25"/>
+                    <preferred-size width="25" height="25"/>
+                    <maximum-size width="25" height="25"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <background color="-16711936"/>
+                </properties>
+                <border type="line"/>
+                <children/>
+              </grid>
+              <grid id="e293f" binding="panel50Percent" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="0" right="0"/>
+                <constraints>
+                  <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
+                    <minimum-size width="25" height="25"/>
+                    <preferred-size width="25" height="25"/>
+                    <maximum-size width="25" height="25"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <background color="-256"/>
+                </properties>
+                <border type="line"/>
+                <children/>
+              </grid>
+            </children>
+          </grid>
+          <component id="1361c" class="javax.swing.JSeparator">
+            <constraints>
+              <grid row="1" column="0" row-span="1" col-span="2" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties/>
+          </component>
+          <component id="d91d1" class="javax.swing.JSeparator">
+            <constraints>
+              <grid row="3" column="0" row-span="1" col-span="2" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties/>
           </component>
         </children>
       </grid>
