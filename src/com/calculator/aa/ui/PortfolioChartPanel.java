@@ -98,7 +98,7 @@ class PortfolioChartPanel extends JPanel {
                 } else if (mouseEvent.isControlDown()) {
                     setComparePortfolio.actionPerformed(new ActionEvent(nearest, ActionEvent.ACTION_PERFORMED, null));
                 } else {
-                    helper.showYields(nearest);
+                    helper.showYields(nearest, riskFreeRate);
                 }
             }
         }
@@ -457,7 +457,7 @@ class PortfolioChartPanel extends JPanel {
     }
 
     private void drawPortfolio(Graphics g, Portfolio pf) {
-        g.setColor(portfolioColor);
+        g.setColor(pf.hasCoefficient() ? Main.gradient.getColor(pf.getCoefficient()) : portfolioColor);
         g.drawRect(mapX(pf.risk()) - 1, mapY(pf.yield()) - 1, 2, 2);
     }
 
@@ -516,6 +516,10 @@ class PortfolioChartPanel extends JPanel {
 
     private void drawEfficientFrontier(Graphics g) {
         int length = frontierPortfolios.size();
+        if (length == 0) {
+            return;
+        }
+
         int[] xxs = new int[length];
         int[] yys = new int[length];
         int i = 0;
@@ -526,10 +530,19 @@ class PortfolioChartPanel extends JPanel {
             i += 1;
         }
 
-        g.setColor(frontierColor);
         ((Graphics2D) g).setStroke(thick);
-        g.drawPolyline(xxs, yys, length);
+        if (frontierPortfolios.get(0).hasCoefficient()) {
+            int l1 = length - 1;
+            for (i = 0; i < l1; i++) {
+                g.setColor(Main.gradient.getColor(frontierPortfolios.get(i).getCoefficient()));
+                g.drawLine(xxs[i], yys[i], xxs[i + 1], yys[i + 1]);
+            }
+        } else {
+            g.setColor(frontierColor);
+            g.drawPolyline(xxs, yys, length);
+        }
         ((Graphics2D) g).setStroke(thin);
+
     }
 
     private void drawCAL(Graphics g) {
@@ -948,8 +961,8 @@ class PortfolioChartPanel extends JPanel {
                 if (np != null) {
                     ShowTable.show(
                             Main.resourceBundle.getString("text.portfolio"),
-                            np.values(),
-                            np.labels(),
+                            riskFreeRate >= 0 ? np.values(riskFreeRate) : np.values(),
+                            riskFreeRate >= 0 ? np.labels(riskFreeRate) : np.labels(),
                             new String[]{Main.resourceBundle.getString("text.value")},
                             false
                     );
@@ -992,5 +1005,10 @@ class PortfolioChartPanel extends JPanel {
             setCursor(Cursor.getDefaultCursor());
             popupMenu.show(this, x, y);
         }
+    }
+
+    void repaintAll() {
+        buffer = null;
+        repaint();
     }
 }

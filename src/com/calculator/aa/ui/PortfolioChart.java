@@ -9,8 +9,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class PortfolioChart extends JDialog {
 
@@ -37,6 +39,10 @@ class PortfolioChart extends JDialog {
     private JLabel labelRatePeriod;
     private JRadioButton radioButtonNone;
     private JRadioButton radioButtonSharp;
+    private JLabel labelCoefMin;
+    private JPanel panelCoefGradient;
+    private JLabel labelCoefMax;
+    private ButtonGroup coefficientGroup;
 
     private final String[] instruments;
     private final double[][] data;
@@ -218,7 +224,15 @@ class PortfolioChart extends JDialog {
             }
         });
         checkBoxCAL.addActionListener(actionEvent -> {
-            buttonZoomPortfolios.setEnabled(checkBoxCAL.isSelected());
+            boolean isSelected = checkBoxCAL.isSelected();
+
+            Enumeration<AbstractButton> radios = coefficientGroup.getElements();
+            while (radios.hasMoreElements()) {
+                AbstractButton radio = radios.nextElement();
+                radio.setEnabled(isSelected);
+            }
+
+            buttonZoomPortfolios.setEnabled(isSelected);
             for(ActionListener a: buttonCompute.getActionListeners()) {
                 a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
             }
@@ -258,12 +272,12 @@ class PortfolioChart extends JDialog {
         });
         radioButtonNone.addActionListener(e -> {
             if (radioButtonNone.isSelected()) {
-                setCoefficientVisible(Coefficients.NONE);
+                setCoefficientVisible(true, helper.getPortfolios());
             }
         });
         radioButtonSharp.addActionListener(e -> {
             if (radioButtonSharp.isSelected()) {
-                setCoefficientVisible(Coefficients.SHARP);
+                setCoefficientVisible(true, helper.getPortfolios());
             }
         });
     }
@@ -363,6 +377,12 @@ class PortfolioChart extends JDialog {
         comboBoxFrom = new JComboBox<>();
         comboBoxTo = new JComboBox<>();
         spinnerCAL = new JSpinner(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.1));
+        panelCoefGradient = new GradientPanel(false);
+        ((GradientPanel)panelCoefGradient).setColors(
+                Main.gradient.getPointColor(GradientPainter.ColorName.Begin),
+                Main.gradient.getPointColor(GradientPainter.ColorName.Middle),
+                Main.gradient.getPointColor(GradientPainter.ColorName.End)
+        );
     }
 
     private List<Portfolio> addAccuracy() {
@@ -457,6 +477,7 @@ class PortfolioChart extends JDialog {
     }
 
     private void updatePortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp, double[][] df) {
+        setCoefficientVisible(false, pfs);
         helper.setPortfolios(pfs,
                 pfsComp,
                 df,
@@ -474,8 +495,52 @@ class PortfolioChart extends JDialog {
         }
     }
 
-    private void setCoefficientVisible(Coefficients coefficient) {
+    private void setCoefficientVisible(boolean repaint, List<Portfolio> pfs) {
 
+        Coefficients coefficient = Coefficients.NONE;
+
+        if (radioButtonSharp.isEnabled() && radioButtonSharp.isSelected()) {
+            coefficient = Coefficients.SHARP;
+        }
+
+        if (coefficient == Coefficients.NONE) {
+            pfs.forEach(p -> p.setCoefficient(Double.NaN));
+            labelCoefMin.setText("0");
+            labelCoefMax.setText("0");
+            ((GradientPanel)panelCoefGradient).setGradientEnabled(false);
+        }
+
+        double minCoef;
+        double maxCoef;
+        double dCoef;
+        double rate = ((double)spinnerCAL.getValue()) / 100.0;
+
+        if (coefficient == Coefficients.SHARP) {
+            List<Double> sharps = pfs.stream()
+                    .map(p -> Calc.coeffSharp(p, rate))
+                    .collect(Collectors.toList());
+            minCoef = sharps.stream().mapToDouble(d -> d).min().orElse(0);
+            maxCoef = sharps.stream().mapToDouble(d -> d).max().orElse(1);
+            dCoef = maxCoef - minCoef;
+
+            if (Math.abs(dCoef) < Calc.epsilon) {
+                dCoef = Calc.epsilon;
+            }
+
+            int length = pfs.size();
+            for (int i = 0; i < length; i++) {
+                pfs.get(i).setCoefficient((sharps.get(i) - minCoef) / dCoef);
+            }
+
+            labelCoefMin.setText(Calc.formatDouble2(minCoef));
+            labelCoefMax.setText(Calc.formatDouble2(maxCoef));
+            ((GradientPanel)panelCoefGradient).setGradientEnabled(true);
+
+        }
+
+        if (repaint) {
+            ((PortfolioChartPanel) chartPanel).repaintAll();
+        }
     }
 
     static void showChart(String[] instruments, double[][] data) {

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class Calc {
 
-    static final double epsilon = 1.0 / 100000.0;
+    public static final double epsilon = 1.0 / 100000.0;
 
     private static double[] yields(double[] values) {
         int length = values.length;
@@ -515,7 +515,7 @@ public class Calc {
         }
     }
 
-    public double coeffSharp(Portfolio p, double riskFree) {
+    public static double coeffSharp(Portfolio p, double riskFree) {
         return (p.yield() - riskFree) / p.risk();
     }
 }

@@ -30,14 +30,16 @@ class YieldsChart extends JDialog {
     private final Portfolio portfolio;
     private double[] realYields;
     private double[] portfolioYields;
+    private double riskFreeRate;
 
     private final int completePeriods;
 
-    private YieldsChart(String[] ls, double[][] sourceData, Portfolio p) {
+    private YieldsChart(String[] ls, double[][] sourceData, Portfolio p, double freeRate) {
         data = sourceData;
         labels = Arrays.copyOfRange(ls, sourceData.length - data.length, ls.length);
         portfolio = p;
         completePeriods = data.length;
+        riskFreeRate = freeRate;
 
         setContentPane(contentPane);
         setModal(true);
@@ -65,8 +67,8 @@ class YieldsChart extends JDialog {
 
         buttonWeights.addActionListener(e -> ShowTable.show(
                 Main.resourceBundle.getString("text.portfolio"),
-                portfolio.values(),
-                portfolio.labels(),
+                riskFreeRate >= 0 ? portfolio.values(riskFreeRate) : portfolio.values(),
+                riskFreeRate >= 0 ? portfolio.labels(riskFreeRate) : portfolio.labels(),
                 new String[] {Main.resourceBundle.getString("text.value")},
                 false)
         );
@@ -254,13 +256,13 @@ class YieldsChart extends JDialog {
         return doubleResult;
     }
 
-    static void showYields(String[] labels, double[][] data, Portfolio portfolio) {
+    static void showYields(String[] labels, double[][] data, Portfolio portfolio, double riskFreeRate) {
         double[][] filtered = Calc.filterValidData(data, portfolio.weights(), new int[] {0}, new int[] {data.length - 1});
         if (filtered == null) {
             return;
         }
 
-        YieldsChart dialog = new YieldsChart(labels, filtered, portfolio);
+        YieldsChart dialog = new YieldsChart(labels, filtered, portfolio, riskFreeRate);
         dialog.pack();
 
         int x = Calc.safeParseInt(Main.properties.getProperty("yields.x", "-1"), -1);

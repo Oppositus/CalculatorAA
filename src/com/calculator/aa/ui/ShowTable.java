@@ -9,9 +9,14 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
-class ShowTable extends JDialog {
+public class ShowTable extends JDialog {
+
+    public static String noPercentFormat = "x%";
+
     private JPanel contentPane;
     private JButton buttonOK;
     private JTable tableData;
@@ -171,9 +176,9 @@ class ShowTable extends JDialog {
         for (int row = 0; row < rowsLength; row++) {
             for (int col = 0; col < colsLengthP1; col++) {
                 if (col == 0) {
-                    preparedRows[row][col] = rowLabels[row];
+                    preparedRows[row][col] = rowLabels[row].replace(noPercentFormat, "");
                 } else {
-                    preparedRows[row][col] = Calc.formatPercent2(table[row][col - 1]);
+                    preparedRows[row][col] = rowLabels[row].contains(noPercentFormat) ? Calc.formatDouble2(table[row][col - 1]) : Calc.formatPercent2(table[row][col - 1]);
 
                     if (table[row][col - 1] < min) {
                         min = table[row][col - 1];

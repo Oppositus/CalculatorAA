@@ -181,6 +181,6 @@ public class SettingsDialog extends JDialog {
 
         comboBoxLook.setSelectedItem(currentLookAndFeel.getName());
 
-        panelShowGradient = new GradientPanel();
+        panelShowGradient = new GradientPanel(true);
     }
 }

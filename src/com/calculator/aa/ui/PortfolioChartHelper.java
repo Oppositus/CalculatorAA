@@ -42,13 +42,17 @@ class PortfolioChartHelper {
         panel.setPortfolios(portfolios, portfoliosCompare);
     }
 
-    void showYields(Portfolio p) {
+    void showYields(Portfolio p, double riskFreeRate) {
         //if (nearest != null) {
-        YieldsChart.showYields(periodsFiltered, dataFiltered, new Portfolio(p));
+        YieldsChart.showYields(periodsFiltered, dataFiltered, new Portfolio(p), riskFreeRate);
         //}
     }
 
     double[][] getDataFiltered() {
         return dataFiltered;
+    }
+
+    List<Portfolio> getPortfolios() {
+        return portfolios;
     }
 }
