@@ -272,11 +272,13 @@ class PortfolioChart extends JDialog {
         });
         radioButtonNone.addActionListener(e -> {
             if (radioButtonNone.isSelected()) {
+                ((GradientSliderPanel)panelCoefGradient).resetPosition();
                 setCoefficientVisible(true, helper.getPortfolios());
             }
         });
         radioButtonSharp.addActionListener(e -> {
             if (radioButtonSharp.isSelected()) {
+                ((GradientSliderPanel)panelCoefGradient).resetPosition();
                 setCoefficientVisible(true, helper.getPortfolios());
             }
         });
@@ -377,8 +379,15 @@ class PortfolioChart extends JDialog {
         comboBoxFrom = new JComboBox<>();
         comboBoxTo = new JComboBox<>();
         spinnerCAL = new JSpinner(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.1));
-        panelCoefGradient = new GradientPanel(false);
-        ((GradientPanel)panelCoefGradient).setColors(
+        panelCoefGradient = new GradientSliderPanel(false, 0, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                double filtered = ((GradientSliderPanel)panelCoefGradient).getPosition();
+                helper.setMinCoefficient(filtered);
+                ((PortfolioChartPanel) chartPanel).repaintAll();
+            }
+        });
+        ((GradientSliderPanel)panelCoefGradient).setColors(
                 Main.gradient.getPointColor(GradientPainter.ColorName.Begin),
                 Main.gradient.getPointColor(GradientPainter.ColorName.Middle),
                 Main.gradient.getPointColor(GradientPainter.ColorName.End)

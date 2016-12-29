@@ -10,10 +10,10 @@ class GradientPanel extends JPanel {
     private Color color100;
     private GradientPainter painter;
 
-    private boolean isEnabled;
+    boolean isPanelEnabled;
 
     GradientPanel(boolean enable) {
-        isEnabled = enable;
+        isPanelEnabled = enable;
     }
 
     void setColors(Color c0, Color c50, Color c100) {
@@ -33,13 +33,13 @@ class GradientPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (isEnabled) {
+        if (isPanelEnabled) {
             painter.paintBackground(this, g, null);
         }
     }
 
     void setGradientEnabled(boolean enable) {
-        isEnabled = enable;
+        isPanelEnabled = enable;
         repaint();
     }
 
