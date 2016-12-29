@@ -35,9 +35,9 @@ public class SettingsDialog extends JDialog {
 
         changed = false;
 
-        panel0Percent.setBackground(parseColor("gradient.from", "255,0,0"));
-        panel50Percent.setBackground(parseColor("gradient.middle", "255,255,0"));
-        panel100Percent.setBackground(parseColor("gradient.to", "0,255,0"));
+        panel0Percent.setBackground(Main.gradient.getPointColor(GradientPainter.ColorName.Begin));
+        panel50Percent.setBackground(Main.gradient.getPointColor(GradientPainter.ColorName.Middle));
+        panel100Percent.setBackground(Main.gradient.getPointColor(GradientPainter.ColorName.End));
 
         ((GradientPanel)panelShowGradient).setColors(panel0Percent.getBackground(), panel50Percent.getBackground(), panel100Percent.getBackground());
 

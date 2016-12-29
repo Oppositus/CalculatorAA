@@ -148,6 +148,7 @@ class PortfolioChart extends JDialog {
 
                 String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
                 int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length));
+
                 List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dataFiltered, dividers);
 
                 List<Portfolio> portfoliosCompare = null;

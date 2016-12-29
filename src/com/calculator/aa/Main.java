@@ -2,6 +2,7 @@ package com.calculator.aa;
 
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.db.SQLiteSupport;
+import com.calculator.aa.ui.GradientPainter;
 import com.calculator.aa.ui.MainWindow;
 
 import javax.swing.*;
@@ -35,6 +36,7 @@ public class Main {
     public static ResourceBundle resourceBundle;
     public static SQLiteSupport sqLite;
     public static String osName;
+    public static GradientPainter gradient;
 
     private Main() {
         mainFrame = new JFrame(resourceBundle.getString("text.program_name"));
@@ -227,6 +229,8 @@ public class Main {
         sqLite = new SQLiteSupport();
 
         osName = System.getProperty("os.name").toLowerCase();
+
+        gradient = new GradientPainter();
 
         SwingUtilities.invokeLater(() -> {
             program = new Main();

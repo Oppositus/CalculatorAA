@@ -75,11 +75,7 @@ public class ReaderCSV {
         if (text == null || text.isEmpty()) {
             return def;
         }
-        try {
-            return Double.valueOf(text.replace(decimal, "."));
-        } catch (NumberFormatException e) {
-            return def;
-        }
+        return Double.valueOf(text.replace(decimal, "."));
     }
 
     public DoubleStream parse(List<String> texts, double def) {

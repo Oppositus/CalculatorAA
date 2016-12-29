@@ -950,7 +950,9 @@ class PortfolioChartPanel extends JPanel {
                             Main.resourceBundle.getString("text.portfolio"),
                             np.values(),
                             np.labels(),
-                            new String[]{Main.resourceBundle.getString("text.value")});
+                            new String[]{Main.resourceBundle.getString("text.value")},
+                            false
+                    );
                 }
             }
         };

@@ -1,8 +1,11 @@
 package com.calculator.aa.calc;
 
+import com.calculator.aa.Main;
+import com.calculator.aa.db.SQLiteSupport;
 import com.calculator.aa.ui.AAModelComparator;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,11 +16,11 @@ public class Zipper {
 
     public Zipper(List<Object> keys, List<Double> values, String label) {
         if (keys.size() != values.size()) {
-            throw new IllegalArgumentException("Keys and values have different length");
+            throw new IllegalArgumentException(Main.resourceBundle.getString("exception.zip_different_length"));
         }
 
         if (keys.isEmpty()) {
-            throw new IllegalArgumentException("Keys and values are empty");
+            throw new IllegalArgumentException(Main.resourceBundle.getString("exception.zip_empty"));
         }
 
         keyList = new ArrayList<>(keys);
@@ -33,11 +36,11 @@ public class Zipper {
 
     public Zipper(List<Object> keys, List<List<Double>> values, List<String> labels) {
         if (keys.size() != values.size()) {
-            throw new IllegalArgumentException("Keys and values have different length");
+            throw new IllegalArgumentException(Main.resourceBundle.getString("exception.zip_different_length"));
         }
 
         if (keys.isEmpty()) {
-            throw new IllegalArgumentException("Keys and values are empty");
+            throw new IllegalArgumentException(Main.resourceBundle.getString("exception.zip_empty"));
         }
 
         keyList = new ArrayList<>(keys);
@@ -63,7 +66,7 @@ public class Zipper {
 
     public Zipper zip(Zipper other, AAModelComparator comparator, double dflt) throws NullPointerException, IllegalArgumentException {
         if (other == null) {
-            throw new NullPointerException("Zipping with null");
+            throw new NullPointerException(Main.resourceBundle.getString("exception.zip_null"));
         }
         int size = keyList.size();
 
@@ -91,7 +94,13 @@ public class Zipper {
 
             if (index >= 0) {
                 if (!comparator.equals(key, other.keyList.get(index))) {
-                    throw new IllegalArgumentException("Zipper.zip: different keys: " + key.toString() + " - " + other.keyList.get(index).toString());
+                    throw new IllegalArgumentException(
+                            String.format(
+                                    Main.resourceBundle.getString("exception.zip_different_keys"),
+                                    key.toString(),
+                                    other.keyList.get(index).toString()
+                            )
+                    );
                 }
                 value.addAll(other.valueList.get(index));
             }
@@ -107,7 +116,22 @@ public class Zipper {
         }
 
         if (index != other.keyList.size()) {
-            throw new IllegalArgumentException("Zipper.zip: unused keys");
+            throw new IllegalArgumentException(
+                    String.format(
+                            Main.resourceBundle.getString("exception.zip_unused_keys"),
+                            String.join(", ", other.keyList
+                                    .subList(index >= 0 ? index : 0, other.keyList.size())
+                                    .stream()
+                                    .map(k -> {
+                                        if (k instanceof Date) {
+                                            return SQLiteSupport.printUnquotedDate((Date)k);
+                                        } else {
+                                            return k.toString();
+                                        }
+                                    })
+                                    .collect(Collectors.toList()))
+                    )
+            );
         }
 
         return new Zipper(keyZippedList, valueZippedList, labelsZippedList);

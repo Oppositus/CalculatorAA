@@ -1,5 +1,7 @@
 package com.calculator.aa.calc;
 
+import com.calculator.aa.Main;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -258,6 +260,20 @@ public class Calc {
     public static List<Portfolio> iteratePortfolios(double[][] correlations, double[] averageYields,
                                                     double[] stdevYields, int[] minimals, int[] maximals,
                                                     String[] instruments, double[][] dataFiltered, int divStep) {
+
+        if (!checkDataIsFinite(correlations)) {
+            throw new IllegalArgumentException(Main.resourceBundle.getString("exception.notfinite_double"));
+        }
+        if (!checkDataIsFinite(averageYields)) {
+            throw new IllegalArgumentException(Main.resourceBundle.getString("exception.notfinite_double"));
+        }
+        if (!checkDataIsFinite(stdevYields)) {
+            throw new IllegalArgumentException(Main.resourceBundle.getString("exception.notfinite_double"));
+        }
+        if (!checkDataIsFinite(dataFiltered)) {
+            throw new IllegalArgumentException(Main.resourceBundle.getString("exception.notfinite_double"));
+        }
+
         List<Portfolio> result = new LinkedList<>();
         int length = averageYields.length;
 
@@ -370,6 +386,26 @@ public class Calc {
         double r = Math.sqrt(x * x + y * y);
 
         return y / r;
+    }
+
+    private static boolean checkDataIsFinite(double[] data) {
+        for (double value : data) {
+            if (!Double.isFinite(value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean checkDataIsFinite(double[][] data) {
+        for (double[] row : data) {
+            if (!checkDataIsFinite(row)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static int sumIntArray(int[] array) {

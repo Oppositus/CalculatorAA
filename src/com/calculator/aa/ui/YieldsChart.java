@@ -67,7 +67,8 @@ class YieldsChart extends JDialog {
                 Main.resourceBundle.getString("text.portfolio"),
                 portfolio.values(),
                 portfolio.labels(),
-                new String[] {Main.resourceBundle.getString("text.value")})
+                new String[] {Main.resourceBundle.getString("text.value")},
+                false)
         );
 
         buttonDraw.addActionListener(e -> {

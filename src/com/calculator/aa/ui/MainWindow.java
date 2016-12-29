@@ -3,8 +3,7 @@ package com.calculator.aa.ui;
 import com.calculator.aa.Main;
 import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.Zipper;
-import com.calculator.aa.db.Instrument;
-import com.calculator.aa.db.ReaderCSV;
+import com.calculator.aa.db.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -19,6 +18,7 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.DataFormatException;
 
 public class MainWindow {
     private JTable mainTable;
@@ -141,14 +141,14 @@ public class MainWindow {
             double[][] corrTable = Calc.correlationTable(model.getData());
             String[] cols = model.getInstrumentsOnly();
 
-            ShowTable.show(Main.resourceBundle.getString("text.correlations_table"), corrTable, cols, cols);
+            ShowTable.show(Main.resourceBundle.getString("text.correlations_table"), corrTable, cols, cols, true);
         });
         buttonCovariances.addActionListener(actionEvent -> {
             AATableModel model = (AATableModel)mainTable.getModel();
             double[][] covTable = Calc.covarianceTable(model.getData());
             String[] cols = model.getInstrumentsOnly();
 
-            ShowTable.show(Main.resourceBundle.getString("text.covariances_table"), covTable, cols, cols);
+            ShowTable.show(Main.resourceBundle.getString("text.covariances_table"), covTable, cols, cols, true);
         });
 
         Action showPortfolioAction = new AbstractAction() {
@@ -329,7 +329,7 @@ public class MainWindow {
         }
     }
 
-    private AATableModel parseCSVAndLoadData(File f) {
+    private AATableModel parseCSVAndLoadData(File f) throws ReadCSVException {
         List<String> columns = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         List<List<Double>> data = new ArrayList<>();
@@ -350,19 +350,27 @@ public class MainWindow {
         List<String> headList = csv.head().toList().get(0);
         columns.addAll(headList.subList(1, headList.size()));
 
-        csv.body()
-                .lines()
-                .forEach(line -> {
-                    labels.add(line.get(0));
-                    List<Double> parsed = csv.parse(line.subList(1, line.size()), -1)
-                            .boxed()
-                            .collect(Collectors.toList());
+        if (columns.size() == 0) {
+            throw new ReadCSVDelimException();
+        }
 
-                    while (parsed.size() < columns.size()) {
-                        parsed.add(-1.0);
-                    }
-                    data.add(parsed);
-                });
+        try {
+            csv.body()
+                    .lines()
+                    .forEach(line -> {
+                        labels.add(line.get(0));
+                        List<Double> parsed = csv.parse(line.subList(1, line.size()), -1)
+                                .boxed()
+                                .collect(Collectors.toList());
+
+                        while (parsed.size() < columns.size()) {
+                            parsed.add(-1.0);
+                        }
+                        data.add(parsed);
+                    });
+        } catch (NumberFormatException e) {
+            throw new ReadCSVDecimalException();
+        }
 
         int htLength = data.size();
         int whLength = columns.size();
