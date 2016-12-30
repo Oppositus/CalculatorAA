@@ -57,7 +57,7 @@ public class GradientSliderPanel extends GradientPanel {
     }
 
     private void setFilterPosition(int mouseX) {
-        position = ((double) mouseX) / ((double) getWidth());
+        position = Math.min((double)mouseX / (double)getWidth(), 0.99);
         applyFilter();
     }
 
