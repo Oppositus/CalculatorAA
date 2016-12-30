@@ -39,9 +39,9 @@ class PortfolioChart extends JDialog {
     private JLabel labelRatePeriod;
     private JRadioButton radioButtonNone;
     private JRadioButton radioButtonSharp;
-    private JLabel labelCoefMin;
+    private JButton buttonCoefMin;
     private JPanel panelCoefGradient;
-    private JLabel labelCoefMax;
+    private JButton buttonCoefMax;
     private ButtonGroup coefficientGroup;
 
     private final String[] instruments;
@@ -182,7 +182,7 @@ class PortfolioChart extends JDialog {
         cbFrontierOnly.addActionListener(e -> ((PortfolioChartPanel) chartPanel).setFrontierOnlyMode(cbFrontierOnly.isSelected()));
 
         buttonAccuracy.addActionListener(e -> {
-            List<Portfolio> frontier = ((PortfolioChartPanel) chartPanel).getFrontierPortfolios();
+            List<Portfolio> frontier = helper.getFrontierPortfoliosNoFilter();
             if (frontier == null || frontier.isEmpty()) {
                 return;
             }
@@ -198,7 +198,7 @@ class PortfolioChart extends JDialog {
             }
         });
         buttonAccuracyMax.addActionListener(e -> {
-            List<Portfolio> frontier = ((PortfolioChartPanel) chartPanel).getFrontierPortfolios();
+            List<Portfolio> frontier = helper.getFrontierPortfoliosNoFilter();
             if (frontier == null || frontier.isEmpty()) {
                 return;
             }
@@ -238,12 +238,6 @@ class PortfolioChart extends JDialog {
             }
         });
         buttonZoomPortfolios.addActionListener(actionEvent -> {
-
-            if (((PortfolioChartPanel)chartPanel).getZoom()) {
-                for (ActionListener a : buttonCompute.getActionListeners()) {
-                    a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
-                }
-            }
             ((PortfolioChartPanel) chartPanel).zoomAllToPortfolios();
         });
         buttonConvertRate.addActionListener(e -> {
@@ -282,6 +276,8 @@ class PortfolioChart extends JDialog {
                 setCoefficientVisible(true, helper.getPortfolios());
             }
         });
+        buttonCoefMin.addActionListener(actionEvent -> ((GradientSliderPanel)panelCoefGradient).setPosition(0));
+        buttonCoefMax.addActionListener(actionEvent -> ((GradientSliderPanel)panelCoefGradient).setPosition(0.99));
     }
 
     private int calculateDivision(int[] minimals, int[] maximals) {
@@ -395,7 +391,7 @@ class PortfolioChart extends JDialog {
     }
 
     private List<Portfolio> addAccuracy() {
-        List<Portfolio> frontier = ((PortfolioChartPanel) chartPanel).getFrontierPortfolios();
+        List<Portfolio> frontier = helper.getFrontierPortfoliosNoFilter();
         List<Portfolio> accuracyPortfolios = new LinkedList<>();
 
         if (frontier == null || frontier.isEmpty()) {
@@ -514,8 +510,10 @@ class PortfolioChart extends JDialog {
 
         if (coefficient == Coefficients.NONE) {
             pfs.forEach(p -> p.setCoefficient(Double.NaN));
-            labelCoefMin.setText("0");
-            labelCoefMax.setText("0");
+            buttonCoefMin.setText("0");
+            buttonCoefMin.setEnabled(false);
+            buttonCoefMax.setText("0");
+            buttonCoefMax.setEnabled(false);
             ((GradientPanel)panelCoefGradient).setGradientEnabled(false);
         }
 
@@ -541,8 +539,10 @@ class PortfolioChart extends JDialog {
                 pfs.get(i).setCoefficient((sharps.get(i) - minCoef) / dCoef);
             }
 
-            labelCoefMin.setText(Calc.formatDouble2(minCoef));
-            labelCoefMax.setText(Calc.formatDouble2(maxCoef));
+            buttonCoefMin.setText(Calc.formatDouble2(minCoef));
+            buttonCoefMin.setEnabled(true);
+            buttonCoefMax.setText(Calc.formatDouble2(maxCoef));
+            buttonCoefMax.setEnabled(true);
             ((GradientPanel)panelCoefGradient).setGradientEnabled(true);
 
         }

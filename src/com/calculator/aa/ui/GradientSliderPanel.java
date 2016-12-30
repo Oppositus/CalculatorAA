@@ -25,9 +25,7 @@ public class GradientSliderPanel extends GradientPanel {
                 super.mouseClicked(mouseEvent);
 
                 if (isPanelEnabled) {
-                    position = ((double) mouseEvent.getX()) / ((double) getWidth());
-                    repaint();
-                    listen.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
+                    setFilterPosition(mouseEvent.getX());
                 }
             }
 
@@ -46,7 +44,26 @@ public class GradientSliderPanel extends GradientPanel {
                 mousePosition = mouseEvent.getX();
                 repaint();
             }
+
+            @Override
+            public void mouseDragged(MouseEvent mouseEvent) {
+                super.mouseDragged(mouseEvent);
+                mousePosition = mouseEvent.getX();
+                if (isPanelEnabled) {
+                    setFilterPosition(mousePosition);
+                }
+            }
         });
+    }
+
+    private void setFilterPosition(int mouseX) {
+        position = ((double) mouseX) / ((double) getWidth());
+        applyFilter();
+    }
+
+    private void applyFilter() {
+        repaint();
+        listener.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
     }
 
     @Override
@@ -96,7 +113,12 @@ public class GradientSliderPanel extends GradientPanel {
 
     void resetPosition() {
         position = 0;
-        repaint();
+        applyFilter();
+    }
+
+    void setPosition(double pos) {
+        position = pos;
+        applyFilter();
     }
 
     double getPosition() {

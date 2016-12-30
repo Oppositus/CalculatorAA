@@ -40,10 +40,6 @@ class PortfolioChartPanel extends JPanel {
     private Action setComparePortfolio;
     private Action showPortfolioComponents;
 
-    private List<Portfolio> portfolios = new ArrayList<>();
-    private List<Portfolio> portfoliosCompare = new ArrayList<>();
-    private List<Portfolio> savedPortfolios;
-    private List<Portfolio> frontierPortfolios = new ArrayList<>();
     private Portfolio bestCALPortfolio;
 
     private double minX;
@@ -79,9 +75,6 @@ class PortfolioChartPanel extends JPanel {
 
     private Portfolio nearest = null;
 
-    private double zoomMin;
-    private double zoomMax;
-
     private boolean wasZoomed = false;
 
     private BufferedImage buffer;
@@ -111,6 +104,9 @@ class PortfolioChartPanel extends JPanel {
                 }
                 return;
             }
+
+            List<Portfolio> portfolios = helper.getPortfolios();
+            List<Portfolio> frontierPortfolios = helper.getFrontierPortfolios();
 
             if ((portfolios == null || portfolios.isEmpty()) && (frontierPortfolios == null || frontierPortfolios.isEmpty())) {
                 return;
@@ -153,23 +149,30 @@ class PortfolioChartPanel extends JPanel {
 
                 if (bothDrag) {
                     dragEndPt.setLocation(mouseEvent.getPoint());
-                    setBothZoom();
+                    double fromRisk = reMapX(Math.min(dragStartPt.x, dragEndPt.x));
+                    double toRisk = reMapX(Math.max(dragStartPt.x, dragEndPt.x));
+                    double fromYield = reMapY(Math.max(dragStartPt.y, dragEndPt.y));
+                    double toYield = reMapY(Math.min(dragStartPt.y, dragEndPt.y));
+                    helper.setZoom(fromRisk, toRisk, fromYield, toYield);
                 } else {
                     if (horizontalDrag) {
                         dragEnd = mouseEvent.getX();
                         int from = Math.min(dragStart, dragEnd);
                         int to = Math.max(dragStart, dragEnd);
-                        zoomMin = reMapX(from);
-                        zoomMax = reMapX(to);
-                        setRiskZoom();
+                        helper.setZoom(reMapX(from), reMapX(to), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
                     } else {
                         dragEnd = mouseEvent.getY();
                         int from = Math.max(dragStart, dragEnd);
                         int to = Math.min(dragStart, dragEnd);
-                        zoomMin = reMapY(from);
-                        zoomMax = reMapY(to);
-                        setYieldZoom();
+                        helper.setZoom(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, reMapY(from), reMapY(to));
                     }
+                }
+
+                if (!helper.getPortfolios().isEmpty()) {
+                    wasZoomed = true;
+                    setPortfolios();
+                } else {
+                    repaint();
                 }
 
             } else {
@@ -229,23 +232,18 @@ class PortfolioChartPanel extends JPanel {
         helper = h;
     }
 
-    void setPortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp) {
-        if (pfs != null && pfs.isEmpty()) {
+    void setPortfolios() {
+
+        List<Portfolio> portfolios = helper.getPortfolios();
+        List<Portfolio> frontierPortfolios = helper.getFrontierPortfolios();
+        List<Portfolio> portfoliosCompare = helper.getPortfoliosCompare();
+
+        if (portfolios != null && portfolios.isEmpty()) {
             return;
         }
 
-        if (pfs != null) {
-            portfolios = pfs;
-            frontierPortfolios = Calc.getEfficientFrontier(portfolios);
-        }
-
         if (frontierOnlyMode) {
-            savedPortfolios = portfolios;
             portfolios = frontierPortfolios;
-        }
-
-        if (pfs == null && !frontierOnlyMode) {
-            portfolios = savedPortfolios;
         }
 
         if (portfolios == null || portfolios.isEmpty()) {
@@ -253,8 +251,6 @@ class PortfolioChartPanel extends JPanel {
         }
 
         buffer = null;
-
-        portfoliosCompare = pfsComp;
 
         if (riskFreeRate >= 0) {
             bestCALPortfolio = Calc.findCAL(frontierPortfolios, riskFreeRate);
@@ -275,7 +271,7 @@ class PortfolioChartPanel extends JPanel {
                 portfoliosCompare != null ? portfoliosCompare.get(portfoliosCompare.size() - 1).risk() : Double.NEGATIVE_INFINITY);
 
         double dr;
-        if (portfolios != null && portfolios.size() == 1) {
+        if (portfolios.size() == 1) {
             dr = 0.05;
         } else {
             dr = (maxRisk - minRisk) * 0.05;
@@ -305,7 +301,7 @@ class PortfolioChartPanel extends JPanel {
             }
 
             double dy;
-            if (portfolios != null && portfolios.size() == 1) {
+            if (portfolios.size() == 1) {
                 dy = 0.05;
             } else {
                 dy = (maxYield - minYield) * 0.05;
@@ -336,7 +332,7 @@ class PortfolioChartPanel extends JPanel {
     void setFrontierOnlyMode(boolean mode) {
         if (frontierOnlyMode != mode) {
             frontierOnlyMode = mode;
-            setPortfolios(null, portfoliosCompare);
+            setPortfolios();
         }
     }
 
@@ -345,18 +341,18 @@ class PortfolioChartPanel extends JPanel {
         riskFreeRate = rate;
     }
 
-    List<Portfolio> getFrontierPortfolios() {
-        return frontierPortfolios;
-    }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        List<Portfolio> portfolios = helper.getPortfolios();
+        List<Portfolio> frontierPortfolios = helper.getFrontierPortfolios();
+        List<Portfolio> portfoliosCompare = helper.getPortfoliosCompare();
+
         int w = getWidth();
         int h = getHeight();
 
-        if (portfolios.isEmpty()) {
+        if (portfolios == null || portfolios.isEmpty()) {
             return;
         }
 
@@ -373,31 +369,34 @@ class PortfolioChartPanel extends JPanel {
 
             drawAxis(gb, w, h);
 
+            gb.setClip(drawingArea);
             if (frontierOnlyMode) {
                 if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
-                    drawEfficientFrontier(gb);
+                    drawEfficientFrontier(gb, frontierPortfolios);
                 }
                 frontierPortfolios.forEach(pf -> drawPortfolio(gb, pf));
             } else {
                 portfolios.forEach(pf -> drawPortfolio(gb, pf));
                 if (!frontierPortfolios.isEmpty() && frontierPortfolios.size() > 1) {
-                    drawEfficientFrontier(gb);
+                    drawEfficientFrontier(gb, frontierPortfolios);
                 }
             }
 
             if (portfoliosCompare != null) {
                 portfoliosCompare.forEach(pf -> drawLargePortfolio(gb, pf, portfolioCompareColor));
             }
+            gb.setClip(null);
 
-            if (riskFreeRate >= 0 && frontierPortfolios != null && !frontierPortfolios.isEmpty()) {
+            if (riskFreeRate >= 0 && !frontierPortfolios.isEmpty()) {
                 drawCAL(gb);
             }
+
         }
 
         drawBuffered(g);
 
         if ((mouseCrossEnabled && mouseX >= 0 && mouseY >= 0) || popupMenu.isVisible()) {
-            drawNearest(g);
+            drawNearest(g, portfolios, frontierPortfolios, portfoliosCompare);
             drawCross(g, w);
         }
 
@@ -471,7 +470,7 @@ class PortfolioChartPanel extends JPanel {
         g.drawOval(risk - 10, yield - 10, 20, 20);
     }
 
-    private void drawNearest(Graphics g) {
+    private void drawNearest(Graphics g, List<Portfolio> portfolios, List<Portfolio> frontierPortfolios, List<Portfolio> portfoliosCompare) {
         if (!drawingArea.contains(mouseX, mouseY)) {
             nearest = null;
             return;
@@ -514,7 +513,7 @@ class PortfolioChartPanel extends JPanel {
         }
     }
 
-    private void drawEfficientFrontier(Graphics g) {
+    private void drawEfficientFrontier(Graphics g, List<Portfolio> frontierPortfolios) {
         int length = frontierPortfolios.size();
         if (length == 0) {
             return;
@@ -798,104 +797,7 @@ class PortfolioChartPanel extends JPanel {
 
     void zoomAllToPortfolios() {
         wasZoomed = true;
-        setPortfolios(portfolios, portfoliosCompare);
-    }
-
-    private void setRiskZoom() {
-        if (portfolios == null || portfolios.isEmpty()) {
-            return;
-        }
-
-        List<Portfolio> pfs = portfolios.stream()
-                .filter(p -> p.risk() >= zoomMin && p.risk() <= zoomMax)
-                .sorted(Portfolio::compareTo)
-                .collect(Collectors.toList());
-
-        List<Portfolio> pfsComp = null;
-
-        if (portfoliosCompare != null) {
-            pfsComp = portfoliosCompare.stream()
-                    .filter(p -> p.risk() >= zoomMin && p.risk() <= zoomMax)
-                    .sorted(Portfolio::compareTo)
-                    .collect(Collectors.toList());
-        }
-        if (pfsComp != null && pfsComp.size() == 0) {
-            pfsComp = null;
-        }
-
-        if (!pfs.isEmpty()) {
-            wasZoomed = true;
-            setPortfolios(pfs, pfsComp);
-        } else {
-            repaint();
-        }
-    }
-
-    private void setBothZoom() {
-        if (portfolios == null || portfolios.isEmpty()) {
-            return;
-        }
-
-        double fromRisk = reMapX(Math.min(dragStartPt.x, dragEndPt.x));
-        double toRisk = reMapX(Math.max(dragStartPt.x, dragEndPt.x));
-        double fromYield = reMapY(Math.max(dragStartPt.y, dragEndPt.y));
-        double toYield = reMapY(Math.min(dragStartPt.y, dragEndPt.y));
-
-        List<Portfolio> pfs = portfolios.stream()
-                .filter(p -> p.risk() >= fromRisk && p.risk() <= toRisk)
-                .filter(p -> p.yield() >= fromYield && p.yield() <= toYield)
-                .sorted(Portfolio::compareTo)
-                .collect(Collectors.toList());
-
-        List<Portfolio> pfsComp = null;
-
-        if (portfoliosCompare != null) {
-            pfsComp = portfoliosCompare.stream()
-                    .filter(p -> p.risk() >= fromRisk && p.risk() <= toRisk)
-                    .filter(p -> p.yield() >= fromYield && p.yield() <= toYield)
-                    .sorted(Portfolio::compareTo)
-                    .collect(Collectors.toList());
-        }
-        if (pfsComp != null && pfsComp.size() == 0) {
-            pfsComp = null;
-        }
-
-        if (!pfs.isEmpty()) {
-            wasZoomed = true;
-            setPortfolios(pfs, pfsComp);
-        } else {
-            repaint();
-        }
-    }
-
-    private void setYieldZoom() {
-        if (portfolios == null || portfolios.isEmpty()) {
-            return;
-        }
-
-        List<Portfolio> pfs = portfolios.stream()
-                .filter(p -> p.yield() >= zoomMin && p.yield() <= zoomMax)
-                .sorted(Portfolio::compareTo)
-                .collect(Collectors.toList());
-
-        List<Portfolio> pfsComp = null;
-
-        if (portfoliosCompare != null) {
-            pfsComp = portfoliosCompare.stream()
-                    .filter(p -> p.yield() >= zoomMin && p.yield() <= zoomMax)
-                    .sorted(Portfolio::compareTo)
-                    .collect(Collectors.toList());
-        }
-        if (pfsComp != null && pfsComp.size() == 0) {
-            pfsComp = null;
-        }
-
-        if (!pfs.isEmpty()) {
-            wasZoomed = true;
-            setPortfolios(pfs, pfsComp);
-        } else {
-            repaint();
-        }
+        setPortfolios();
     }
 
     private void startMouseCross(int x, int y) {
