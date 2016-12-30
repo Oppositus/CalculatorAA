@@ -149,22 +149,33 @@ class PortfolioChartPanel extends JPanel {
 
                 if (bothDrag) {
                     dragEndPt.setLocation(mouseEvent.getPoint());
-                    double fromRisk = reMapX(Math.min(dragStartPt.x, dragEndPt.x));
-                    double toRisk = reMapX(Math.max(dragStartPt.x, dragEndPt.x));
-                    double fromYield = reMapY(Math.max(dragStartPt.y, dragEndPt.y));
-                    double toYield = reMapY(Math.min(dragStartPt.y, dragEndPt.y));
-                    helper.setZoom(fromRisk, toRisk, fromYield, toYield);
+
+                    if (!dragStartPt.equals(dragEndPt)) {
+                        double fromRisk = reMapX(Math.min(dragStartPt.x, dragEndPt.x));
+                        double toRisk = reMapX(Math.max(dragStartPt.x, dragEndPt.x));
+                        double fromYield = reMapY(Math.max(dragStartPt.y, dragEndPt.y));
+                        double toYield = reMapY(Math.min(dragStartPt.y, dragEndPt.y));
+                        helper.setZoom(fromRisk, toRisk, fromYield, toYield);
+                    }
+
                 } else {
                     if (horizontalDrag) {
-                        dragEnd = mouseEvent.getX();
-                        int from = Math.min(dragStart, dragEnd);
-                        int to = Math.max(dragStart, dragEnd);
-                        helper.setZoom(reMapX(from), reMapX(to), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+                        dragEnd = mouseX;
+
+                        if (dragStart != dragEnd) {
+                            int from = Math.min(dragStart, dragEnd);
+                            int to = Math.max(dragStart, dragEnd);
+                            helper.setZoom(reMapX(from), reMapX(to), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+                        }
+
                     } else {
-                        dragEnd = mouseEvent.getY();
-                        int from = Math.max(dragStart, dragEnd);
-                        int to = Math.min(dragStart, dragEnd);
-                        helper.setZoom(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, reMapY(from), reMapY(to));
+                        dragEnd = mouseY;
+
+                        if (dragStart != dragEnd) {
+                            int from = Math.max(dragStart, dragEnd);
+                            int to = Math.min(dragStart, dragEnd);
+                            helper.setZoom(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, reMapY(from), reMapY(to));
+                        }
                     }
                 }
 
@@ -791,11 +802,8 @@ class PortfolioChartPanel extends JPanel {
         wasZoomed = false;
     }
 
-    boolean getZoom() {
-        return wasZoomed;
-    }
-
     void zoomAllToPortfolios() {
+        helper.resetZoom();
         wasZoomed = true;
         setPortfolios();
     }
