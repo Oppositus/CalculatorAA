@@ -153,7 +153,21 @@ class PortfolioChart extends JDialog {
                 }
 
                 String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
-                int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length));
+                int dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length), false, 0);
+                if (dividers < 0) {
+                    int force = JOptionPane.showConfirmDialog(
+                            Main.getFrame(),
+                            Main.resourceBundle.getString("text.too_many_computations"),
+                            Main.resourceBundle.getString("text.warning"),
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.WARNING_MESSAGE);
+                    if (force == JOptionPane.YES_OPTION) {
+                        dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length), true, -dividers);
+                    } else {
+                        return;
+                    }
+
+                }
 
                 List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dataFiltered, dividers);
 
@@ -280,7 +294,7 @@ class PortfolioChart extends JDialog {
         buttonCoefMax.addActionListener(actionEvent -> ((GradientSliderPanel)panelCoefGradient).setPosition(0.99));
     }
 
-    private int calculateDivision(int[] minimals, int[] maximals) {
+    private int calculateDivision(int[] minimals, int[] maximals, boolean force, int start) {
 
         int[] variants = new int[] {100, 50, 25, 20, 10, 5, 4, 2, 1};
         int length = variants.length;
@@ -296,16 +310,27 @@ class PortfolioChart extends JDialog {
         }
 
         int lastNotZero = -1;
+        int result;
 
         if (nonEmpty >= 10) {
-            return 5;
+            result = 100 / variants[3];
+            if (checkModulo(minimals, maximals, result)) {
+                return result;
+            } else if (!force) {
+                return -1;
+            }
         }
 
-        for (int i = 0; i < length; i++) {
+        for (int i = start; i < length; i++) {
             sum[0] = 0;
 
             if (i == length - 1 && nonEmpty > 5) {
-                return 100 / variants[lastNotZero];
+                result = 100 / variants[lastNotZero];
+                if (checkModulo(minimals, maximals, result)) {
+                    return result;
+                } else if (!force) {
+                    return -(lastNotZero + 1);
+                }
             }
 
             calculateDivisionHelper(
@@ -316,7 +341,13 @@ class PortfolioChart extends JDialog {
             );
 
             if (sum[0] > limit) {
-                return 100 / variants[lastNotZero >= 0 ? lastNotZero : i];
+                int index = lastNotZero >= 0 ? lastNotZero : i;
+                result = 100 / variants[index];
+                if (checkModulo(minimals, maximals, result)) {
+                    return result;
+                } else if (!force) {
+                    return -(index + 1);
+                }
             }
 
             if (sum[0] != 0) {
@@ -346,6 +377,12 @@ class PortfolioChart extends JDialog {
 
             weights[index] += step;
         }
+    }
+
+    private boolean checkModulo(int[] minimals, int[] maximals, int divider) {
+        int step = 100 / divider;
+        return Arrays.stream(minimals).allMatch(i -> i % step == 0) &&
+                Arrays.stream(maximals).allMatch(i -> i % step == 0);
     }
 
     private void onOK() {
