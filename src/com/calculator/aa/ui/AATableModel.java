@@ -19,6 +19,8 @@ public class AATableModel extends AbstractTableModel {
     private final Pattern ptXX_XX_YYYY = Pattern.compile("^(\\d\\d?)[^\\d](\\d\\d?)[^\\d](\\d\\d\\d\\d)$");
     private final Pattern ptYYYY_MM_DD = Pattern.compile("^(\\d\\d\\d\\d)[^\\d](\\d\\d?)[^\\d](\\d\\d?)$");
 
+    static final int SERVICE_ROWS = 3;
+
     private final int width;
     private final int height;
     private double[][]data;
@@ -26,24 +28,28 @@ public class AATableModel extends AbstractTableModel {
     private Object[] periods;
     private final String[] periodsSource;
     private final double[] averages;
+    private final double[] geomAverages;
     private final double[] deviations;
 
     private MainWindow.DateFormats dateFormat;
 
     // Default constructor
     AATableModel() {
-        this(1, 2);
+        this(1, 3);
     }
 
     // Create new table w*h
     private AATableModel(int w, int h) {
         width = w + 1;
-        height = h + 2;
-        data = new double[height - 2][width - 1];
+        height = h + SERVICE_ROWS;
+
+        int dataHeight = height - SERVICE_ROWS;
+        data = new double[dataHeight][width - 1];
         instruments = new String[width];
-        periods = new Object[height - 2];
-        periodsSource = new String[height - 2];
+        periods = new Object[dataHeight];
+        periodsSource = new String[dataHeight];
         averages = new double[width - 1];
+        geomAverages = new double[width - 1];
         deviations = new double[width - 1];
         dateFormat = MainWindow.DateFormats.DATE_FORMAT_NONE;
 
@@ -55,7 +61,7 @@ public class AATableModel extends AbstractTableModel {
                 instruments[wh] = "";
             }
 
-            for (int ht = 0; ht < height - 2; ht++) {
+            for (int ht = 0; ht < dataHeight; ht++) {
                 if (wh < width - 1) {
                     data[ht][wh] = 0.0f;
                 }
@@ -97,6 +103,8 @@ public class AATableModel extends AbstractTableModel {
             }
         }
 
+        int dataHeight = height - SERVICE_ROWS;
+
         for (int wh = 0; wh < width; wh++) {
             if (wh > prev.width - 1) {
                 break;
@@ -104,9 +112,9 @@ public class AATableModel extends AbstractTableModel {
 
             instruments[wh] = prev.instruments[wh];
 
-            for (int ht = 0; ht < height - 2; ht++) {
+            for (int ht = 0; ht < dataHeight; ht++) {
 
-                if (ht >= prev.height - 2) {
+                if (ht >= prev.height - SERVICE_ROWS) {
                     break;
                 }
 
@@ -129,6 +137,8 @@ public class AATableModel extends AbstractTableModel {
     public AATableModel(int w, int h, double[][] d, String[] l, String[] i, boolean useDates) {
         this(w, h);
 
+        int dataHeight = height - SERVICE_ROWS;
+
         for (int wh = 0; wh < width; wh++) {
             if (wh > 0) {
                 instruments[wh] = i[wh - 1];
@@ -136,7 +146,7 @@ public class AATableModel extends AbstractTableModel {
                 instruments[wh] = "";
             }
 
-            for (int ht = 0; ht < height - 2; ht++) {
+            for (int ht = 0; ht < dataHeight; ht++) {
                 if (wh < width - 1) {
                     data[ht][wh] = d[ht][wh];
                 }
@@ -169,10 +179,12 @@ public class AATableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int row, int col) {
-        if (row == height - 2) {
-            return col == 0 ? Main.resourceBundle.getString("text.yield") : (height < 4 ? "" : Calc.formatPercent2(averages[col - 1]));
+        if (row == height - 3) {
+            return col == 0 ? Main.resourceBundle.getString("text.yield") : (height < 5 ? "" : Calc.formatPercent2(averages[col - 1]));
+        } else if (row == height - 2) {
+            return col == 0 ? Main.resourceBundle.getString("text.compound_yield") : (height < 5 ? "" : Calc.formatPercent2(geomAverages[col - 1]));
         } else if (row == height - 1) {
-            return col == 0 ? Main.resourceBundle.getString("text.risk") : (height < 5 ? "" : Calc.formatPercent2(deviations[col - 1]));
+            return col == 0 ? Main.resourceBundle.getString("text.risk") : (height < 6 ? "" : Calc.formatPercent2(deviations[col - 1]));
         } else {
             if (col == 0) {
                 return formatPeriod(row);
@@ -190,7 +202,7 @@ public class AATableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int col) {
-        return row < height - 2;
+        return row < height - SERVICE_ROWS;
     }
 
     @Override
@@ -202,6 +214,7 @@ public class AATableModel extends AbstractTableModel {
             data[row][col - 1] = Double.valueOf(val);
             updateAverage(col - 1);
             fireTableCellUpdated(height - 2, col);
+            fireTableCellUpdated(height - 3, col);
 
             updateStDev(col - 1);
             fireTableCellUpdated(height - 1, col);
@@ -286,7 +299,7 @@ public class AATableModel extends AbstractTableModel {
         pairs.sort(Comparator.comparing(AbstractMap.SimpleEntry::getKey));
 
         Object[] newPeriods = new Object[length];
-        double[][] newData = new double[height - 2][width - 1];
+        double[][] newData = new double[height - SERVICE_ROWS][width - 1];
 
         for (int i = 0; i < length; i++) {
             int oldPos = pairs.get(i).getValue();
@@ -365,7 +378,7 @@ public class AATableModel extends AbstractTableModel {
     }
 
     private double[] getCol(int col) {
-        int length = height - 2;
+        int length = height - SERVICE_ROWS;
         double[] values = new double[length];
         for (int i = 0; i < length; i++) {
             values[i] = data[i][col];
@@ -374,7 +387,8 @@ public class AATableModel extends AbstractTableModel {
     }
 
     private void updateAverage(int col) {
-        averages[col] = Calc.averagePercentYields(getCol(col));
+        averages[col] = Calc.averageSimplePercentYields(getCol(col));
+        geomAverages[col] = Calc.averagePercentYields(getCol(col));
     }
 
     private void updateStDev(int col) {

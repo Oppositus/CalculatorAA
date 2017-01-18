@@ -152,6 +152,10 @@ public class Calc {
         return Math.pow(product(yields), 1.0 / yields.length);
     }
 
+    public static double averageSimplePercentYields(double[] values) {
+        return averageYields(values) - 1;
+    }
+
     public static double averagePercentYields(double[] values) {
         return geomAverageYields(values) - 1;
     }

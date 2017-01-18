@@ -95,7 +95,7 @@ public class Portfolio implements Comparable<Portfolio> {
         System.arraycopy(instruments, 0, result, 0, length);
 
         result[length] = Main.resourceBundle.getString("text.risk");
-        result[length + 1] = Main.resourceBundle.getString("text.yield");
+        result[length + 1] = Main.resourceBundle.getString("text.compound_yield");
 
         return result;
     }
@@ -107,7 +107,7 @@ public class Portfolio implements Comparable<Portfolio> {
         System.arraycopy(instruments, 0, result, 0, length);
 
         result[length] = Main.resourceBundle.getString("text.risk");
-        result[length + 1] = Main.resourceBundle.getString("text.yield");
+        result[length + 1] = Main.resourceBundle.getString("text.compound_yield");
         result[length + 2] = Main.resourceBundle.getString("text.risk_free_rate");
         result[length + 3] = Main.resourceBundle.getString("text.sharp_rate") + ShowTable.noPercentFormat;
 

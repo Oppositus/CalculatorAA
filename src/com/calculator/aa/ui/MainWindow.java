@@ -56,7 +56,7 @@ public class MainWindow {
             Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
             Font font = cell.getFont();
 
-            if (row >= rows - 2) {
+            if (row >= rows - AATableModel.SERVICE_ROWS) {
                 font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD));
                 cell.setBackground(back);
             } else {
@@ -92,19 +92,25 @@ public class MainWindow {
     public MainWindow() {
         buttonAddRow.addActionListener(actionEvent -> {
             AATableModel oldModel = (AATableModel)mainTable.getModel();
-            AATableModel newModel = new AATableModel(oldModel.getWidth() - 1, oldModel.getHeight() - 1, oldModel, -1, -1);
+            AATableModel newModel = new AATableModel(
+                    oldModel.getWidth() - 1,
+                    oldModel.getHeight() - AATableModel.SERVICE_ROWS + 1,
+                    oldModel,
+                    -1, -1);
             setNewModel(newModel);
         });
+
         buttonDeleteRow.addActionListener(actionEvent -> {
             AATableModel oldModel = (AATableModel)mainTable.getModel();
-            if (oldModel.getHeight() > 4) {
+            if (oldModel.getHeight() > AATableModel.SERVICE_ROWS + 2) {
                 AATableModel newModel = new AATableModel(oldModel.getWidth() - 1,
-                        oldModel.getHeight() - 3,
+                        oldModel.getHeight() - AATableModel.SERVICE_ROWS - 1,
                         oldModel,
                         mainTable.getSelectedRow(), -1);
                 setNewModel(newModel);
             }
         });
+
         buttonOpen.addActionListener(actionEvent -> {
             File[] f = openExistingFile(true);
             if (f != null) {
@@ -164,7 +170,7 @@ public class MainWindow {
 
         buttonDeleteInvalid.addActionListener(e -> {
             AATableModel model = (AATableModel)mainTable.getModel();
-            if (model.getHeight() < 5) {
+            if (model.getHeight() < AATableModel.SERVICE_ROWS + 3) {
                 return;
             }
 
@@ -174,7 +180,7 @@ public class MainWindow {
                 for (double aRow : row) {
                     if (aRow < 0) {
                         model = new AATableModel(model.getWidth() - 1,
-                                model.getHeight() - 3,
+                                model.getHeight() - AATableModel.SERVICE_ROWS - 1,
                                 model,
                                 0, -1);
                         valid = false;
@@ -185,7 +191,7 @@ public class MainWindow {
                 }
             }
 
-            if (model.getHeight() < 5) {
+            if (model.getHeight() < AATableModel.SERVICE_ROWS + 3) {
                 return;
             }
 
@@ -255,7 +261,7 @@ public class MainWindow {
             AATableModel oldModel = (AATableModel)mainTable.getModel();
             if (oldModel.getWidth() > 2) {
                 AATableModel newModel = new AATableModel(oldModel.getWidth() - 2,
-                        oldModel.getHeight() - 2,
+                        oldModel.getHeight() - AATableModel.SERVICE_ROWS,
                         oldModel,
                         -1, mainTable.getSelectedColumn());
 
