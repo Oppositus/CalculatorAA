@@ -309,7 +309,7 @@ class PortfolioChart extends JDialog {
             }
         }
 
-        int lastNotZero = -1;
+        int lastNotZero = start;
         int result;
 
         if (nonEmpty >= 10) {
