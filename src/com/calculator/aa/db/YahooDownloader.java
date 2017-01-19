@@ -48,14 +48,13 @@ public class YahooDownloader implements DataDownloader {
         Calendar calTo = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
         String url = DownloadURL.replace("{instrument}", instrument.getTicker())
-                .replace("{month_from}", String.valueOf(calFrom.get(Calendar.MONTH) + 1))
+                .replace("{month_from}", String.valueOf(calFrom.get(Calendar.MONTH)))
                 .replace("{day_from}", "1")
                 .replace("{year_from}", String.valueOf(calFrom.get(Calendar.YEAR)))
-                .replace("{month_to}", String.valueOf(calTo.get(Calendar.MONTH) + 1))
+                .replace("{month_to}", String.valueOf(calTo.get(Calendar.MONTH)))
                 .replace("{day_to}", String.valueOf(calTo.get(Calendar.DAY_OF_MONTH)))
                 .replace("{year_to}", String.valueOf(calTo.get(Calendar.YEAR)))
                 .replace("{period}", "m");
-
 
         try {
             HttpURLConnection.setFollowRedirects(true);

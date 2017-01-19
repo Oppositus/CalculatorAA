@@ -360,6 +360,9 @@ class PortfolioChart extends JDialog {
 
     // todo: optimize this shit!
     private void calculateDivisionHelper(int[] minimals, int[] maximals, int[] weights, int index, int step, int[] sum) {
+
+        int l1 = weights.length - 1;
+
         while (weights[index] <= maximals[index]) {
 
             // clear tail
@@ -371,7 +374,7 @@ class PortfolioChart extends JDialog {
                 sum[0] += 1;
             }
 
-            if (index < weights.length - 1 && testSum < 100) {
+            if (index < l1 && testSum < 100) {
                 calculateDivisionHelper(minimals, maximals, weights, index + 1, step, sum);
             }
 

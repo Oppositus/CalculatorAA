@@ -295,6 +295,9 @@ public class Calc {
                                                int[] minimals, int[] maximals, int step,
                                                int[] weights, String[] instruments, double[][] dataFiltered,
                                                int index, List<Portfolio> acc) {
+
+        int l1 = weights.length - 1;
+
         while (weights[index] <= maximals[index]) {
 
             // clear tail
@@ -309,7 +312,7 @@ public class Calc {
                 );
             }
 
-            if (index < weights.length - 1 && sum < 100) {
+            if (index < l1 && sum < 100) {
                 iteratePortfolioHelper(correlations, avYields, sdYields, minimals, maximals, step, weights, instruments, dataFiltered, index + 1, acc);
             }
 
