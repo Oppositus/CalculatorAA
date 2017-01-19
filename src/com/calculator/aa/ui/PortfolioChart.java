@@ -370,6 +370,10 @@ class PortfolioChart extends JDialog {
 
             int testSum = Calc.sumIntArray(weights);
 
+            if (testSum > 100) {
+                break;
+            }
+
             if (testSum == 100) {
                 sum[0] += 1;
             }

@@ -305,6 +305,10 @@ public class Calc {
 
             int sum = sumIntArray(weights);
 
+            if (sum > 100) {
+                break;
+            }
+
             if (sum == 100) {
                 acc.add(
                         portfolio(correlations, avYields, sdYields,
@@ -416,7 +420,12 @@ public class Calc {
     }
 
     public static int sumIntArray(int[] array) {
-        return Arrays.stream(array).sum();
+        int l = array.length;
+        int sum = 0;
+        for (int i = 0; i < l; ++i) {
+            sum += array[i];
+        }
+        return sum;
     }
 
     public static double distance(DoublePoint p1, DoublePoint p2) {
