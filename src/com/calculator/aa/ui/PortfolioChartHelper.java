@@ -137,4 +137,12 @@ class PortfolioChartHelper {
         zoomTo.setX(toRisk);
         zoomTo.setY(toYield);
     }
+
+    public void setNearest(Portfolio n) {
+        nearest = n;
+    }
+
+    Portfolio getNearest() {
+        return nearest;
+    }
 }

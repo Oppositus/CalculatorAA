@@ -5,6 +5,7 @@ import com.calculator.aa.calc.Calc;
 import com.calculator.aa.calc.Portfolio;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
@@ -52,6 +53,29 @@ class PortfolioChart extends JDialog {
 
     private final PortfolioChartHelper helper;
 
+    private class LimitationTableCellRenderer extends DefaultTableCellRenderer {
+        private final Color back = new Color(212, 212, 212);
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+            Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+            cell.setBackground(row == 3 ? back : Color.WHITE);
+            return cell;
+        }
+    }
+
+    private class LimitationTableModel extends DefaultTableModel {
+
+        LimitationTableModel(Object[][] body, Object[] header) {
+            super(body, header);
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            return row != 3;
+        }
+    }
+
     private PortfolioChart(String[] i, double[][] d) {
         instruments = i;
         data = d;
@@ -95,7 +119,7 @@ class PortfolioChart extends JDialog {
 
                 int length = instruments.length - 1;
 
-                DefaultTableModel model = (DefaultTableModel) tableLimitations.getModel();
+                LimitationTableModel model = (LimitationTableModel) tableLimitations.getModel();
 
                 int[] minimals = new int[length];
                 int[] maximals = new int[length];
@@ -404,14 +428,36 @@ class PortfolioChart extends JDialog {
 
     private void updateLimitations() {
         int length = instruments.length;
-        String[][] limits = new String[3][length];
-        for (int col = 0; col < instruments.length; col++) {
+        String[][] limits = new String[4][length];
+        for (int col = 0; col < length; col++) {
             limits[0][col] = col == 0 ? Main.resourceBundle.getString("text.min") : "0";
             limits[1][col] = col == 0 ? Main.resourceBundle.getString("text.max") : "100";
             limits[2][col] = col == 0 ? Main.resourceBundle.getString("text.compare") : "0";
+            limits[3][col] = col == 0 ? Main.resourceBundle.getString("text.nearest") : getNearestComponent(col - 1);
         }
 
-        tableLimitations.setModel(new DefaultTableModel(limits, instruments));
+        tableLimitations.setModel(new LimitationTableModel(limits, instruments));
+        for (int i = 0; i < length; i++) {
+            tableLimitations.getColumnModel().getColumn(i).setCellRenderer(new LimitationTableCellRenderer());
+        }
+
+    }
+
+    void updateNearestWeights() {
+        int length = instruments.length;
+        LimitationTableModel model = (LimitationTableModel)tableLimitations.getModel();
+        for (int col = 1; col < length; col++) {
+            model.setValueAt(getNearestComponent(col -1), 3, col);
+        }
+    }
+
+    private String getNearestComponent(int component) {
+        Portfolio pf = helper.getNearest();
+        if (pf == null) {
+            return "0";
+        }
+
+        return Integer.toString((int)(pf.weights()[component] * 100));
     }
 
     private void createUIComponents() {
@@ -419,7 +465,7 @@ class PortfolioChart extends JDialog {
         comboBoxFrom = new JComboBox<>();
         comboBoxTo = new JComboBox<>();
         spinnerCAL = new JSpinner(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.1));
-        panelCoefGradient = new GradientSliderPanel(false, 0, new AbstractAction() {
+        panelCoefGradient = new GradientSliderPanel(false, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 double filtered = ((GradientSliderPanel)panelCoefGradient).getPosition();
@@ -455,7 +501,7 @@ class PortfolioChart extends JDialog {
         String[] trueInstr = Arrays.copyOfRange(instruments, 1, instruments.length);
         int dividers = 100;
 
-        DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
+        LimitationTableModel model = (LimitationTableModel)tableLimitations.getModel();
         int[] userMinimals = new int[length];
         int[] userMaximals = new int[length];
         int[] compares = new int[length];
@@ -536,7 +582,7 @@ class PortfolioChart extends JDialog {
     }
 
     void setPortfolioToCompare(int[] weights) {
-        DefaultTableModel model = (DefaultTableModel)tableLimitations.getModel();
+        LimitationTableModel model = (LimitationTableModel)tableLimitations.getModel();
 
         int length = weights.length;
         for (int i = 0; i < length; i++) {
@@ -588,6 +634,7 @@ class PortfolioChart extends JDialog {
             buttonCoefMax.setText(Calc.formatDouble2(maxCoef));
             buttonCoefMax.setEnabled(true);
             ((GradientPanel)panelCoefGradient).setGradientEnabled(true);
+            ((GradientSliderPanel)panelCoefGradient).setGradientBounds(minCoef, maxCoef);
 
         }
 

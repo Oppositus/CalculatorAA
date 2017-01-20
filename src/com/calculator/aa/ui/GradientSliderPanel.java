@@ -1,21 +1,26 @@
 package com.calculator.aa.ui;
 
+import com.calculator.aa.calc.Calc;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Rectangle2D;
 
 public class GradientSliderPanel extends GradientPanel {
 
-    private static int triangle = 6;
-
     private double position;
+    private double minimum;
+    private double maximum;
     private int mousePosition;
     private ActionListener listener;
 
-    GradientSliderPanel(boolean enable, double pos, ActionListener listen) {
+    GradientSliderPanel(boolean enable, ActionListener listen) {
         super(enable);
 
-        position = pos;
         listener = listen;
+        position = 0;
+        minimum = 0;
+        maximum = 1;
 
         mousePosition = -1;
 
@@ -57,8 +62,12 @@ public class GradientSliderPanel extends GradientPanel {
     }
 
     private void setFilterPosition(int mouseX) {
-        position = Math.min((double)mouseX / (double)getWidth(), 0.99);
-        applyFilter();
+        double pos = Math.min((double)mouseX / (double)getWidth(), 0.99);
+
+        if (pos >= 0.0 && pos <= 1.0) {
+            position = pos;
+            applyFilter();
+        }
     }
 
     private void applyFilter() {
@@ -87,6 +96,7 @@ public class GradientSliderPanel extends GradientPanel {
 
         int pos = (int)(position * w);
 
+        final int triangle = 6;
         int[] xs = new int[] {
                 pos - triangle,
                 pos,
@@ -108,6 +118,20 @@ public class GradientSliderPanel extends GradientPanel {
         g.fillPolygon(xs, ybot, 3);
         g.drawLine(pos, 0, pos, h);
 
+        if (isPanelEnabled) {
+            g.setColor(Color.BLACK);
+            String currentSlider = Calc.formatDouble2((maximum - minimum) * position + minimum);
+            FontMetrics fm = g.getFontMetrics();
+            Rectangle2D bounds = fm.getStringBounds(currentSlider, g);
+            int posTextX;
+            if (position < 0.5) {
+                posTextX = pos + 5;
+            } else {
+                posTextX = pos - (int)bounds.getWidth() - 5;
+            }
+            g.drawString(currentSlider, posTextX, h / 2 + (int)(bounds.getHeight() / 2));
+        }
+
         g.setClip(null);
     }
 
@@ -123,5 +147,11 @@ public class GradientSliderPanel extends GradientPanel {
 
     double getPosition() {
         return position;
+    }
+
+    void setGradientBounds(double min, double max) {
+        minimum = min;
+        maximum = max;
+        repaint();
     }
 }

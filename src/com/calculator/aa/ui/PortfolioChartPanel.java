@@ -483,6 +483,7 @@ class PortfolioChartPanel extends JPanel {
     private void drawNearest(Graphics g, List<Portfolio> portfolios, List<Portfolio> frontierPortfolios, List<Portfolio> portfoliosCompare) {
         if (!drawingArea.contains(mouseX, mouseY)) {
             nearest = null;
+            updateNearestWeights();
             return;
         }
 
@@ -521,7 +522,28 @@ class PortfolioChartPanel extends JPanel {
             g.setColor(selectedColor);
             g.fillRect(mapX(nearest.risk()) - 4, mapY(nearest.yield()) - 4, 7, 7);
         }
+        updateNearestWeights();
     }
+
+    void updateNearestWeights() {
+        if (nearest != null) {
+            helper.setNearest(nearest);
+
+            PortfolioChart chart;
+            Component parent = getParent();
+            while (parent != null && !(parent instanceof PortfolioChart)) {
+                parent = parent.getParent();
+            }
+
+            if (parent == null) {
+                return;
+            }
+
+            chart = (PortfolioChart) parent;
+            chart.updateNearestWeights();
+        }
+    }
+
 
     private void drawEfficientFrontier(Graphics g, List<Portfolio> frontierPortfolios) {
         int length = frontierPortfolios.size();
