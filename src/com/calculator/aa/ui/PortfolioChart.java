@@ -191,6 +191,7 @@ class PortfolioChart extends JDialog {
                     if (force == JOptionPane.YES_OPTION) {
                         dividers = calculateDivision(Arrays.copyOf(minimals, minimals.length), Arrays.copyOf(maximals, maximals.length), true, -dividers);
                     } else {
+                        setCursor(Cursor.getDefaultCursor());
                         return;
                     }
 
@@ -278,9 +279,7 @@ class PortfolioChart extends JDialog {
                 a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
             }
         });
-        buttonZoomPortfolios.addActionListener(actionEvent -> {
-            ((PortfolioChartPanel) chartPanel).zoomAllToPortfolios();
-        });
+        buttonZoomPortfolios.addActionListener(actionEvent -> ((PortfolioChartPanel) chartPanel).zoomAllToPortfolios());
         buttonConvertRate.addActionListener(e -> {
 
             double rate = (double)spinnerCAL.getValue() / 100.0 + 1;
