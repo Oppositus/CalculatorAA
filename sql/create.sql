@@ -139,6 +139,12 @@ INSERT INTO "INSTRUMENTS" VALUES
     (NULL, 'RWO', 'SPDR Dow Jones Global Real Estate ETF', 1, 1, '2008-05-22', NULL),
     (NULL, 'REM', 'iShares Mortgage Real Estate Capped ETF', 1, 1, '2007-05-04', NULL),
     (NULL, 'TLT', 'iShares 20+ Year Treasury Bond', 1, 1, '2002-07-30', NULL),
+    (NULL, 'FDN', 'First Trust Dow Jones Internet ETF', 1, 1, '2006-06-23', NULL),
+    (NULL, 'XBI', 'SPDR S&P Biotech ETF', 1, 1, '2006-02-06', NULL),
+    (NULL, 'IEV', 'iShares Europe', 1, 1, '2000-07-28', NULL),
+    (NULL, 'BNDX', 'Vanguard Total International Bond ETF', 1, 1, '2014-12-29', NULL),
+    (NULL, 'TLH', 'iShares 10-20 Year Treasury Bond', 1, 1, '2007-01-11', NULL),
+    (NULL, 'IEF', 'iShares 7-10 Year Treasury Bond', 1, 1, '2002-07-30', NULL),
 
     (NULL, 'SCRYX', 'AB Sm Cp Core', 2, 1, '2015-12-29', NULL),
     (NULL, 'JSMGX', 'Janus Triton', 2, 1, '2005-11-30', NULL),
