@@ -59,7 +59,10 @@ class PortfolioChart extends JDialog {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
             Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+
             cell.setBackground(row == 3 ? back : Color.WHITE);
+            cell.setForeground(Color.BLACK);
+
             return cell;
         }
     }
