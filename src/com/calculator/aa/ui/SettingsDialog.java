@@ -22,6 +22,7 @@ public class SettingsDialog extends JDialog {
     private JPanel panelShowGradient;
     private JPanel panel50Percent;
     private JPanel panel100Percent;
+    private JLabel LabelVersion;
 
     private UIManager.LookAndFeelInfo[] looksAndFeels;
     private LookAndFeel currentLookAndFeel;
@@ -38,6 +39,8 @@ public class SettingsDialog extends JDialog {
         panel0Percent.setBackground(Main.gradient.getPointColor(GradientPainter.ColorName.Begin));
         panel50Percent.setBackground(Main.gradient.getPointColor(GradientPainter.ColorName.Middle));
         panel100Percent.setBackground(Main.gradient.getPointColor(GradientPainter.ColorName.End));
+
+        LabelVersion.setText(Main.versionApp);
 
         ((GradientPanel)panelShowGradient).setColors(panel0Percent.getBackground(), panel50Percent.getBackground(), panel100Percent.getBackground());
 
