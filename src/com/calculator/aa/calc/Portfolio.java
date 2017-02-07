@@ -111,14 +111,15 @@ public class Portfolio implements Comparable<Portfolio> {
 
     public String[] labels(double riskFreeRate) {
         int length = weights.length;
-        String[] result = new String[length + 4];
+        String[] result = new String[length + 5];
 
         System.arraycopy(instruments, 0, result, 0, length);
 
         result[length] = Main.resourceBundle.getString("text.risk");
         result[length + 1] = Main.resourceBundle.getString("text.compound_yield");
         result[length + 2] = Main.resourceBundle.getString("text.risk_free_rate");
-        result[length + 3] = Main.resourceBundle.getString("text.sharpe_rateo") + ShowTable.noPercentFormat;
+        result[length + 3] = Main.resourceBundle.getString("text.sharpe_ratio") + ShowTable.noPercentFormat;
+        result[length + 4] = Main.resourceBundle.getString("text.sortino_ratio") + ShowTable.noPercentFormat;
 
         return result;
     }
@@ -143,7 +144,7 @@ public class Portfolio implements Comparable<Portfolio> {
 
     public double[][] values(double riskFreeRate) {
         int length = weights.length;
-        double[][] result = new double[length + 4][1];
+        double[][] result = new double[length + 5][1];
 
         for (int i = 0; i < length; i++) {
             result[i][0] = weights[i];
@@ -153,6 +154,7 @@ public class Portfolio implements Comparable<Portfolio> {
         result[length + 1][0] = yield();
         result[length + 2][0] = riskFreeRate;
         result[length + 3][0] = Calc.ratioSharpe(this, riskFreeRate);
+        result[length + 4][0] = Calc.ratioSortino(this, riskFreeRate);
 
         return result;
     }

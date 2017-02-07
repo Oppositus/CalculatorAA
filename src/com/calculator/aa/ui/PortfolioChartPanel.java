@@ -577,6 +577,11 @@ class PortfolioChartPanel extends JPanel {
     }
 
     private void drawCAL(Graphics g) {
+
+        if (bestCALPortfolio == null) {
+            return;
+        }
+
         int fromX = mapX(0);
         int fromY = mapY(riskFreeRate);
         int toX = mapX(bestCALPortfolio.risk());

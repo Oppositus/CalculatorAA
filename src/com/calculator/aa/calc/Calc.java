@@ -139,13 +139,24 @@ public class Calc {
         return Arrays.stream(values).sum() / values.length;
     }
 
-    private static double stDev(double[] values) {
+    private static double stDev(double[] values, double average) {
         if (values.length < 2) {
             return 0;
         }
-        double average = average(values);
         double sum = Arrays.stream(values).map(d -> d - average).map(d -> d * d).sum();
         return Math.sqrt(1.0 / (values.length - 1.0) * sum);
+    }
+
+    private static double negStDev(double[] values) {
+        if (values.length < 2) {
+            return 0;
+        }
+
+        double[] driskSum = Arrays.stream(values)
+                .map(d -> d > 0 ? 0 : d * d)
+                .toArray();
+        return Math.sqrt(average(driskSum));
+
     }
 
     private static double averageYields(double[] values) {
@@ -606,6 +617,13 @@ public class Calc {
             System.arraycopy(dataWeighted[row], 0, prev, 0, cols);
         }
 
+        if (isRelative) {
+            double[] prevResult = Arrays.copyOf(result, completePeriods);
+            for (int row = 1; row < completePeriods; row++) {
+                result[row] = prevResult[row] / prevResult[row - 1];
+            }
+        }
+
         if (isLog) {
             return Arrays.stream(result).map(Math::log).toArray();
         } else {
@@ -624,9 +642,25 @@ public class Calc {
                 .toArray();
 
         double excessReturn = average(excess);
-        double stdev = stDev(excess);
+        double stdev = stDev(excess, excessReturn);
 
         return excessReturn / stdev;
+    }
+
+    public static double ratioSortino(Portfolio portfolio, double riskFree) {
+
+        double[] yields = portfolio.getRebalancedMode() ?
+                calculateRebalances(portfolio, false, true) : calculateRealYields(portfolio, false, true);
+
+        double[] excess = Arrays.stream(yields)
+                .skip(1)
+                .map(d -> (d - 1) - riskFree)
+                .toArray();
+
+        double excessReturn = average(excess);
+        double negstdev = negStDev(excess);
+
+        return excessReturn / negstdev;
     }
 }
 

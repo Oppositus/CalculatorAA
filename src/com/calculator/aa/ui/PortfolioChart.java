@@ -609,7 +609,7 @@ class PortfolioChart extends JDialog {
             coefficient = Coefficients.SHARPE;
         }
         if (radioButtonSortino.isEnabled() && radioButtonSortino.isSelected()) {
-            coefficient = Coefficients.SHARPE;
+            coefficient = Coefficients.SORTINO;
         }
 
         if (coefficient == Coefficients.NONE) {
@@ -626,38 +626,22 @@ class PortfolioChart extends JDialog {
         double dCoef;
         double rate = ((double)spinnerCAL.getValue()) / 100.0;
 
+        List<Double> coefList = null;
+
         if (coefficient == Coefficients.SHARPE) {
-            List<Double> sharpes = pfs.stream()
+            coefList = pfs.stream()
                     .map(p -> Calc.ratioSharpe(p, rate))
                     .collect(Collectors.toList());
-            minCoef = sharpes.stream().mapToDouble(d -> d).min().orElse(0);
-            maxCoef = sharpes.stream().mapToDouble(d -> d).max().orElse(1);
-            dCoef = maxCoef - minCoef;
 
-            if (Math.abs(dCoef) < Calc.epsilon) {
-                dCoef = Calc.epsilon;
-            }
-
-            int length = pfs.size();
-            for (int i = 0; i < length; i++) {
-                pfs.get(i).setCoefficient((sharpes.get(i) - minCoef) / dCoef);
-            }
-
-            buttonCoefMin.setText(Calc.formatDouble2(minCoef));
-            buttonCoefMin.setEnabled(true);
-            buttonCoefMax.setText(Calc.formatDouble2(maxCoef));
-            buttonCoefMax.setEnabled(true);
-            ((GradientPanel)panelCoefGradient).setGradientEnabled(true);
-            ((GradientSliderPanel)panelCoefGradient).setGradientBounds(minCoef, maxCoef);
-
+        } else if (coefficient == Coefficients.SORTINO) {
+            coefList = pfs.stream()
+                    .map(p -> Calc.ratioSortino(p, rate))
+                    .collect(Collectors.toList());
         }
 
-        if (coefficient == Coefficients.SORTINO) {
-            /*List<Double> sharpes = pfs.stream()
-                    .map(p -> Calc.ratioSharpe(p, rate))
-                    .collect(Collectors.toList());
-            minCoef = sharpes.stream().mapToDouble(d -> d).min().orElse(0);
-            maxCoef = sharpes.stream().mapToDouble(d -> d).max().orElse(1);
+        if (coefList != null) {
+            minCoef = coefList.stream().mapToDouble(d -> d).min().orElse(0);
+            maxCoef = coefList.stream().mapToDouble(d -> d).max().orElse(1);
             dCoef = maxCoef - minCoef;
 
             if (Math.abs(dCoef) < Calc.epsilon) {
@@ -666,16 +650,15 @@ class PortfolioChart extends JDialog {
 
             int length = pfs.size();
             for (int i = 0; i < length; i++) {
-                pfs.get(i).setCoefficient((sharpes.get(i) - minCoef) / dCoef);
+                pfs.get(i).setCoefficient((coefList.get(i) - minCoef) / dCoef);
             }
 
             buttonCoefMin.setText(Calc.formatDouble2(minCoef));
             buttonCoefMin.setEnabled(true);
             buttonCoefMax.setText(Calc.formatDouble2(maxCoef));
             buttonCoefMax.setEnabled(true);
-            ((GradientPanel)panelCoefGradient).setGradientEnabled(true);
-            ((GradientSliderPanel)panelCoefGradient).setGradientBounds(minCoef, maxCoef);*/
-
+            ((GradientPanel) panelCoefGradient).setGradientEnabled(true);
+            ((GradientSliderPanel) panelCoefGradient).setGradientBounds(minCoef, maxCoef);
         }
 
         ((PortfolioChartPanel) chartPanel).repaintAll();
