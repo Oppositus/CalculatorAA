@@ -77,7 +77,7 @@ class YieldsChart extends JDialog {
             boolean isSelected = checkBoxRebalance.isSelected();
             portfolio.setRebalancedMode(isSelected);
             boolean isLog = buttonLogScale.isSelected();
-            realYields = isSelected ? calculateRebalances(isLog) : calculateRealYields(isLog);
+            realYields = isSelected ? Calc.calculateRebalances(portfolio, isLog, false) : Calc.calculateRealYields(portfolio, isLog, false);
             portfolioYields = calculateModelYields(isLog);
             boolean[] sigmas = new boolean[] {
                     checkBoxSigma1.isSelected(),
@@ -119,26 +119,6 @@ class YieldsChart extends JDialog {
         yieldsPanel = new PortfolioYieldsPanel();
     }
 
-    private double[] calculateRealYields(boolean isLog) {
-        double[] weights = portfolio.weights();
-        int cols = weights.length;
-        double[] result = new double[completePeriods];
-
-        for (int row = 0; row < completePeriods; row++) {
-            double sum = 0;
-            for (int col = 0; col < cols; col++) {
-                sum += data[row][col] / data[0][col] * weights[col];
-            }
-            result[row] = sum;
-        }
-
-        if (isLog) {
-            return Arrays.stream(result).map(Math::log).toArray();
-        } else {
-            return result;
-        }
-    }
-
     private double[] calculateModelYields(boolean isLog) {
         int add = (int)spinnerPeriods.getValue();
         int length = completePeriods + add;
@@ -157,43 +137,6 @@ class YieldsChart extends JDialog {
         }
     }
 
-    private double[] calculateRebalances(boolean isLog) {
-        double[] weights = portfolio.weights();
-        int cols = weights.length;
-
-        double[][] dataWeighted = new double[completePeriods][cols];
-
-        for (int row = 0; row < completePeriods; row++) {
-            for (int col = 0; col < cols; col++) {
-                dataWeighted[row][col] = data[row][col] * weights[col];
-            }
-        }
-
-        double[] result = new double[completePeriods];
-        double[] prev = new double[cols];
-        double multiplier = 1.0;
-
-        System.arraycopy(dataWeighted[0], 0, prev, 0, cols);
-        result[0] = 1.0;
-
-        for (int row = 1; row < completePeriods; row++) {
-            double sum = 0;
-            for (int col = 0; col < cols; col++) {
-                if (weights[col] > 0) {
-                    sum += dataWeighted[row][col] / prev[col] * weights[col];
-                }
-            }
-            multiplier *= sum;
-            result[row] = multiplier;
-            System.arraycopy(dataWeighted[row], 0, prev, 0, cols);
-        }
-
-        if (isLog) {
-            return Arrays.stream(result).map(Math::log).toArray();
-        } else {
-            return result;
-        }
-    }
 
     private double[][] calculateInstrumentYields(boolean isLog) {
         double[] weights = portfolio.weights();

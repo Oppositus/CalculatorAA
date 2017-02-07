@@ -8,6 +8,7 @@ import java.util.Arrays;
 public class Portfolio implements Comparable<Portfolio> {
     private final DoublePoint parameters;
     private final DoublePoint rebalancedParameters;
+    private final double [][] data;
     private final double[] weights;
     private final String[] instruments;
     private boolean rebalancedMode;
@@ -16,6 +17,13 @@ public class Portfolio implements Comparable<Portfolio> {
     public Portfolio(Portfolio o) {
         parameters = new DoublePoint(o.parameters);
         rebalancedParameters = new DoublePoint(o.rebalancedParameters);
+
+        int len = o.data.length;
+        data = new double[len][];
+        for (int i = 0; i < len; i++) {
+            data[i] = Arrays.copyOf(o.data[i], o.data[i].length);
+        }
+
         weights = Arrays.copyOf(o.weights, o.weights.length);
         instruments = Arrays.copyOf(o.instruments, o.instruments.length);
         rebalancedMode = o.rebalancedMode;
@@ -24,10 +32,11 @@ public class Portfolio implements Comparable<Portfolio> {
 
     Portfolio(DoublePoint p, double[] w, String[] i, double[][] df) {
         parameters = p;
+        data = df;
         weights = w;
         instruments = i;
         rebalancedMode = false;
-        rebalancedParameters = calculateRebalances(df);
+        rebalancedParameters = calculateRebalances();
         coefficient = Double.NaN;
     }
 
@@ -109,7 +118,7 @@ public class Portfolio implements Comparable<Portfolio> {
         result[length] = Main.resourceBundle.getString("text.risk");
         result[length + 1] = Main.resourceBundle.getString("text.compound_yield");
         result[length + 2] = Main.resourceBundle.getString("text.risk_free_rate");
-        result[length + 3] = Main.resourceBundle.getString("text.sharp_rate") + ShowTable.noPercentFormat;
+        result[length + 3] = Main.resourceBundle.getString("text.sharpe_rateo") + ShowTable.noPercentFormat;
 
         return result;
     }
@@ -143,13 +152,17 @@ public class Portfolio implements Comparable<Portfolio> {
         result[length][0] = risk();
         result[length + 1][0] = yield();
         result[length + 2][0] = riskFreeRate;
-        result[length + 3][0] = Calc.coeffSharp(this, riskFreeRate);
+        result[length + 3][0] = Calc.ratioSharpe(this, riskFreeRate);
 
         return result;
     }
 
     public double[] weights() {
         return weights;
+    }
+
+    public double[][] data() {
+        return data;
     }
 
     public double yield() {
@@ -164,7 +177,7 @@ public class Portfolio implements Comparable<Portfolio> {
         return rebalancedMode ? rebalancedParameters : parameters;
     }
 
-    private DoublePoint calculateRebalances(double[][] data) {
+    private DoublePoint calculateRebalances() {
         int rows = data.length;
         int cols = weights.length;
 

@@ -132,6 +132,22 @@ public class Calc {
         return result;
     }
 
+    private static double average(double[] values) {
+        if (values.length < 2) {
+            return 0;
+        }
+        return Arrays.stream(values).sum() / values.length;
+    }
+
+    private static double stDev(double[] values) {
+        if (values.length < 2) {
+            return 0;
+        }
+        double average = average(values);
+        double sum = Arrays.stream(values).map(d -> d - average).map(d -> d * d).sum();
+        return Math.sqrt(1.0 / (values.length - 1.0) * sum);
+    }
+
     private static double averageYields(double[] values) {
         double[] filtered = Arrays.stream(values).filter(d -> d >= 0).toArray();
         if (filtered.length < 2) {
@@ -531,8 +547,86 @@ public class Calc {
         }
     }
 
-    public static double coeffSharp(Portfolio p, double riskFree) {
-        return (p.yield() - riskFree) / p.risk();
+    public static double[] calculateRealYields(Portfolio p, boolean isLog, boolean isRelative) {
+        double[] weights = p.weights();
+        double[][] data = p.data();
+        int completePeriods = data.length;
+        int cols = weights.length;
+        double[] result = new double[completePeriods];
+
+        if (isRelative) {
+            result[0] = 1;
+        }
+
+        for (int row = isRelative ? 1 : 0; row < completePeriods; row++) {
+            double sum = 0;
+            for (int col = 0; col < cols; col++) {
+                sum += data[row][col] / data[isRelative ? row - 1 : 0][col] * weights[col];
+            }
+            result[row] = sum;
+        }
+
+        if (isLog) {
+            return Arrays.stream(result).map(Math::log).toArray();
+        } else {
+            return result;
+        }
+    }
+
+    public static double[] calculateRebalances(Portfolio p, boolean isLog, boolean isRelative) {
+        double[] weights = p.weights();
+        double[][] data = p.data();
+        int completePeriods = data.length;
+        int cols = weights.length;
+
+        double[][] dataWeighted = new double[completePeriods][cols];
+
+        for (int row = 0; row < completePeriods; row++) {
+            for (int col = 0; col < cols; col++) {
+                dataWeighted[row][col] = data[row][col] * weights[col];
+            }
+        }
+
+        double[] result = new double[completePeriods];
+        double[] prev = new double[cols];
+        double multiplier = 1.0;
+
+        System.arraycopy(dataWeighted[0], 0, prev, 0, cols);
+        result[0] = 1.0;
+
+        for (int row = 1; row < completePeriods; row++) {
+            double sum = 0;
+            for (int col = 0; col < cols; col++) {
+                if (weights[col] > 0) {
+                    sum += dataWeighted[row][col] / prev[col] * weights[col];
+                }
+            }
+            multiplier *= sum;
+            result[row] = multiplier;
+            System.arraycopy(dataWeighted[row], 0, prev, 0, cols);
+        }
+
+        if (isLog) {
+            return Arrays.stream(result).map(Math::log).toArray();
+        } else {
+            return result;
+        }
+    }
+
+    public static double ratioSharpe(Portfolio portfolio, double riskFree) {
+
+        double[] yields = portfolio.getRebalancedMode() ?
+                calculateRebalances(portfolio, false, true) : calculateRealYields(portfolio, false, true);
+
+        double[] excess = Arrays.stream(yields)
+                .skip(1)
+                .map(d -> (d - 1) - riskFree)
+                .toArray();
+
+        double excessReturn = average(excess);
+        double stdev = stDev(excess);
+
+        return excessReturn / stdev;
     }
 }
 
