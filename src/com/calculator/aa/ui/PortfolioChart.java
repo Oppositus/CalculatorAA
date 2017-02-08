@@ -276,6 +276,17 @@ class PortfolioChart extends JDialog {
             }
         });
         cbShowRebalances.addActionListener(e -> {
+            if (cbShowRebalances.isSelected()) {
+                comboBoxRebalanceMethod.setEnabled(true);
+                boolean isThreshold = comboBoxRebalanceMethod.getSelectedIndex() == 1;
+                labelThreshold.setEnabled(isThreshold);
+                spinnerThreshold.setEnabled(isThreshold);
+            } else {
+                comboBoxRebalanceMethod.setEnabled(false);
+                labelThreshold.setEnabled(false);
+                spinnerThreshold.setEnabled(false);
+            }
+
             for(ActionListener a: buttonCompute.getActionListeners()) {
                 a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
             }
