@@ -465,6 +465,14 @@ public class Calc {
         return sum;
     }
 
+    private static double sumDoubleArray(double[] array) {
+        double sum = 0.0;
+        for (double elem : array) {
+            sum += elem;
+        }
+        return sum;
+    }
+
     public static double distance(DoublePoint p1, DoublePoint p2) {
         double dx = p2.getX() - p1.getX();
         double dy = p2.getY() - p1.getY();
@@ -655,10 +663,31 @@ public class Calc {
         int cols = weights.length;
 
         double[][] dataWeighted = new double[completePeriods][cols];
+        double[] newDataWeighted = new double[cols];
 
         for (int row = 0; row < completePeriods; row++) {
             for (int col = 0; col < cols; col++) {
                 dataWeighted[row][col] = data[row][col] * weights[col];
+
+                if (row > 0) {
+                    newDataWeighted[col] = dataWeighted[row - 1][col] * (data[row][col] / data[row - 1][col]);
+                }
+
+            }
+
+            if (row > 0) {
+                boolean thresholded = false;
+                double total = sumDoubleArray(newDataWeighted);
+                for (int col = 0; col < cols; col++) {
+                    double diff = Math.abs(newDataWeighted[col] / total - weights[col]);
+                    if (diff >= threshold) {
+                        thresholded = true;
+                        break;
+                    }
+                }
+                if (!thresholded) {
+                    System.arraycopy(newDataWeighted, 0, dataWeighted[row], 0, cols);
+                }
             }
         }
 
