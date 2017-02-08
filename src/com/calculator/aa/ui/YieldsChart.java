@@ -30,16 +30,20 @@ class YieldsChart extends JDialog {
     private final Portfolio portfolio;
     private double[] realYields;
     private double[] portfolioYields;
-    private double riskFreeRate;
+    private final double riskFreeRate;
+    private final Calc.RebalanceMode rebalanceMode;
+    private final int rebalalanceThreshold;
 
     private final int completePeriods;
 
-    private YieldsChart(String[] ls, double[][] sourceData, Portfolio p, double freeRate) {
+    private YieldsChart(String[] ls, double[][] sourceData, Portfolio p, double freeRate, Calc.RebalanceMode mode, int threshold) {
         data = sourceData;
         labels = Arrays.copyOfRange(ls, sourceData.length - data.length, ls.length);
         portfolio = p;
         completePeriods = data.length;
         riskFreeRate = freeRate;
+        rebalanceMode = mode;
+        rebalalanceThreshold = threshold;
 
         setContentPane(contentPane);
         setModal(true);
@@ -77,7 +81,7 @@ class YieldsChart extends JDialog {
             boolean isSelected = checkBoxRebalance.isSelected();
             portfolio.setRebalancedMode(isSelected);
             boolean isLog = buttonLogScale.isSelected();
-            realYields = isSelected ? Calc.calculateRebalances(portfolio, isLog, false) : Calc.calculateRealYields(portfolio, isLog, false);
+            realYields = isSelected ? Calc.calculateRebalances(portfolio, isLog, false, rebalanceMode, rebalalanceThreshold) : Calc.calculateRealYields(portfolio, isLog, false);
             portfolioYields = calculateModelYields(isLog);
             boolean[] sigmas = new boolean[] {
                     checkBoxSigma1.isSelected(),
@@ -199,13 +203,13 @@ class YieldsChart extends JDialog {
         return doubleResult;
     }
 
-    static void showYields(String[] labels, double[][] data, Portfolio portfolio, double riskFreeRate) {
+    static void showYields(String[] labels, double[][] data, Portfolio portfolio, double riskFreeRate, Calc.RebalanceMode mode, int threshold) {
         double[][] filtered = Calc.filterValidData(data, portfolio.weights(), new int[] {0}, new int[] {data.length - 1});
         if (filtered == null) {
             return;
         }
 
-        YieldsChart dialog = new YieldsChart(labels, filtered, portfolio, riskFreeRate);
+        YieldsChart dialog = new YieldsChart(labels, filtered, portfolio, riskFreeRate, mode, threshold);
         dialog.pack();
 
         int x = Calc.safeParseInt(Main.properties.getProperty("yields.x", "-1"), -1);

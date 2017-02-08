@@ -12,7 +12,7 @@ public class GradientSliderPanel extends GradientPanel {
     private double minimum;
     private double maximum;
     private int mousePosition;
-    private ActionListener listener;
+    private final ActionListener listener;
 
     GradientSliderPanel(boolean enable, ActionListener listen) {
         super(enable);

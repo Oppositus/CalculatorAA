@@ -165,14 +165,13 @@ public class SettingsDialog extends JDialog {
     }
 
     private void saveColor(String propertyName, Color color) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(color.getRed());
-        sb.append(",");
-        sb.append(color.getGreen());
-        sb.append(",");
-        sb.append(color.getBlue());
+        String colorString = color.getRed() +
+                "," +
+                color.getGreen() +
+                "," +
+                color.getBlue();
 
-        Main.properties.setProperty(propertyName, sb.toString());
+        Main.properties.setProperty(propertyName, colorString);
     }
 
     private void createUIComponents() {

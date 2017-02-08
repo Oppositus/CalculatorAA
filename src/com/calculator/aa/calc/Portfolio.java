@@ -13,6 +13,8 @@ public class Portfolio implements Comparable<Portfolio> {
     private final String[] instruments;
     private boolean rebalancedMode;
     private double coefficient;
+    private final Calc.RebalanceMode rebalanceMode;
+    private final int rebalancetTreshold;
 
     public Portfolio(Portfolio o) {
         parameters = new DoublePoint(o.parameters);
@@ -28,14 +30,18 @@ public class Portfolio implements Comparable<Portfolio> {
         instruments = Arrays.copyOf(o.instruments, o.instruments.length);
         rebalancedMode = o.rebalancedMode;
         coefficient = o.coefficient;
+        rebalanceMode = o.rebalanceMode;
+        rebalancetTreshold = o.rebalancetTreshold;
     }
 
-    Portfolio(DoublePoint p, double[] w, String[] i, double[][] df) {
+    Portfolio(DoublePoint p, double[] w, String[] i, double[][] df, Calc.RebalanceMode mode, int threshold) {
         parameters = p;
         data = df;
         weights = w;
         instruments = i;
         rebalancedMode = false;
+        rebalanceMode = mode;
+        rebalancetTreshold = threshold;
         rebalancedParameters = calculateRebalances();
         coefficient = Double.NaN;
     }
@@ -153,8 +159,8 @@ public class Portfolio implements Comparable<Portfolio> {
         result[length][0] = risk();
         result[length + 1][0] = yield();
         result[length + 2][0] = riskFreeRate;
-        result[length + 3][0] = Calc.ratioSharpe(this, riskFreeRate);
-        result[length + 4][0] = Calc.ratioSortino(this, riskFreeRate);
+        result[length + 3][0] = Calc.ratioSharpe(this, riskFreeRate, rebalanceMode, rebalancetTreshold);
+        result[length + 4][0] = Calc.ratioSortino(this, riskFreeRate, rebalanceMode, rebalancetTreshold);
 
         return result;
     }
@@ -180,36 +186,7 @@ public class Portfolio implements Comparable<Portfolio> {
     }
 
     private DoublePoint calculateRebalances() {
-        int rows = data.length;
-        int cols = weights.length;
-
-        double[][] dataWeighted = new double[rows][cols];
-
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                dataWeighted[row][col] = data[row][col] * weights[col];
-            }
-        }
-
-        double[] result = new double[rows];
-        double[] prev = new double[cols];
-        double multiplier = 1.0;
-
-        System.arraycopy(dataWeighted[0], 0, prev, 0, cols);
-        result[0] = 1.0;
-
-        for (int row = 1; row < rows; row++) {
-            double sum = 0;
-            for (int col = 0; col < cols; col++) {
-                if (weights[col] > 0) {
-                    sum += dataWeighted[row][col] / prev[col] * weights[col];
-                }
-            }
-            multiplier *= sum;
-            result[row] = multiplier;
-            System.arraycopy(dataWeighted[row], 0, prev, 0, cols);
-        }
-
+        double[] result = Calc.calculateRebalances(this, false, false, rebalanceMode, rebalancetTreshold);
         return new DoublePoint(
                 Calc.stdevYields(result),
                 Calc.averagePercentYields(result));

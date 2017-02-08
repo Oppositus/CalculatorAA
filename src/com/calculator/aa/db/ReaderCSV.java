@@ -45,13 +45,11 @@ public class ReaderCSV {
         return this;
     }
 
-    public ReaderCSV readFromFile(File file) {
+    public void readFromFile(File file) {
         try {
             read(new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)));
-            return this;
         } catch (FileNotFoundException e) {
             JOptionPane.showMessageDialog(Main.getFrame(), e, Main.resourceBundle.getString("text.error"), JOptionPane.ERROR_MESSAGE);
-            return this;
         }
     }
 

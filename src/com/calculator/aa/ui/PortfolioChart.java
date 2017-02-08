@@ -45,6 +45,9 @@ class PortfolioChart extends JDialog {
     private JPanel panelCoefGradient;
     private JButton buttonCoefMax;
     private JRadioButton radioButtonSortino;
+    private JComboBox<String> comboBoxRebalanceMethod;
+    private JSpinner spinnerThreshold;
+    private JLabel labelThreshold;
     private ButtonGroup coefficientGroup;
 
     private final String[] instruments;
@@ -103,6 +106,13 @@ class PortfolioChart extends JDialog {
         comboBoxTo.setModel(new DefaultComboBoxModel<>(Arrays.copyOfRange(periods, 2, periods.length)));
         comboBoxTo.setSelectedIndex(periods.length - 3);
         spinnerCAL.addMouseWheelListener(new SpinnerWheelListener(spinnerCAL));
+        spinnerThreshold.addMouseWheelListener(new SpinnerWheelListener(spinnerThreshold));
+
+        comboBoxRebalanceMethod.setModel(new DefaultComboBoxModel<>(new String[] {
+                Main.resourceBundle.getString("text.periodical"),
+                Main.resourceBundle.getString("text.threshold"),
+
+        }));
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -199,11 +209,14 @@ class PortfolioChart extends JDialog {
 
                 }
 
-                List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dataFiltered, dividers);
+                Calc.RebalanceMode mode = getRebalaceMode();
+                int threshold = getRebalaceThreshold();
+
+                List<Portfolio> portfolios = Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dataFiltered, dividers, mode, threshold);
 
                 List<Portfolio> portfoliosCompare = null;
                 if (Arrays.stream(compares).sum() == 100) {
-                    portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, dataFiltered, 100);
+                    portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, dataFiltered, 100, mode, threshold);
                 }
 
                 boolean isSelected = cbShowRebalances.isSelected();
@@ -327,6 +340,12 @@ class PortfolioChart extends JDialog {
 
         buttonCoefMin.addActionListener(actionEvent -> ((GradientSliderPanel)panelCoefGradient).setPosition(0));
         buttonCoefMax.addActionListener(actionEvent -> ((GradientSliderPanel)panelCoefGradient).setPosition(0.99));
+        comboBoxRebalanceMethod.addActionListener(actionEvent -> {
+            int selected = comboBoxRebalanceMethod.getSelectedIndex();
+            boolean isThreshold = selected == 1;
+            labelThreshold.setEnabled(isThreshold);
+            spinnerThreshold.setEnabled(isThreshold);
+        });
     }
 
     private int calculateDivision(int[] minimals, int[] maximals, boolean force, int start) {
@@ -476,6 +495,8 @@ class PortfolioChart extends JDialog {
         comboBoxFrom = new JComboBox<>();
         comboBoxTo = new JComboBox<>();
         spinnerCAL = new JSpinner(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.1));
+        spinnerThreshold = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
+
         panelCoefGradient = new GradientSliderPanel(false, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -530,6 +551,9 @@ class PortfolioChart extends JDialog {
             compares[col] = Integer.valueOf((String) model.getValueAt(2, col + 1));
         }
 
+        Calc.RebalanceMode mode = getRebalaceMode();
+        int threshold = getRebalaceThreshold();
+
         int index = 0;
         int size = frontier.size();
         while (index < size) {
@@ -560,7 +584,7 @@ class PortfolioChart extends JDialog {
             }
 
             accuracyPortfolios.addAll(
-                    Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dataFiltered, dividers)
+                    Calc.iteratePortfolios(corrTable, avYields, sdYields, minimals, maximals, trueInstr, dataFiltered, dividers, mode, threshold)
             );
 
             index += 1;
@@ -568,7 +592,7 @@ class PortfolioChart extends JDialog {
 
         List<Portfolio> portfoliosCompare = null;
         if (Arrays.stream(compares).sum() == 100) {
-            portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, dataFiltered, 100);
+            portfoliosCompare = Calc.iteratePortfolios(corrTable, avYields, sdYields, compares, compares, trueInstr, dataFiltered, 100, mode, threshold);
         }
 
         boolean isSelected = cbShowRebalances.isSelected();
@@ -584,6 +608,7 @@ class PortfolioChart extends JDialog {
 
     private void updatePortfolios(List<Portfolio> pfs, List<Portfolio> pfsComp, double[][] df) {
         setCoefficientVisible(pfs);
+        helper.setRebalanceMode(getRebalaceMode(), getRebalaceThreshold());
         helper.setPortfolios(pfs,
                 pfsComp,
                 df,
@@ -625,17 +650,19 @@ class PortfolioChart extends JDialog {
         double maxCoef;
         double dCoef;
         double rate = ((double)spinnerCAL.getValue()) / 100.0;
+        Calc.RebalanceMode mode = getRebalaceMode();
+        int threshold = getRebalaceThreshold();
 
         List<Double> coefList = null;
 
         if (coefficient == Coefficients.SHARPE) {
             coefList = pfs.stream()
-                    .map(p -> Calc.ratioSharpe(p, rate))
+                    .map(p -> Calc.ratioSharpe(p, rate, mode, threshold))
                     .collect(Collectors.toList());
 
         } else if (coefficient == Coefficients.SORTINO) {
             coefList = pfs.stream()
-                    .map(p -> Calc.ratioSortino(p, rate))
+                    .map(p -> Calc.ratioSortino(p, rate, mode, threshold))
                     .collect(Collectors.toList());
         }
 
@@ -662,6 +689,14 @@ class PortfolioChart extends JDialog {
         }
 
         ((PortfolioChartPanel) chartPanel).repaintAll();
+    }
+
+    private Calc.RebalanceMode getRebalaceMode() {
+        return comboBoxRebalanceMethod.getSelectedIndex() == 0 ? Calc.RebalanceMode.PERIODIC : Calc.RebalanceMode.THRESHOLD;
+    }
+
+    private int getRebalaceThreshold() {
+        return (int)spinnerThreshold.getValue();
     }
 
     static void showChart(String[] instruments, double[][] data) {

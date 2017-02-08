@@ -12,6 +12,11 @@ public class Calc {
 
     public static final double epsilon = 1.0 / 100000.0;
 
+    public enum RebalanceMode {
+        PERIODIC,
+        THRESHOLD
+    }
+
     private static double[] yields(double[] values) {
         int length = values.length;
         double[] yields = new double[length - 1];
@@ -278,19 +283,23 @@ public class Calc {
     }
 
     private static Portfolio portfolio(double[][] correlations, double[] averageYields, double[] stdevYields,
-                                       double[] weights, String[] instruments, double[][] dataFiltered) {
+                                       double[] weights, String[] instruments, double[][] dataFiltered,
+                                       RebalanceMode mode, int threshold) {
         return new Portfolio(
                 new DoublePoint(
                         portfolioRisk(correlations, stdevYields, weights),
                         sumProduct(averageYields, weights)),
                 weights,
                 instruments,
-                dataFiltered);
+                dataFiltered,
+                mode,
+                threshold);
     }
 
     public static List<Portfolio> iteratePortfolios(double[][] correlations, double[] averageYields,
                                                     double[] stdevYields, int[] minimals, int[] maximals,
-                                                    String[] instruments, double[][] dataFiltered, int divStep) {
+                                                    String[] instruments, double[][] dataFiltered, int divStep,
+                                                    RebalanceMode mode, int threshold) {
 
         if (!checkDataIsFinite(correlations)) {
             throw new IllegalArgumentException(Main.resourceBundle.getString("exception.notfinite_double"));
@@ -311,7 +320,7 @@ public class Calc {
         int[] weights = new int[length];
         System.arraycopy(minimals, 0, weights, 0, length);
 
-        iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, 100 / divStep, weights, instruments, dataFiltered, 0, result);
+        iteratePortfolioHelper(correlations, averageYields, stdevYields, minimals, maximals, 100 / divStep, weights, instruments, dataFiltered, mode, threshold, 0, result);
 
         result.sort(Portfolio::compareTo);
 
@@ -321,6 +330,7 @@ public class Calc {
     private static void iteratePortfolioHelper(double[][] correlations, double[] avYields, double[] sdYields,
                                                int[] minimals, int[] maximals, int step,
                                                int[] weights, String[] instruments, double[][] dataFiltered,
+                                               RebalanceMode mode, int threshold,
                                                int index, List<Portfolio> acc) {
 
         int l1 = weights.length - 1;
@@ -339,12 +349,13 @@ public class Calc {
             if (sum == 100) {
                 acc.add(
                         portfolio(correlations, avYields, sdYields,
-                                Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray(), instruments, dataFiltered)
+                                Arrays.stream(weights).mapToDouble(d -> d / 100.0).toArray(), instruments, dataFiltered,
+                                mode, threshold)
                 );
             }
 
             if (index < l1 && sum < 100) {
-                iteratePortfolioHelper(correlations, avYields, sdYields, minimals, maximals, step, weights, instruments, dataFiltered, index + 1, acc);
+                iteratePortfolioHelper(correlations, avYields, sdYields, minimals, maximals, step, weights, instruments, dataFiltered, mode, threshold, index + 1, acc);
             }
 
             weights[index] += step;
@@ -447,10 +458,9 @@ public class Calc {
     }
 
     public static int sumIntArray(int[] array) {
-        int l = array.length;
         int sum = 0;
-        for (int i = 0; i < l; ++i) {
-            sum += array[i];
+        for (int elem : array) {
+            sum += elem;
         }
         return sum;
     }
@@ -584,7 +594,14 @@ public class Calc {
         }
     }
 
-    public static double[] calculateRebalances(Portfolio p, boolean isLog, boolean isRelative) {
+    public static double[] calculateRebalances(Portfolio p, boolean isLog, boolean isRelative, RebalanceMode mode, int threshold) {
+        return mode == RebalanceMode.PERIODIC ?
+                calculatePeriodicalRebalances(p, isLog, isRelative) :
+                calculateThresholdRebalances(p, isLog, isRelative, threshold / 100.0);
+
+    }
+
+    private static double[] calculatePeriodicalRebalances(Portfolio p, boolean isLog, boolean isRelative) {
         double[] weights = p.weights();
         double[][] data = p.data();
         int completePeriods = data.length;
@@ -631,10 +648,57 @@ public class Calc {
         }
     }
 
-    public static double ratioSharpe(Portfolio portfolio, double riskFree) {
+    private static double[] calculateThresholdRebalances(Portfolio p, boolean isLog, boolean isRelative, double threshold) {
+        double[] weights = p.weights();
+        double[][] data = p.data();
+        int completePeriods = data.length;
+        int cols = weights.length;
+
+        double[][] dataWeighted = new double[completePeriods][cols];
+
+        for (int row = 0; row < completePeriods; row++) {
+            for (int col = 0; col < cols; col++) {
+                dataWeighted[row][col] = data[row][col] * weights[col];
+            }
+        }
+
+        double[] result = new double[completePeriods];
+        double[] prev = new double[cols];
+        double multiplier = 1.0;
+
+        System.arraycopy(dataWeighted[0], 0, prev, 0, cols);
+        result[0] = 1.0;
+
+        for (int row = 1; row < completePeriods; row++) {
+            double sum = 0;
+            for (int col = 0; col < cols; col++) {
+                if (weights[col] > 0) {
+                    sum += dataWeighted[row][col] / prev[col] * weights[col];
+                }
+            }
+            multiplier *= sum;
+            result[row] = multiplier;
+            System.arraycopy(dataWeighted[row], 0, prev, 0, cols);
+        }
+
+        if (isRelative) {
+            double[] prevResult = Arrays.copyOf(result, completePeriods);
+            for (int row = 1; row < completePeriods; row++) {
+                result[row] = prevResult[row] / prevResult[row - 1];
+            }
+        }
+
+        if (isLog) {
+            return Arrays.stream(result).map(Math::log).toArray();
+        } else {
+            return result;
+        }
+    }
+
+    public static double ratioSharpe(Portfolio portfolio, double riskFree, RebalanceMode mode, int threshold) {
 
         double[] yields = portfolio.getRebalancedMode() ?
-                calculateRebalances(portfolio, false, true) : calculateRealYields(portfolio, false, true);
+                calculateRebalances(portfolio, false, true, mode, threshold) : calculateRealYields(portfolio, false, true);
 
         double[] excess = Arrays.stream(yields)
                 .skip(1)
@@ -647,10 +711,10 @@ public class Calc {
         return excessReturn / stdev;
     }
 
-    public static double ratioSortino(Portfolio portfolio, double riskFree) {
+    public static double ratioSortino(Portfolio portfolio, double riskFree, RebalanceMode mode, int threshold) {
 
         double[] yields = portfolio.getRebalancedMode() ?
-                calculateRebalances(portfolio, false, true) : calculateRealYields(portfolio, false, true);
+                calculateRebalances(portfolio, false, true, mode, threshold) : calculateRealYields(portfolio, false, true);
 
         double[] excess = Arrays.stream(yields)
                 .skip(1)

@@ -25,6 +25,9 @@ class PortfolioChartHelper {
 
     private Portfolio nearest;
 
+    private Calc.RebalanceMode rebalanceMode;
+    private int rebalancetTreshold;
+
     PortfolioChartHelper() {
         nearest = null;
         calValue = -1;
@@ -62,7 +65,7 @@ class PortfolioChartHelper {
 
     void showYields(Portfolio p, double riskFreeRate) {
         //if (nearest != null) {
-        YieldsChart.showYields(periodsFiltered, dataFiltered, new Portfolio(p), riskFreeRate);
+        YieldsChart.showYields(periodsFiltered, dataFiltered, new Portfolio(p), riskFreeRate, rebalanceMode, rebalancetTreshold);
         //}
     }
 
@@ -102,6 +105,11 @@ class PortfolioChartHelper {
 
     void setMinCoefficient(double coef) {
         minCoefficient = coef;
+    }
+
+    void setRebalanceMode(Calc.RebalanceMode mode, int threshold) {
+        rebalanceMode = mode;
+        rebalancetTreshold = threshold;
     }
 
     private List<Portfolio> filterByMinCoefficient(List<Portfolio> list) {

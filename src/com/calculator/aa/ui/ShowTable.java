@@ -15,7 +15,7 @@ import java.awt.event.WindowEvent;
 
 public class ShowTable extends JDialog {
 
-    public static String noPercentFormat = "x%";
+    public static final String noPercentFormat = "x%";
 
     private JPanel contentPane;
     private JButton buttonOK;

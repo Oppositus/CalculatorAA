@@ -525,7 +525,7 @@ class PortfolioChartPanel extends JPanel {
         updateNearestWeights();
     }
 
-    void updateNearestWeights() {
+    private void updateNearestWeights() {
         if (nearest != null) {
             helper.setNearest(nearest);
 

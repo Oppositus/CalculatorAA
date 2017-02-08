@@ -227,12 +227,10 @@ public class SQLiteSupport {
     }
 
     private void updateInstrumentHistoryResult(DataDownloader downloader, Instrument instr, Consumer<Boolean> after, Boolean success, String data) {
-
-        boolean result = false;
-
         if (!success) {
-            after.accept(result);
+            after.accept(false);
         } else {
+            boolean result = false;
 
             if (!data.isEmpty()) {
                 ReaderCSV csv = downloader.createReader();
