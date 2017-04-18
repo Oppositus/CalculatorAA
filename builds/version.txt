@@ -1,4 +1,4 @@
-application=2.2
+application=2.3
 database=2.2
-aurl=https://raw.githubusercontent.com/Oppositus/CalculatorAA/master/builds/calcaa_2_2.zip
+aurl=https://raw.githubusercontent.com/Oppositus/CalculatorAA/master/builds/calcaa_2_3.zip
 durl=https://raw.githubusercontent.com/Oppositus/CalculatorAA/master/builds/instruments.source.zip
