@@ -14,7 +14,7 @@ import java.util.function.BiConsumer;
 
 public class YahooDownloader implements DataDownloader {
 
-    private static final String DownloadURL = "http://chart.finance.yahoo.com/table.csv?s={instrument}&a={month_from}&b={day_from}&c={year_from}&d={month_to}&e={day_to}&f={year_to}&g={period}&ignore=.csv";
+    private static final String DownloadURL = "https://chart.finance.yahoo.com/table.csv?s={instrument}&a={month_from}&b={day_from}&c={year_from}&d={month_to}&e={day_to}&f={year_to}&g={period}&ignore=.csv";
     static final String Name = "Yahoo Finance";
     private static final String WebURL = "https://finance.yahoo.com/";
 
